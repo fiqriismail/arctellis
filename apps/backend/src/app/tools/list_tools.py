@@ -43,7 +43,45 @@ def make_tools(service: SharePointService) -> list:
         items = await service.get_items(odata_filter=odata_filter or None)
         return str(len(items))
 
-    return [get_schema, filter_rows, count_rows]
+    @tool
+    async def sum_column(column_name: str, odata_filter: str = "") -> str:
+        """Sum the values of a numeric column in the SharePoint list.
+        column_name: exact column name as returned by get_schema.
+        odata_filter: optional OData filter expression.
+        Rows whose value cannot be parsed as a number are silently skipped.
+        Returns the total as a number."""
+        items = await service.get_items(odata_filter=odata_filter or None)
+        total = 0.0
+        parsed_count = 0
+        for item in items:
+            val = _parse_number(item.fields.get(column_name))
+            if val is not None:
+                total += val
+                parsed_count += 1
+        if parsed_count == 0:
+            return f"No parseable numeric values found in column '{column_name}'."
+        return str(total)
+
+    @tool
+    async def average_column(column_name: str, odata_filter: str = "") -> str:
+        """Calculate the average of a numeric column in the SharePoint list.
+        column_name: exact column name as returned by get_schema.
+        odata_filter: optional OData filter expression.
+        Rows whose value cannot be parsed as a number are silently skipped.
+        Returns the average as a number."""
+        items = await service.get_items(odata_filter=odata_filter or None)
+        total = 0.0
+        parsed_count = 0
+        for item in items:
+            val = _parse_number(item.fields.get(column_name))
+            if val is not None:
+                total += val
+                parsed_count += 1
+        if parsed_count == 0:
+            return f"No parseable numeric values found in column '{column_name}'."
+        return str(total / parsed_count)
+
+    return [get_schema, filter_rows, count_rows, sum_column, average_column]
 
 
 def _parse_number(value: Any) -> float | None:
