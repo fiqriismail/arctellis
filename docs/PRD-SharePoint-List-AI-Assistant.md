@@ -2,10 +2,11 @@
 
 | | |
 |---|---|
-| **Version** | 0.1 (Draft) |
-| **Date** | 24 May 2026 |
+| **Version** | 0.2 (Draft) |
+| **Date** | 4 June 2026 |
 | **Author** | Fiqri |
 | **Status** | For review |
+| **Change note** | Technology stack revised from Blazor Server / Semantic Kernel to Next.js (frontend) + Python FastAPI (backend) + LangChain. LLM (Azure OpenAI) and data access (Microsoft Graph / Entra ID) unchanged. |
 
 ---
 
@@ -13,7 +14,7 @@
 
 The SharePoint List AI Assistant is a web application that lets users ask questions about the data in a SharePoint list using plain English. Instead of building filters, views, or exporting to Excel, a user types a question into a chat box ("how many items are approved?", "what's the total budget for the Marketing department?") and receives a written answer with the relevant numbers and summaries.
 
-The application is a Blazor Server web app backed by Azure OpenAI. An LLM interprets the user's question and decides which data operations to run; the application code executes those operations deterministically against the SharePoint list via Microsoft Graph. This split keeps natural-language flexibility while guaranteeing that calculations are accurate.
+The application is a Next.js web frontend backed by a Python FastAPI service and Azure OpenAI. An LLM interprets the user's question and decides which data operations to run; the backend executes those operations deterministically against the SharePoint list via Microsoft Graph. This split keeps natural-language flexibility while guaranteeing that calculations are accurate.
 
 ## 2. Problem Statement
 
@@ -49,7 +50,7 @@ SharePoint lists are easy to populate but awkward to interrogate. Answering a qu
 ## 5. Functional Requirements
 
 ### 5.1 Chat Interface
-- **FR-1** A single, centred text input is the primary control. No filter panels, dropdowns, or form fields.
+- **FR-1** A single, centred text input is the primary control. No filter panels, dropdowns, or form fields. Built with Next.js and shadcn/ui components (light theme).
 - **FR-2** Submitted questions and returned answers appear as a vertical conversation thread (user message, then assistant answer).
 - **FR-3** Assistant answers render formatted text (markdown) so numbers, lists, and short tables display cleanly.
 - **FR-4** While an answer is being generated, a loading/typing indicator is shown. Streaming the response token-by-token is preferred.
@@ -72,34 +73,38 @@ SharePoint lists are easy to populate but awkward to interrogate. Answering a qu
 ## 6. Technical Architecture
 
 ### 6.1 Stack
-- **Frontend / host:** Blazor Server (ASP.NET Core). Server-side rendering keeps secrets and Graph calls off the client.
-- **AI orchestration:** Microsoft Semantic Kernel.
-- **LLM:** Azure OpenAI (chat completion deployment with function-calling support).
-- **Data access:** Microsoft Graph SDK (`Microsoft.Graph`), authenticated via `Azure.Identity`.
+- **Frontend:** Next.js (App Router) with shadcn/ui components (light theme), hosted on **Azure Static Web Apps**. A pure client of the backend; it holds no secrets and makes no direct Graph or LLM calls.
+- **Backend / host:** Python FastAPI service, packaged as a container and deployed as a **container-based application** (e.g. Azure Container Apps). Holds all AI orchestration, Graph access, and secrets server-side, and streams answers to the frontend.
+- **AI orchestration:** LangChain (agent with tool calling). LangChain tools are the boundary where the LLM's intent becomes deterministic Python code.
+- **LLM:** Azure OpenAI (chat completion deployment with function-/tool-calling support), accessed via `langchain-openai`'s `AzureChatOpenAI`.
+- **Data access:** Microsoft Graph SDK for Python (`msgraph-sdk`), authenticated via `azure-identity` / `msal`.
 - **Identity:** Microsoft Entra ID app registration.
 
 ### 6.2 Component Layers
-1. **Blazor chat component** — renders the conversation, captures input, displays streamed answers.
-2. **Conversation service** — holds `ChatHistory` per session, calls the Kernel.
-3. **Semantic Kernel + Azure OpenAI connector** — interprets questions and selects functions.
-4. **List Data Plugin** — a set of `[KernelFunction]`-attributed methods (count, sum, average, group-by, filter, get-schema). This is the boundary where the LLM's intent becomes deterministic code.
-5. **SharePoint service** — wraps Graph calls, handles auth and caching.
+1. **Next.js chat component** — renders the conversation, captures input, displays streamed answers. Calls the backend over HTTP and consumes a streamed (SSE) response.
+2. **FastAPI conversation endpoint** — holds chat history per session, invokes the LangChain agent, and streams tokens back to the frontend.
+3. **LangChain agent + Azure OpenAI** — interprets questions and selects which tools to call.
+4. **List Data tools** — a set of LangChain tools (count, sum, average, group-by, filter, get-schema). This is the boundary where the LLM's intent becomes deterministic Python code.
+5. **SharePoint service** — Python module wrapping Graph calls, handling auth and caching.
 6. **SharePoint Online** — the source list.
 
-Request flow: user question → Conversation service → Kernel (Azure OpenAI) decides on function calls → List Data Plugin executes them against cached list data → results returned to the model → model composes a natural-language answer → streamed back to the Blazor UI.
+Request flow: user question → Next.js → FastAPI conversation endpoint → LangChain agent (Azure OpenAI) decides on tool calls → List Data tools execute them against cached list data → results returned to the model → model composes a natural-language answer → streamed (SSE) back through FastAPI to the Next.js UI.
 
 ### 6.3 Tool/Function Design Principle
-The LLM is responsible only for *understanding the question* and *phrasing the answer*. Every fact and figure in the answer originates from code execution. Function descriptions and parameter descriptions must be written carefully, since the model relies on them to choose correctly.
+The LLM is responsible only for *understanding the question* and *phrasing the answer*. Every fact and figure in the answer originates from code execution. LangChain tool names, descriptions, and argument schemas must be written carefully, since the model relies on them to choose correctly.
 
 ### 6.4 Authentication
 - The app registration is granted Graph application permission `Sites.Read.All` (or the more scoped `Sites.Selected` if the list's site can be explicitly granted), with admin consent.
-- Client-credentials flow is used for an app that reads data on its own behalf. If per-user identity is later required, this moves to delegated/on-behalf-of auth — see Open Questions.
+- Client-credentials flow (via `azure-identity` / `msal` in the FastAPI backend) is used for an app that reads data on its own behalf. If per-user identity is later required, this moves to delegated/on-behalf-of auth — see Open Questions.
+- The Next.js frontend never holds Graph or Azure OpenAI credentials. The Next.js ↔ FastAPI boundary is the trust boundary.
+- End-user access is gated by Entra ID sign-in: users authenticate in the Next.js app, and the FastAPI backend validates the resulting token on every request and rejects unauthenticated calls (NFR-8). This end-user sign-in is distinct from the app's own client-credentials identity used to read SharePoint — in v1 all authenticated users share that single read identity (per-user SharePoint permissions remain Open Question 1).
 
 ## 7. Non-Functional Requirements
 
 ### 7.1 Security
-- **NFR-1** Azure OpenAI keys, the Entra client secret, and all connection settings are stored in app configuration / a secret store (e.g. Azure Key Vault or user secrets in dev), never in client code or source control.
-- **NFR-2** No list data or credentials are exposed to the browser beyond the rendered answer text.
+- **NFR-1** All API keys, secrets, and sensitive connection settings (Azure OpenAI keys, the Entra client secret, etc.) are stored in **Azure Key Vault** and retrieved by the backend at runtime — never in the Next.js client code or source control. The container's managed identity is granted read access to the vault; local development may use environment variables / `.env` standing in for the vault, but no secret is ever committed.
+- **NFR-2** No list data or credentials are exposed to the browser beyond the rendered answer text. Secrets and Graph calls stay inside the FastAPI backend.
+- **NFR-8** The system is accessible only to authenticated members of the organisation — no anonymous access. End users sign in with Entra ID; both the Next.js frontend and the FastAPI backend require a valid authenticated session, and the backend rejects unauthenticated requests. (User sign-in governs *access to the app*; it is separate from how the app reads SharePoint data, which remains the app's own client-credentials identity in v1 — see §6.4 and Open Question 1.)
 
 ### 7.2 Performance
 - **NFR-3** Target end-to-end response time under ~5 seconds for a typical question on a list of moderate size.
@@ -126,11 +131,11 @@ Write-back, multi-list support, per-user row security, attachment/document analy
 
 | Phase | Scope |
 |---|---|
-| **Phase 1 — Foundation** | Entra app registration, Graph access, SharePoint service reads list items and schema. Verified with a console/test harness. |
-| **Phase 2 — Agent core** | Semantic Kernel + Azure OpenAI wired up. List Data Plugin with count, sum, average, group-by, filter, schema functions. Function calling working end-to-end. |
-| **Phase 3 — Chat UI** | Blazor chat component: single input, conversation thread, markdown rendering, loading indicator, streaming, new-conversation control. |
+| **Phase 1 — Foundation** | Entra app registration, Graph access, Python SharePoint service reads list items and schema. Verified with a script/test harness. |
+| **Phase 2 — Agent core** | LangChain agent + Azure OpenAI wired up in FastAPI. List Data tools with count, sum, average, group-by, filter, schema. Tool calling working end-to-end. |
+| **Phase 3 — Chat UI** | Next.js + shadcn/ui chat: single input, conversation thread, markdown rendering, loading indicator, SSE streaming, new-conversation control. |
 | **Phase 4 — Hardening** | Caching, large-list filtered retrieval, logging, ambiguity/clarification handling, accuracy test suite. |
-| **Phase 5 — Deploy** | Configuration/secrets via Key Vault, deployment to Azure App Service, smoke testing. |
+| **Phase 5 — Deploy** | Secrets in Azure Key Vault (read via the container's managed identity). Frontend deployed to Azure Static Web Apps; backend container deployed as a container app. Smoke testing. |
 
 ## 11. Risks and Mitigations
 
@@ -145,10 +150,10 @@ Write-back, multi-list support, per-user row security, attachment/document analy
 ## 12. Open Questions
 
 1. Should answers reflect each end user's own SharePoint permissions, or is a single shared read account acceptable for v1? (This determines client-credentials vs. delegated auth.)
-2. Does the app need to be accessible to anonymous users, or only authenticated members of the organisation?
+2. ~~Does the app need to be accessible to anonymous users, or only authenticated members of the organisation?~~ **Resolved:** authenticated members of the organisation only; no anonymous access (Entra ID sign-in required — see NFR-8).
 3. How frequently does the list change — does the 30–60s cache window need tuning?
 4. Is there a specific list already chosen, and what are its key columns and approximate row count?
-5. Hosting target — Azure App Service, container, or other?
+5. ~~Hosting target — Azure App Service, container, or other?~~ **Resolved:** frontend on Azure Static Web Apps; backend as a container-based application (e.g. Azure Container Apps). Secrets in Azure Key Vault (see NFR-1).
 
 ## 13. Success Metrics
 
