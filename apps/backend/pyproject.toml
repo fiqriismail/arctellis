@@ -9,7 +9,6 @@ dependencies = [
     "langchain-openai>=0.3",
     "msgraph-sdk>=1.10",
     "azure-identity>=1.19",
-    "msal>=1.31",
     "python-dotenv>=1.0",
     "pydantic-settings>=2.7",
 ]
