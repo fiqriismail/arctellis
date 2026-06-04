@@ -14,7 +14,9 @@ from msgraph.generated.sites.item.lists.item.items import items_request_builder
 class ColumnDefinition:
     name: str
     display_name: str
-    column_type: str  # "text" | "number" | "dateTime" | "choice" | "boolean" | "lookup" | "person" | "other"
+    # column_type: "text" | "number" | "dateTime" | "choice" | "boolean"
+    # | "lookup" | "person" | "other"
+    column_type: str
 
 
 @dataclass
@@ -96,9 +98,8 @@ class SharePointService:
         return columns
 
     async def get_items(self, odata_filter: str | None = None) -> list[ListItem]:
-        query_params = items_request_builder.ItemsRequestBuilder.ItemsRequestBuilderGetQueryParameters(
-            expand=["fields"],
-        )
+        builder = items_request_builder.ItemsRequestBuilder
+        query_params = builder.ItemsRequestBuilderGetQueryParameters(expand=["fields"])
         if odata_filter:
             query_params.filter = odata_filter
 
@@ -110,7 +111,8 @@ class SharePointService:
             .items.get(request_configuration=request_configuration)
         )
 
-        # Note: only fetches first page (~200 items). Pagination via odata_next_link not implemented.
+        # Note: only fetches first page (~200 items). Pagination via
+        # odata_next_link not implemented.
         items: list[ListItem] = []
         if not result or not result.value:
             return items
@@ -135,7 +137,9 @@ async def create_sharepoint_service(
     site_path = parsed.path.rstrip("/")
     site = await client.sites.by_site_id(f"{hostname}:{site_path}").get()
     if not site or not site.id:
-        raise ValueError(f"Could not resolve site ID for URL: {settings.sharepoint_site_url}")
+        raise ValueError(
+            f"Could not resolve site ID for URL: {settings.sharepoint_site_url}"
+        )
     return SharePointService(
         client=client,
         site_id=site.id,
