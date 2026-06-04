@@ -1,11 +1,12 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
-from httpx import AsyncClient, ASGITransport
-
+from httpx import ASGITransport, AsyncClient
 
 # ── require_auth unit tests ────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_require_auth_no_credentials_raises_401():
@@ -20,6 +21,7 @@ async def test_require_auth_no_credentials_raises_401():
 @pytest.mark.asyncio
 async def test_require_auth_invalid_token_raises_401():
     import jwt
+
     from app.auth import require_auth
 
     creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="bad.token")
@@ -45,6 +47,7 @@ async def test_require_auth_valid_token_returns_claims():
 
 
 # ── endpoint protection ────────────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_health_requires_no_auth():
@@ -75,6 +78,7 @@ async def test_chat_without_auth_header_returns_401():
 @pytest.mark.asyncio
 async def test_chat_with_invalid_token_returns_401():
     import jwt
+
     from app.main import app
 
     with patch("app.auth.validate_entra_token", side_effect=jwt.PyJWTError("bad")):

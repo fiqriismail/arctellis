@@ -18,9 +18,7 @@ def validate_entra_token(token: str, tenant_id: str, client_id: str) -> dict:
 
     Raises jwt.PyJWTError on any validation failure.
     """
-    jwks_url = (
-        f"https://login.microsoftonline.com/{tenant_id}/discovery/v2.0/keys"
-    )
+    jwks_url = f"https://login.microsoftonline.com/{tenant_id}/discovery/v2.0/keys"
     jwks_client = jwt.PyJWKClient(jwks_url)
     signing_key = jwks_client.get_signing_key_from_jwt(token)
     return jwt.decode(

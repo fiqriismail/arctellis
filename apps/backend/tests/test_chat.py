@@ -91,8 +91,8 @@ def reset_sessions():
 
 @pytest.fixture(autouse=True)
 def override_auth():
-    from app.main import app
     from app.auth import require_auth
+    from app.main import app
 
     app.dependency_overrides[require_auth] = lambda: {"sub": "test-user"}
     yield
