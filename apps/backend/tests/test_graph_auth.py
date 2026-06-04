@@ -1,9 +1,10 @@
 from unittest.mock import patch
 
+from app.services.graph_auth import GraphAuthService
+
 
 def test_graph_auth_service_creates_client_secret_credential():
     with patch("app.services.graph_auth.ClientSecretCredential") as mock_cred_cls:
-        from app.services.graph_auth import GraphAuthService
 
         GraphAuthService(
             tenant_id="tenant-123",
@@ -19,8 +20,6 @@ def test_graph_auth_service_creates_client_secret_credential():
 
 def test_graph_auth_service_get_credential_returns_credential():
     with patch("app.services.graph_auth.ClientSecretCredential") as mock_cred_cls:
-        from app.services.graph_auth import GraphAuthService
-
         service = GraphAuthService("t", "c", "s")
         credential = service.get_credential()
         assert credential is mock_cred_cls.return_value
@@ -30,8 +29,6 @@ def test_graph_auth_service_get_client_returns_graph_service_client():
     with patch("app.services.graph_auth.ClientSecretCredential"), patch(
         "app.services.graph_auth.GraphServiceClient"
     ) as mock_graph_cls:
-        from app.services.graph_auth import GraphAuthService
-
         service = GraphAuthService("t", "c", "s")
         client = service.get_client()
         mock_graph_cls.assert_called_once()
@@ -44,8 +41,6 @@ def test_graph_auth_service_get_client_passes_credential():
     ) as mock_cred_cls, patch(
         "app.services.graph_auth.GraphServiceClient"
     ) as mock_graph_cls:
-        from app.services.graph_auth import GraphAuthService
-
         service = GraphAuthService("t", "c", "s")
         service.get_client()
         mock_graph_cls.assert_called_once_with(credentials=mock_cred_cls.return_value)

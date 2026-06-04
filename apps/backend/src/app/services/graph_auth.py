@@ -14,4 +14,5 @@ class GraphAuthService:
         return self._credential
 
     def get_client(self) -> GraphServiceClient:
+        """Return a new GraphServiceClient backed by the stored credential."""
         return GraphServiceClient(credentials=self._credential)
