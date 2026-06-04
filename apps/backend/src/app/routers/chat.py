@@ -7,9 +7,10 @@ from fastapi.responses import StreamingResponse
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel
 
+from app.auth import require_auth
 from app.session import append_to_history, get_history
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_auth)])
 
 
 class ChatRequest(BaseModel):

@@ -89,6 +89,16 @@ def reset_sessions():
     reset_all()
 
 
+@pytest.fixture(autouse=True)
+def override_auth():
+    from app.main import app
+    from app.auth import require_auth
+
+    app.dependency_overrides[require_auth] = lambda: {"sub": "test-user"}
+    yield
+    app.dependency_overrides.pop(require_auth, None)
+
+
 @pytest.mark.asyncio
 async def test_chat_returns_sse_content_type():
     from app.main import app
