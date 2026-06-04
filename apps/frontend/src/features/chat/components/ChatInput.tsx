@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { ArrowUp } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -13,15 +13,6 @@ interface ChatInputProps {
 
 export function ChatInput({ onSubmit, disabled = false }: ChatInputProps) {
   const [value, setValue] = useState('')
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  // Auto-resize textarea as content grows
-  useEffect(() => {
-    const el = textareaRef.current
-    if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${Math.min(el.scrollHeight, 160)}px`
-  }, [value])
 
   const handleSubmit = () => {
     const trimmed = value.trim()
@@ -40,7 +31,6 @@ export function ChatInput({ onSubmit, disabled = false }: ChatInputProps) {
   return (
     <div className="flex items-end gap-2">
       <Textarea
-        ref={textareaRef}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
