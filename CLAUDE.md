@@ -32,10 +32,6 @@ Always use these exact versions. Do not introduce alternative libraries without 
 - **Secrets:** never committed. Use `.env` locally (gitignored). In production, secrets come from Azure Key Vault via managed identity.
 - **TDD:** write the failing test first, confirm red, implement, confirm green, then commit.
 - **Commits:** conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `style:`). Include the story ID in the message where applicable, e.g. `feat(backend): add count_rows tool (BE-04)`.
-- **Commit frequently** — after each logical unit of work (failing test, implementation, lint fix). Do not batch unrelated changes into one commit.
-- **Branch naming:** `feature/<story-id>-<short-description>` (e.g. `feature/BE-01-graph-auth`). Branch off `main`; merge via PR.
-- **Push:** push the branch to origin after each story is complete and before opening a PR. Never force-push to `main`.
-- **Pull requests:** one PR per story. Title format: `[STORY-ID] Story title` (e.g. `[BE-01] Entra App Registration & Graph Auth`). PR body should summarise what was built and link the story note in the vault.
 
 ## Memory — Obsidian vault
 
