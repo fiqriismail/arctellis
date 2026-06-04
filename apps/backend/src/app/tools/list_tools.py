@@ -122,13 +122,13 @@ def make_tools(service: SharePointService) -> list:
             elif aggregate_func == "sum":
                 nums = [_parse_number(v) for v in vals]
                 nums = [n for n in nums if n is not None]
-                agg_result = str(sum(nums)) if nums else "No parseable numeric values in this group."
+                no_values_msg = "No parseable numeric values in this group."
+                agg_result = str(sum(nums)) if nums else no_values_msg
             else:  # average
                 nums = [_parse_number(v) for v in vals]
                 nums = [n for n in nums if n is not None]
-                agg_result = (
-                    str(sum(nums) / len(nums)) if nums else "No parseable numeric values in this group."
-                )
+                no_values_msg = "No parseable numeric values in this group."
+                agg_result = str(sum(nums) / len(nums)) if nums else no_values_msg
             lines.append(f"{group_val}: {agg_result}")
         return "\n".join(lines)
 

@@ -4,8 +4,8 @@ import pytest
 
 from app.services.sharepoint import ColumnDefinition, ListItem
 
-
 # --- _parse_number ---
+
 
 def test_parse_number_valid_float():
     from app.tools.list_tools import _parse_number
@@ -39,6 +39,7 @@ def test_parse_number_actual_float():
 
 # --- get_schema tool ---
 
+
 @pytest.mark.asyncio
 async def test_get_schema_returns_column_names_and_types():
     from app.tools.list_tools import make_tools
@@ -47,7 +48,9 @@ async def test_get_schema_returns_column_names_and_types():
     mock_service.get_schema = AsyncMock(
         return_value=[
             ColumnDefinition(name="Title", display_name="Title", column_type="text"),
-            ColumnDefinition(name="Budget", display_name="Budget", column_type="number"),
+            ColumnDefinition(
+                name="Budget", display_name="Budget", column_type="number"
+            ),
         ]
     )
 
@@ -76,6 +79,7 @@ async def test_get_schema_empty_list():
 
 
 # --- filter_rows tool ---
+
 
 @pytest.mark.asyncio
 async def test_filter_rows_returns_json_fields():
@@ -143,6 +147,7 @@ async def test_filter_rows_no_results():
 
 # --- count_rows tool ---
 
+
 @pytest.mark.asyncio
 async def test_count_rows_returns_count():
     from app.tools.list_tools import make_tools
@@ -194,6 +199,7 @@ async def test_count_rows_passes_filter():
 
 # --- sum_column tool ---
 
+
 @pytest.mark.asyncio
 async def test_sum_column_sums_numeric_values():
     from app.tools.list_tools import make_tools
@@ -222,8 +228,8 @@ async def test_sum_column_skips_unparseable_rows():
     mock_service.get_items = AsyncMock(
         return_value=[
             ListItem(id="1", fields={"Budget": "1000"}),
-            ListItem(id="2", fields={"Budget": "N/A"}),   # unparseable — skipped
-            ListItem(id="3", fields={"Budget": None}),     # None — skipped
+            ListItem(id="2", fields={"Budget": "N/A"}),  # unparseable — skipped
+            ListItem(id="3", fields={"Budget": None}),  # None — skipped
         ]
     )
 
@@ -254,6 +260,7 @@ async def test_sum_column_no_parseable_values():
 
 # --- average_column tool ---
 
+
 @pytest.mark.asyncio
 async def test_average_column_returns_average():
     from app.tools.list_tools import make_tools
@@ -282,7 +289,7 @@ async def test_average_column_skips_unparseable_rows():
     mock_service.get_items = AsyncMock(
         return_value=[
             ListItem(id="1", fields={"Score": "10"}),
-            ListItem(id="2", fields={"Score": "bad"}),   # skipped
+            ListItem(id="2", fields={"Score": "bad"}),  # skipped
             ListItem(id="3", fields={"Score": "30"}),
         ]
     )
@@ -314,6 +321,7 @@ async def test_average_column_no_parseable_values():
 
 # --- group_and_aggregate tool ---
 
+
 @pytest.mark.asyncio
 async def test_group_and_aggregate_count():
     from app.tools.list_tools import make_tools
@@ -329,12 +337,14 @@ async def test_group_and_aggregate_count():
 
     tools = make_tools(mock_service)
     group_tool = next(t for t in tools if t.name == "group_and_aggregate")
-    result = await group_tool.ainvoke({
-        "group_by_column": "Status",
-        "aggregate_column": "Budget",
-        "aggregate_func": "count",
-        "odata_filter": "",
-    })
+    result = await group_tool.ainvoke(
+        {
+            "group_by_column": "Status",
+            "aggregate_column": "Budget",
+            "aggregate_func": "count",
+            "odata_filter": "",
+        }
+    )
 
     assert "Active: 2" in result
     assert "Closed: 1" in result
@@ -355,12 +365,14 @@ async def test_group_and_aggregate_sum():
 
     tools = make_tools(mock_service)
     group_tool = next(t for t in tools if t.name == "group_and_aggregate")
-    result = await group_tool.ainvoke({
-        "group_by_column": "Dept",
-        "aggregate_column": "Budget",
-        "aggregate_func": "sum",
-        "odata_filter": "",
-    })
+    result = await group_tool.ainvoke(
+        {
+            "group_by_column": "Dept",
+            "aggregate_column": "Budget",
+            "aggregate_func": "sum",
+            "odata_filter": "",
+        }
+    )
 
     assert "Finance: 3000.0" in result
     assert "IT: 500.0" in result
@@ -381,12 +393,14 @@ async def test_group_and_aggregate_average():
 
     tools = make_tools(mock_service)
     group_tool = next(t for t in tools if t.name == "group_and_aggregate")
-    result = await group_tool.ainvoke({
-        "group_by_column": "Dept",
-        "aggregate_column": "Score",
-        "aggregate_func": "average",
-        "odata_filter": "",
-    })
+    result = await group_tool.ainvoke(
+        {
+            "group_by_column": "Dept",
+            "aggregate_column": "Score",
+            "aggregate_func": "average",
+            "odata_filter": "",
+        }
+    )
 
     assert "Finance: 90.0" in result
     assert "IT: 90.0" in result
@@ -406,12 +420,14 @@ async def test_group_and_aggregate_skips_unparseable_in_sum():
 
     tools = make_tools(mock_service)
     group_tool = next(t for t in tools if t.name == "group_and_aggregate")
-    result = await group_tool.ainvoke({
-        "group_by_column": "Dept",
-        "aggregate_column": "Budget",
-        "aggregate_func": "sum",
-        "odata_filter": "",
-    })
+    result = await group_tool.ainvoke(
+        {
+            "group_by_column": "Dept",
+            "aggregate_column": "Budget",
+            "aggregate_func": "sum",
+            "odata_filter": "",
+        }
+    )
 
     assert "Finance: 1000.0" in result
 
@@ -425,12 +441,14 @@ async def test_group_and_aggregate_invalid_func():
 
     tools = make_tools(mock_service)
     group_tool = next(t for t in tools if t.name == "group_and_aggregate")
-    result = await group_tool.ainvoke({
-        "group_by_column": "Dept",
-        "aggregate_column": "Budget",
-        "aggregate_func": "median",
-        "odata_filter": "",
-    })
+    result = await group_tool.ainvoke(
+        {
+            "group_by_column": "Dept",
+            "aggregate_column": "Budget",
+            "aggregate_func": "median",
+            "odata_filter": "",
+        }
+    )
 
     assert "Invalid" in result
 
@@ -444,11 +462,13 @@ async def test_group_and_aggregate_empty_list():
 
     tools = make_tools(mock_service)
     group_tool = next(t for t in tools if t.name == "group_and_aggregate")
-    result = await group_tool.ainvoke({
-        "group_by_column": "Dept",
-        "aggregate_column": "Budget",
-        "aggregate_func": "count",
-        "odata_filter": "",
-    })
+    result = await group_tool.ainvoke(
+        {
+            "group_by_column": "Dept",
+            "aggregate_column": "Budget",
+            "aggregate_func": "count",
+            "odata_filter": "",
+        }
+    )
 
     assert "No rows" in result
