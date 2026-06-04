@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -8,6 +9,27 @@ from urllib.parse import urlparse
 from kiota_abstractions.base_request_configuration import RequestConfiguration
 from msgraph import GraphServiceClient
 from msgraph.generated.sites.item.lists.item.items import items_request_builder
+
+
+class _TTLCache:
+    """Simple in-memory TTL cache backed by a dict and monotonic timestamps."""
+
+    def __init__(self, ttl: int) -> None:
+        self._ttl = ttl
+        self._store: dict[str, tuple[Any, float]] = {}
+
+    def get(self, key: str) -> Any:
+        entry = self._store.get(key)
+        if entry is None:
+            return None
+        value, expiry = entry
+        if time.monotonic() >= expiry:
+            del self._store[key]
+            return None
+        return value
+
+    def set(self, key: str, value: Any) -> None:
+        self._store[key] = (value, time.monotonic() + self._ttl)
 
 
 @dataclass
@@ -31,10 +53,12 @@ class SharePointService:
         client: GraphServiceClient,
         site_id: str,
         list_id: str,
+        cache_ttl: int = 60,
     ) -> None:
         self._client = client
         self._site_id = site_id
         self._list_id = list_id
+        self._cache = _TTLCache(ttl=cache_ttl)
 
     @staticmethod
     def _infer_column_type(col: Any) -> str:
@@ -77,6 +101,9 @@ class SharePointService:
         return str(value)
 
     async def get_schema(self) -> list[ColumnDefinition]:
+        cached = self._cache.get("schema")
+        if cached is not None:
+            return cached
         result = await (
             self._client.sites.by_site_id(self._site_id)
             .lists.by_list_id(self._list_id)
@@ -84,6 +111,7 @@ class SharePointService:
         )
         columns: list[ColumnDefinition] = []
         if not result or not result.value:
+            self._cache.set("schema", columns)
             return columns
         for col in result.value:
             if col.hidden or not col.name:
@@ -95,9 +123,15 @@ class SharePointService:
                     column_type=self._infer_column_type(col),
                 )
             )
+        self._cache.set("schema", columns)
         return columns
 
     async def get_items(self, odata_filter: str | None = None) -> list[ListItem]:
+        cache_key = f"items:{odata_filter or ''}"
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         builder = items_request_builder.ItemsRequestBuilder
         query_params = builder.ItemsRequestBuilderGetQueryParameters(expand=["fields"])
         if odata_filter:
@@ -115,6 +149,7 @@ class SharePointService:
         # odata_next_link not implemented.
         items: list[ListItem] = []
         if not result or not result.value:
+            self._cache.set(cache_key, items)
             return items
 
         for item in result.value:
@@ -123,6 +158,7 @@ class SharePointService:
                 fields = dict(item.fields.additional_data)
             items.append(ListItem(id=item.id or "", fields=fields))
 
+        self._cache.set(cache_key, items)
         return items
 
 
@@ -144,4 +180,5 @@ async def create_sharepoint_service(
         client=client,
         site_id=site.id,
         list_id=settings.sharepoint_list_id,
+        cache_ttl=settings.cache_ttl_seconds,
     )

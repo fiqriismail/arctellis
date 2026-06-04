@@ -1,3 +1,4 @@
+import time
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -403,3 +404,274 @@ async def test_create_sharepoint_service_resolves_site_id():
     mock_client.sites.by_site_id.assert_called_once_with(
         "barringtondigital.sharepoint.com:/sites/Procurement"
     )
+
+
+# --- _TTLCache tests ---
+
+
+def test_ttl_cache_get_returns_value_before_expiry():
+    from app.services.sharepoint import _TTLCache
+
+    cache = _TTLCache(ttl=60)
+    cache.set("key1", ["data"])
+    result = cache.get("key1")
+    assert result == ["data"]
+
+
+def test_ttl_cache_get_returns_none_for_missing_key():
+    from app.services.sharepoint import _TTLCache
+
+    cache = _TTLCache(ttl=60)
+    assert cache.get("missing") is None
+
+
+def test_ttl_cache_get_returns_none_after_expiry():
+    from app.services.sharepoint import _TTLCache
+
+    cache = _TTLCache(ttl=0)  # expires immediately
+    cache.set("key1", "value")
+    time.sleep(0.01)  # tiny sleep ensures monotonic clock has advanced
+    assert cache.get("key1") is None
+
+
+def test_ttl_cache_set_overwrites_existing_key():
+    from app.services.sharepoint import _TTLCache
+
+    cache = _TTLCache(ttl=60)
+    cache.set("key1", "first")
+    cache.set("key1", "second")
+    assert cache.get("key1") == "second"
+
+
+def test_ttl_cache_different_keys_are_independent():
+    from app.services.sharepoint import _TTLCache
+
+    cache = _TTLCache(ttl=60)
+    cache.set("a", 1)
+    cache.set("b", 2)
+    assert cache.get("a") == 1
+    assert cache.get("b") == 2
+
+
+def test_sharepoint_service_creates_cache_with_given_ttl():
+    from app.services.sharepoint import SharePointService, _TTLCache
+
+    mock_client = MagicMock()
+    service = SharePointService(
+        client=mock_client, site_id="s", list_id="l", cache_ttl=30
+    )
+    assert isinstance(service._cache, _TTLCache)
+    assert service._cache._ttl == 30
+
+
+def test_sharepoint_service_default_cache_ttl_is_60():
+    from app.services.sharepoint import SharePointService, _TTLCache
+
+    mock_client = MagicMock()
+    service = SharePointService(client=mock_client, site_id="s", list_id="l")
+    assert isinstance(service._cache, _TTLCache)
+    assert service._cache._ttl == 60
+
+
+@pytest.mark.asyncio
+async def test_get_schema_cached_on_second_call():
+    from app.services.sharepoint import SharePointService
+
+    mock_col = MagicMock()
+    mock_col.name = "Title"
+    mock_col.display_name = "Title"
+    mock_col.hidden = False
+    mock_col.number = None
+    mock_col.date_time = None
+    mock_col.boolean = None
+    mock_col.choice = None
+    mock_col.lookup = None
+    mock_col.person_or_group = None
+
+    mock_response = MagicMock()
+    mock_response.value = [mock_col]
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_site = mock_client.sites.by_site_id.return_value
+    mock_list = mock_site.lists.by_list_id.return_value
+    mock_list.columns.get = get_mock
+
+    service = SharePointService(
+        client=mock_client, site_id="s", list_id="l", cache_ttl=60
+    )
+
+    first = await service.get_schema()
+    second = await service.get_schema()
+
+    assert first == second
+    assert get_mock.call_count == 1  # Graph called only once
+
+
+@pytest.mark.asyncio
+async def test_get_schema_refetches_after_ttl_expiry():
+    from app.services.sharepoint import SharePointService
+
+    mock_col = MagicMock()
+    mock_col.name = "Title"
+    mock_col.display_name = "Title"
+    mock_col.hidden = False
+    mock_col.number = None
+    mock_col.date_time = None
+    mock_col.boolean = None
+    mock_col.choice = None
+    mock_col.lookup = None
+    mock_col.person_or_group = None
+
+    mock_response = MagicMock()
+    mock_response.value = [mock_col]
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_site = mock_client.sites.by_site_id.return_value
+    mock_list = mock_site.lists.by_list_id.return_value
+    mock_list.columns.get = get_mock
+
+    service = SharePointService(
+        client=mock_client, site_id="s", list_id="l", cache_ttl=0
+    )
+
+    await service.get_schema()
+    time.sleep(0.01)
+    await service.get_schema()
+
+    assert get_mock.call_count == 2  # Graph called again after expiry
+
+
+@pytest.mark.asyncio
+async def test_get_items_cached_on_second_call():
+    from app.services.sharepoint import SharePointService
+
+    mock_fields = MagicMock()
+    mock_fields.additional_data = {"Title": "Row 1"}
+    mock_item = MagicMock()
+    mock_item.id = "1"
+    mock_item.fields = mock_fields
+    mock_response = MagicMock()
+    mock_response.value = [mock_item]
+    mock_response.odata_next_link = None
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_site = mock_client.sites.by_site_id.return_value
+    mock_list = mock_site.lists.by_list_id.return_value
+    mock_list.items.get = get_mock
+
+    service = SharePointService(
+        client=mock_client, site_id="s", list_id="l", cache_ttl=60
+    )
+
+    first = await service.get_items()
+    second = await service.get_items()
+
+    assert first == second
+    assert get_mock.call_count == 1  # Graph called only once
+
+
+@pytest.mark.asyncio
+async def test_get_items_different_filters_have_separate_cache_keys():
+    from app.services.sharepoint import SharePointService
+
+    mock_response = MagicMock()
+    mock_response.value = []
+    mock_response.odata_next_link = None
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_site = mock_client.sites.by_site_id.return_value
+    mock_list = mock_site.lists.by_list_id.return_value
+    mock_list.items.get = get_mock
+
+    service = SharePointService(
+        client=mock_client, site_id="s", list_id="l", cache_ttl=60
+    )
+
+    await service.get_items(odata_filter="fields/Status eq 'Active'")
+    await service.get_items(odata_filter="fields/Status eq 'Closed'")
+
+    # Two different filters → two Graph calls (no cache collision)
+    assert get_mock.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_get_items_refetches_after_ttl_expiry():
+    from app.services.sharepoint import SharePointService
+
+    mock_response = MagicMock()
+    mock_response.value = []
+    mock_response.odata_next_link = None
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_site = mock_client.sites.by_site_id.return_value
+    mock_list = mock_site.lists.by_list_id.return_value
+    mock_list.items.get = get_mock
+
+    service = SharePointService(
+        client=mock_client, site_id="s", list_id="l", cache_ttl=0
+    )
+
+    await service.get_items()
+    time.sleep(0.01)
+    await service.get_items()
+
+    assert get_mock.call_count == 2  # Refetched after TTL expiry
+
+
+@pytest.mark.asyncio
+async def test_get_items_same_filter_reuses_cache():
+    from app.services.sharepoint import SharePointService
+
+    mock_response = MagicMock()
+    mock_response.value = []
+    mock_response.odata_next_link = None
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_site = mock_client.sites.by_site_id.return_value
+    mock_list = mock_site.lists.by_list_id.return_value
+    mock_list.items.get = get_mock
+
+    service = SharePointService(
+        client=mock_client, site_id="s", list_id="l", cache_ttl=60
+    )
+
+    f = "fields/Status eq 'Active'"
+    await service.get_items(odata_filter=f)
+    await service.get_items(odata_filter=f)
+
+    # Same filter → cache hit on second call
+    assert get_mock.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_create_sharepoint_service_passes_cache_ttl():
+    from app.services.sharepoint import SharePointService, create_sharepoint_service
+
+    mock_site = MagicMock()
+    mock_site.id = "barringtondigital.sharepoint.com,abc,def"
+
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.get = AsyncMock(return_value=mock_site)
+
+    mock_auth = MagicMock()
+    mock_auth.get_client.return_value = mock_client
+
+    mock_settings = MagicMock()
+    mock_settings.sharepoint_site_url = (
+        "https://barringtondigital.sharepoint.com/sites/Procurement"
+    )
+    mock_settings.sharepoint_list_id = "37b0d45b-4f69-42cf-b26f-7112033a83fb"
+    mock_settings.cache_ttl_seconds = 120
+
+    service = await create_sharepoint_service(
+        auth_service=mock_auth, settings=mock_settings
+    )
+
+    assert isinstance(service, SharePointService)
+    assert service._cache._ttl == 120
