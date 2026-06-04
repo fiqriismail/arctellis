@@ -81,7 +81,65 @@ def make_tools(service: SharePointService) -> list:
             return f"No parseable numeric values found in column '{column_name}'."
         return str(total / parsed_count)
 
-    return [get_schema, filter_rows, count_rows, sum_column, average_column]
+    @tool
+    async def group_and_aggregate(
+        group_by_column: str,
+        aggregate_column: str,
+        aggregate_func: str,
+        odata_filter: str = "",
+    ) -> str:
+        """Group rows by one column and aggregate another column.
+        group_by_column: column to group by (exact name from get_schema).
+        aggregate_column: column to aggregate (exact name from get_schema).
+        aggregate_func: one of 'count', 'sum', or 'average'.
+          - count: count all rows in each group.
+          - sum: sum numeric values in aggregate_column per group.
+          - average: average numeric values in aggregate_column per group.
+        odata_filter: optional OData filter applied before grouping.
+        Rows whose aggregate_column cannot be parsed as a number are skipped
+        (for sum and average only).
+        Returns one line per group: 'group_value: result'."""
+        if aggregate_func not in ("count", "sum", "average"):
+            return (
+                f"Invalid aggregate_func '{aggregate_func}'. "
+                "Must be 'count', 'sum', or 'average'."
+            )
+        items = await service.get_items(odata_filter=odata_filter or None)
+        if not items:
+            return "No rows found."
+
+        groups: dict[str, list[Any]] = {}
+        for item in items:
+            group_val = str(item.fields.get(group_by_column, "(blank)"))
+            if group_val not in groups:
+                groups[group_val] = []
+            groups[group_val].append(item.fields.get(aggregate_column))
+
+        lines = []
+        for group_val, vals in sorted(groups.items()):
+            if aggregate_func == "count":
+                agg_result = str(len(vals))
+            elif aggregate_func == "sum":
+                nums = [_parse_number(v) for v in vals]
+                nums = [n for n in nums if n is not None]
+                agg_result = str(sum(nums)) if nums else "0 (no parseable values)"
+            else:  # average
+                nums = [_parse_number(v) for v in vals]
+                nums = [n for n in nums if n is not None]
+                agg_result = (
+                    str(sum(nums) / len(nums)) if nums else "0 (no parseable values)"
+                )
+            lines.append(f"{group_val}: {agg_result}")
+        return "\n".join(lines)
+
+    return [
+        get_schema,
+        filter_rows,
+        count_rows,
+        sum_column,
+        average_column,
+        group_and_aggregate,
+    ]
 
 
 def _parse_number(value: Any) -> float | None:

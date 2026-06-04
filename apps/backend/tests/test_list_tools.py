@@ -310,3 +310,145 @@ async def test_average_column_no_parseable_values():
     result = await avg_tool.ainvoke({"column_name": "Score", "odata_filter": ""})
 
     assert "No parseable" in result
+
+
+# --- group_and_aggregate tool ---
+
+@pytest.mark.asyncio
+async def test_group_and_aggregate_count():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_items = AsyncMock(
+        return_value=[
+            ListItem(id="1", fields={"Status": "Active", "Budget": "1000"}),
+            ListItem(id="2", fields={"Status": "Active", "Budget": "2000"}),
+            ListItem(id="3", fields={"Status": "Closed", "Budget": "500"}),
+        ]
+    )
+
+    tools = make_tools(mock_service)
+    group_tool = next(t for t in tools if t.name == "group_and_aggregate")
+    result = await group_tool.ainvoke({
+        "group_by_column": "Status",
+        "aggregate_column": "Budget",
+        "aggregate_func": "count",
+        "odata_filter": "",
+    })
+
+    assert "Active: 2" in result
+    assert "Closed: 1" in result
+
+
+@pytest.mark.asyncio
+async def test_group_and_aggregate_sum():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_items = AsyncMock(
+        return_value=[
+            ListItem(id="1", fields={"Dept": "Finance", "Budget": "1000"}),
+            ListItem(id="2", fields={"Dept": "Finance", "Budget": "2000"}),
+            ListItem(id="3", fields={"Dept": "IT", "Budget": "500"}),
+        ]
+    )
+
+    tools = make_tools(mock_service)
+    group_tool = next(t for t in tools if t.name == "group_and_aggregate")
+    result = await group_tool.ainvoke({
+        "group_by_column": "Dept",
+        "aggregate_column": "Budget",
+        "aggregate_func": "sum",
+        "odata_filter": "",
+    })
+
+    assert "Finance: 3000.0" in result
+    assert "IT: 500.0" in result
+
+
+@pytest.mark.asyncio
+async def test_group_and_aggregate_average():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_items = AsyncMock(
+        return_value=[
+            ListItem(id="1", fields={"Dept": "Finance", "Score": "80"}),
+            ListItem(id="2", fields={"Dept": "Finance", "Score": "100"}),
+            ListItem(id="3", fields={"Dept": "IT", "Score": "90"}),
+        ]
+    )
+
+    tools = make_tools(mock_service)
+    group_tool = next(t for t in tools if t.name == "group_and_aggregate")
+    result = await group_tool.ainvoke({
+        "group_by_column": "Dept",
+        "aggregate_column": "Score",
+        "aggregate_func": "average",
+        "odata_filter": "",
+    })
+
+    assert "Finance: 90.0" in result
+    assert "IT: 90.0" in result
+
+
+@pytest.mark.asyncio
+async def test_group_and_aggregate_skips_unparseable_in_sum():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_items = AsyncMock(
+        return_value=[
+            ListItem(id="1", fields={"Dept": "Finance", "Budget": "1000"}),
+            ListItem(id="2", fields={"Dept": "Finance", "Budget": "N/A"}),  # skipped
+        ]
+    )
+
+    tools = make_tools(mock_service)
+    group_tool = next(t for t in tools if t.name == "group_and_aggregate")
+    result = await group_tool.ainvoke({
+        "group_by_column": "Dept",
+        "aggregate_column": "Budget",
+        "aggregate_func": "sum",
+        "odata_filter": "",
+    })
+
+    assert "Finance: 1000.0" in result
+
+
+@pytest.mark.asyncio
+async def test_group_and_aggregate_invalid_func():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_items = AsyncMock(return_value=[])
+
+    tools = make_tools(mock_service)
+    group_tool = next(t for t in tools if t.name == "group_and_aggregate")
+    result = await group_tool.ainvoke({
+        "group_by_column": "Dept",
+        "aggregate_column": "Budget",
+        "aggregate_func": "median",
+        "odata_filter": "",
+    })
+
+    assert "Invalid" in result
+
+
+@pytest.mark.asyncio
+async def test_group_and_aggregate_empty_list():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_items = AsyncMock(return_value=[])
+
+    tools = make_tools(mock_service)
+    group_tool = next(t for t in tools if t.name == "group_and_aggregate")
+    result = await group_tool.ainvoke({
+        "group_by_column": "Dept",
+        "aggregate_column": "Budget",
+        "aggregate_func": "count",
+        "odata_filter": "",
+    })
+
+    assert "No rows" in result
