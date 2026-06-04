@@ -103,7 +103,9 @@ The components map directly to the layers in PRD §6.2.
 
 **Responsibility:** understand the question, decide which tools to call, and phrase the final answer — nothing else.
 
-- Agent with tool calling via `langchain-openai`'s `ChatOpenAI` against OpenAI's API (PRD §6.1).
+- Agent created with `create_agent()` from `langchain.agents`, backed by LangGraph for durable execution (PRD §6.1).
+- Model initialised via `init_chat_model("openai:gpt-4o")` from `langchain.chat_models`; `langchain-openai` remains the provider package.
+- Tools defined with the `@tool` decorator (`langchain.tools`) — type hints and docstrings become the schema the model uses to choose tools and arguments.
 - The model selects tools and arguments; it does **not** compute facts or figures (FR-7, §6.3).
 - Handles ambiguity by asking a clarifying question, and declines unrelated questions politely (FR-10, FR-11).
 - Tool names, descriptions, and argument schemas are written carefully — the model's correctness depends on them (§6.3, NFR-6).
