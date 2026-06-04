@@ -26,7 +26,7 @@ def build_agent(service: SharePointService, settings: Settings) -> CompiledState
     tools = make_tools(service)
     llm = ChatOpenAI(
         model=settings.openai_model,
-        api_key=settings.openai_api_key,  # type: ignore[arg-type]
+        api_key=settings.openai_api_key,
     )
     return create_agent(
         model=llm,

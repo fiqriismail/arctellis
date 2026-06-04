@@ -48,6 +48,7 @@ def test_build_agent_passes_correct_model_string():
         llm = kwargs["model"]
         assert isinstance(llm, ChatOpenAI)
         assert llm.model_name == "gpt-4o"
+        assert llm.openai_api_key.get_secret_value() == "sk-test"
 
 
 def test_build_agent_registers_all_six_tools():

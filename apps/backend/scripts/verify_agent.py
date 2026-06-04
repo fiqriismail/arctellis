@@ -41,10 +41,16 @@ async def verify() -> None:
     print("3. Question: What columns are available in this list?")
     answer = await invoke_agent(agent, "What columns are available in this list?")
     print(f"   Answer: {answer[:300]}\n")
+    if not answer or len(answer) < 20:
+        print("   FAIL — answer looks too short, agent may not have called get_schema")
+        sys.exit(1)
 
     print("4. Question: How many items are in the list?")
     answer = await invoke_agent(agent, "How many items are in the list?")
     print(f"   Answer: {answer}\n")
+    if not any(c.isdigit() for c in answer):
+        print("   FAIL — answer contains no number, agent may not have called count_rows")
+        sys.exit(1)
 
     print("5. Question: What is the weather today? (should politely decline)")
     answer = await invoke_agent(agent, "What is the weather today?")
