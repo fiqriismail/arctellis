@@ -11,6 +11,7 @@ from app.services.sharepoint import create_sharepoint_service
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Skipped in tests: test fixtures set app.state.agent before requests.
     if not hasattr(app.state, "agent"):
         settings = get_settings()
         auth = GraphAuthService(

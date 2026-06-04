@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from langgraph.graph.state import CompiledStateGraph
@@ -39,9 +41,16 @@ async def chat(
                         token = chunk.content
                         full_response.append(token)
                         yield f"data: {token}\n\n"
-            append_to_history(body.session_id, "assistant", "".join(full_response))
             yield "data: [DONE]\n\n"
         except Exception:
+            logging.exception(
+                "Agent streaming error for session %s", body.session_id
+            )
             yield "data: [ERROR] An error occurred. Please try again.\n\n"
+        finally:
+            if full_response:
+                append_to_history(
+                    body.session_id, "assistant", "".join(full_response)
+                )
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
