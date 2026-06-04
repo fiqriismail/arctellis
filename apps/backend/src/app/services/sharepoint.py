@@ -70,3 +70,24 @@ class SharePointService:
                 return value.lower() in ("true", "1", "yes")
             return bool(value)
         return str(value)
+
+    async def get_schema(self) -> list[ColumnDefinition]:
+        result = await (
+            self._client.sites.by_site_id(self._site_id)
+            .lists.by_list_id(self._list_id)
+            .columns.get()
+        )
+        columns: list[ColumnDefinition] = []
+        if not result or not result.value:
+            return columns
+        for col in result.value:
+            if col.hidden or not col.name:
+                continue
+            columns.append(
+                ColumnDefinition(
+                    name=col.name,
+                    display_name=col.display_name or col.name,
+                    column_type=self._infer_column_type(col),
+                )
+            )
+        return columns

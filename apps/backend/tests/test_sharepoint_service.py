@@ -1,4 +1,5 @@
-from unittest.mock import MagicMock
+import pytest
+from unittest.mock import AsyncMock, MagicMock
 
 
 def test_column_definition_stores_fields():
@@ -178,3 +179,100 @@ def test_infer_column_type_person():
     mock_col.lookup = None
     mock_col.person_or_group = MagicMock()
     assert SharePointService._infer_column_type(mock_col) == "person"
+
+
+@pytest.mark.asyncio
+async def test_get_schema_returns_column_definitions():
+    from app.services.sharepoint import SharePointService
+
+    mock_col1 = MagicMock()
+    mock_col1.name = "Title"
+    mock_col1.display_name = "Title"
+    mock_col1.hidden = False
+    mock_col1.number = None
+    mock_col1.date_time = None
+    mock_col1.boolean = None
+    mock_col1.choice = None
+    mock_col1.lookup = None
+    mock_col1.person_or_group = None
+
+    mock_col2 = MagicMock()
+    mock_col2.name = "Budget"
+    mock_col2.display_name = "Budget"
+    mock_col2.hidden = False
+    mock_col2.number = MagicMock()
+    mock_col2.date_time = None
+    mock_col2.boolean = None
+    mock_col2.choice = None
+    mock_col2.lookup = None
+    mock_col2.person_or_group = None
+
+    mock_response = MagicMock()
+    mock_response.value = [mock_col1, mock_col2]
+
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.columns.get = AsyncMock(
+        return_value=mock_response
+    )
+
+    service = SharePointService(client=mock_client, site_id="site-1", list_id="list-1")
+    columns = await service.get_schema()
+
+    assert len(columns) == 2
+    assert columns[0].name == "Title"
+    assert columns[0].column_type == "text"
+    assert columns[1].name == "Budget"
+    assert columns[1].column_type == "number"
+
+
+@pytest.mark.asyncio
+async def test_get_schema_skips_hidden_columns():
+    from app.services.sharepoint import SharePointService
+
+    mock_visible = MagicMock()
+    mock_visible.name = "Status"
+    mock_visible.display_name = "Status"
+    mock_visible.hidden = False
+    mock_visible.number = None
+    mock_visible.date_time = None
+    mock_visible.boolean = None
+    mock_visible.choice = MagicMock()
+    mock_visible.lookup = None
+    mock_visible.person_or_group = None
+
+    mock_hidden = MagicMock()
+    mock_hidden.name = "_UIVersionString"
+    mock_hidden.display_name = "UI Version"
+    mock_hidden.hidden = True
+
+    mock_response = MagicMock()
+    mock_response.value = [mock_visible, mock_hidden]
+
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.columns.get = AsyncMock(
+        return_value=mock_response
+    )
+
+    service = SharePointService(client=mock_client, site_id="site-1", list_id="list-1")
+    columns = await service.get_schema()
+
+    assert len(columns) == 1
+    assert columns[0].name == "Status"
+    assert columns[0].column_type == "choice"
+
+
+@pytest.mark.asyncio
+async def test_get_schema_returns_empty_on_no_columns():
+    from app.services.sharepoint import SharePointService
+
+    mock_response = MagicMock()
+    mock_response.value = []
+
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.columns.get = AsyncMock(
+        return_value=mock_response
+    )
+
+    service = SharePointService(client=mock_client, site_id="site-1", list_id="list-1")
+    columns = await service.get_schema()
+    assert columns == []
