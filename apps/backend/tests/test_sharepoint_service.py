@@ -139,3 +139,42 @@ def test_safe_parse_text_returns_string():
     from app.services.sharepoint import SharePointService
 
     assert SharePointService._safe_parse("hello", "text") == "hello"
+
+
+def test_infer_column_type_choice():
+    from app.services.sharepoint import SharePointService
+
+    mock_col = MagicMock()
+    mock_col.number = None
+    mock_col.date_time = None
+    mock_col.boolean = None
+    mock_col.choice = MagicMock()
+    mock_col.lookup = None
+    mock_col.person_or_group = None
+    assert SharePointService._infer_column_type(mock_col) == "choice"
+
+
+def test_infer_column_type_lookup():
+    from app.services.sharepoint import SharePointService
+
+    mock_col = MagicMock()
+    mock_col.number = None
+    mock_col.date_time = None
+    mock_col.boolean = None
+    mock_col.choice = None
+    mock_col.lookup = MagicMock()
+    mock_col.person_or_group = None
+    assert SharePointService._infer_column_type(mock_col) == "lookup"
+
+
+def test_infer_column_type_person():
+    from app.services.sharepoint import SharePointService
+
+    mock_col = MagicMock()
+    mock_col.number = None
+    mock_col.date_time = None
+    mock_col.boolean = None
+    mock_col.choice = None
+    mock_col.lookup = None
+    mock_col.person_or_group = MagicMock()
+    assert SharePointService._infer_column_type(mock_col) == "person"
