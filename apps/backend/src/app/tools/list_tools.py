@@ -34,7 +34,16 @@ def make_tools(service: SharePointService) -> list:
         rows = [item.fields for item in items]
         return json.dumps(rows, default=str)
 
-    return [get_schema, filter_rows]
+    @tool
+    async def count_rows(odata_filter: str = "") -> str:
+        """Count the number of rows in the SharePoint list matching an
+        optional filter (OData expression, e.g. \"fields/Status eq 'Active'\").
+        Leave odata_filter empty to count all rows.
+        Returns the count as a plain number."""
+        items = await service.get_items(odata_filter=odata_filter or None)
+        return str(len(items))
+
+    return [get_schema, filter_rows, count_rows]
 
 
 def _parse_number(value: Any) -> float | None:

@@ -139,3 +139,54 @@ async def test_filter_rows_no_results():
     result = await filter_rows_tool.ainvoke({"odata_filter": ""})
 
     assert "No rows" in result
+
+
+# --- count_rows tool ---
+
+@pytest.mark.asyncio
+async def test_count_rows_returns_count():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_items = AsyncMock(
+        return_value=[
+            ListItem(id="1", fields={"Title": "A"}),
+            ListItem(id="2", fields={"Title": "B"}),
+            ListItem(id="3", fields={"Title": "C"}),
+        ]
+    )
+
+    tools = make_tools(mock_service)
+    count_rows_tool = next(t for t in tools if t.name == "count_rows")
+    result = await count_rows_tool.ainvoke({"odata_filter": ""})
+
+    assert result == "3"
+
+
+@pytest.mark.asyncio
+async def test_count_rows_zero():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_items = AsyncMock(return_value=[])
+
+    tools = make_tools(mock_service)
+    count_rows_tool = next(t for t in tools if t.name == "count_rows")
+    result = await count_rows_tool.ainvoke({"odata_filter": ""})
+
+    assert result == "0"
+
+
+@pytest.mark.asyncio
+async def test_count_rows_passes_filter():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    get_items_mock = AsyncMock(return_value=[])
+    mock_service.get_items = get_items_mock
+
+    tools = make_tools(mock_service)
+    count_rows_tool = next(t for t in tools if t.name == "count_rows")
+    await count_rows_tool.ainvoke({"odata_filter": "fields/Status eq 'Active'"})
+
+    get_items_mock.assert_called_once_with(odata_filter="fields/Status eq 'Active'")
