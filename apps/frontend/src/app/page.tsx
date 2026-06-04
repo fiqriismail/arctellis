@@ -1,6 +1,12 @@
+'use client'
+
 import { ChatInput } from '@/features/chat/components/ChatInput'
 
 export default function HomePage() {
+  const handleSubmit = (question: string) => {
+    console.log('Question submitted:', question)
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="w-full max-w-2xl space-y-6">
@@ -15,7 +21,7 @@ export default function HomePage() {
         </div>
 
         {/* Input */}
-        <ChatInput onSubmit={(q) => console.log('Question submitted:', q)} />
+        <ChatInput onSubmit={handleSubmit} />
 
         {/* Keyboard hint */}
         <p className="text-center text-xs text-muted-foreground">
