@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
+from urllib.parse import urlparse
 
 from kiota_abstractions.base_request_configuration import RequestConfiguration
 from msgraph import GraphServiceClient
@@ -120,3 +121,20 @@ class SharePointService:
             items.append(ListItem(id=item.id or "", fields=fields))
 
         return items
+
+
+async def create_sharepoint_service(
+    auth_service: Any,
+    settings: Any,
+) -> SharePointService:
+    """Resolve site ID from URL and return a configured SharePointService."""
+    client = auth_service.get_client()
+    parsed = urlparse(settings.sharepoint_site_url)
+    hostname = parsed.netloc
+    site_path = parsed.path.rstrip("/")
+    site = await client.sites.by_site_id(f"{hostname}:{site_path}").get()
+    return SharePointService(
+        client=client,
+        site_id=site.id,
+        list_id=settings.sharepoint_list_id,
+    )
