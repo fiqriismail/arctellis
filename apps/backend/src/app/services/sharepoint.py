@@ -127,6 +127,11 @@ class SharePointService:
         return columns
 
     async def get_items(self, odata_filter: str | None = None) -> list[ListItem]:
+        cache_key = f"items:{odata_filter or ''}"
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         builder = items_request_builder.ItemsRequestBuilder
         query_params = builder.ItemsRequestBuilderGetQueryParameters(expand=["fields"])
         if odata_filter:
@@ -144,6 +149,7 @@ class SharePointService:
         # odata_next_link not implemented.
         items: list[ListItem] = []
         if not result or not result.value:
+            self._cache.set(cache_key, items)
             return items
 
         for item in result.value:
@@ -152,6 +158,7 @@ class SharePointService:
                 fields = dict(item.fields.additional_data)
             items.append(ListItem(id=item.id or "", fields=fields))
 
+        self._cache.set(cache_key, items)
         return items
 
 

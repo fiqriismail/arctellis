@@ -532,3 +532,93 @@ async def test_get_schema_refetches_after_ttl_expiry():
     await service.get_schema()
 
     assert get_mock.call_count == 2  # Graph called again after expiry
+
+
+@pytest.mark.asyncio
+async def test_get_items_cached_on_second_call():
+    from app.services.sharepoint import SharePointService
+
+    mock_fields = MagicMock()
+    mock_fields.additional_data = {"Title": "Row 1"}
+    mock_item = MagicMock()
+    mock_item.id = "1"
+    mock_item.fields = mock_fields
+    mock_response = MagicMock()
+    mock_response.value = [mock_item]
+    mock_response.odata_next_link = None
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.items.get = get_mock
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l", cache_ttl=60)
+
+    first = await service.get_items()
+    second = await service.get_items()
+
+    assert first == second
+    assert get_mock.call_count == 1  # Graph called only once
+
+
+@pytest.mark.asyncio
+async def test_get_items_different_filters_have_separate_cache_keys():
+    from app.services.sharepoint import SharePointService
+
+    mock_response = MagicMock()
+    mock_response.value = []
+    mock_response.odata_next_link = None
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.items.get = get_mock
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l", cache_ttl=60)
+
+    await service.get_items(odata_filter="fields/Status eq 'Active'")
+    await service.get_items(odata_filter="fields/Status eq 'Closed'")
+
+    # Two different filters → two Graph calls (no cache collision)
+    assert get_mock.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_get_items_refetches_after_ttl_expiry():
+    from app.services.sharepoint import SharePointService
+
+    mock_response = MagicMock()
+    mock_response.value = []
+    mock_response.odata_next_link = None
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.items.get = get_mock
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l", cache_ttl=0)
+
+    await service.get_items()
+    time.sleep(0.01)
+    await service.get_items()
+
+    assert get_mock.call_count == 2  # Refetched after TTL expiry
+
+
+@pytest.mark.asyncio
+async def test_get_items_same_filter_reuses_cache():
+    from app.services.sharepoint import SharePointService
+
+    mock_response = MagicMock()
+    mock_response.value = []
+    mock_response.odata_next_link = None
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.items.get = get_mock
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l", cache_ttl=60)
+
+    f = "fields/Status eq 'Active'"
+    await service.get_items(odata_filter=f)
+    await service.get_items(odata_filter=f)
+
+    # Same filter → cache hit on second call
+    assert get_mock.call_count == 1
