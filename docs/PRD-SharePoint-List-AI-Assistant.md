@@ -76,14 +76,14 @@ SharePoint lists are easy to populate but awkward to interrogate. Answering a qu
 - **Frontend:** Next.js (App Router) with shadcn/ui components (light theme), hosted on **Azure Static Web Apps**. A pure client of the backend; it holds no secrets and makes no direct Graph or LLM calls.
 - **Backend / host:** Python FastAPI service, packaged as a container and deployed as a **container-based application** (e.g. Azure Container Apps). Holds all AI orchestration, Graph access, and secrets server-side, and streams answers to the frontend.
 - **AI orchestration:** LangChain (agent with tool calling). LangChain tools are the boundary where the LLM's intent becomes deterministic Python code.
-- **LLM:** Azure OpenAI (chat completion deployment with function-/tool-calling support), accessed via `langchain-openai`'s `AzureChatOpenAI`.
+- **LLM:** OpenAI (chat completion with function-/tool-calling support), accessed via `langchain-openai`'s `ChatOpenAI`.
 - **Data access:** Microsoft Graph SDK for Python (`msgraph-sdk`), authenticated via `azure-identity` / `msal`.
 - **Identity:** Microsoft Entra ID app registration.
 
 ### 6.2 Component Layers
 1. **Next.js chat component** — renders the conversation, captures input, displays streamed answers. Calls the backend over HTTP and consumes a streamed (SSE) response.
 2. **FastAPI conversation endpoint** — holds chat history per session, invokes the LangChain agent, and streams tokens back to the frontend.
-3. **LangChain agent + Azure OpenAI** — interprets questions and selects which tools to call.
+3. **LangChain agent + OpenAI** — interprets questions and selects which tools to call.
 4. **List Data tools** — a set of LangChain tools (count, sum, average, group-by, filter, get-schema). This is the boundary where the LLM's intent becomes deterministic Python code.
 5. **SharePoint service** — Python module wrapping Graph calls, handling auth and caching.
 6. **SharePoint Online** — the source list.
@@ -96,7 +96,7 @@ The LLM is responsible only for *understanding the question* and *phrasing the a
 ### 6.4 Authentication
 - The app registration is granted Graph application permission `Sites.Read.All` (or the more scoped `Sites.Selected` if the list's site can be explicitly granted), with admin consent.
 - Client-credentials flow (via `azure-identity` / `msal` in the FastAPI backend) is used for an app that reads data on its own behalf. If per-user identity is later required, this moves to delegated/on-behalf-of auth — see Open Questions.
-- The Next.js frontend never holds Graph or Azure OpenAI credentials. The Next.js ↔ FastAPI boundary is the trust boundary.
+- The Next.js frontend never holds Graph or OpenAI credentials. The Next.js ↔ FastAPI boundary is the trust boundary.
 - End-user access is gated by Entra ID sign-in: users authenticate in the Next.js app, and the FastAPI backend validates the resulting token on every request and rejects unauthenticated calls (NFR-8). This end-user sign-in is distinct from the app's own client-credentials identity used to read SharePoint — in v1 all authenticated users share that single read identity (per-user SharePoint permissions remain Open Question 1).
 
 ## 7. Non-Functional Requirements
@@ -132,7 +132,7 @@ Write-back, multi-list support, per-user row security, attachment/document analy
 | Phase | Scope |
 |---|---|
 | **Phase 1 — Foundation** | Entra app registration, Graph access, Python SharePoint service reads list items and schema. Verified with a script/test harness. |
-| **Phase 2 — Agent core** | LangChain agent + Azure OpenAI wired up in FastAPI. List Data tools with count, sum, average, group-by, filter, schema. Tool calling working end-to-end. |
+| **Phase 2 — Agent core** | LangChain agent + OpenAI wired up in FastAPI. List Data tools with count, sum, average, group-by, filter, schema. Tool calling working end-to-end. |
 | **Phase 3 — Chat UI** | Next.js + shadcn/ui chat: single input, conversation thread, markdown rendering, loading indicator, SSE streaming, new-conversation control. |
 | **Phase 4 — Hardening** | Caching, large-list filtered retrieval, logging, ambiguity/clarification handling, accuracy test suite. |
 | **Phase 5 — Deploy** | Secrets in Azure Key Vault (read via the container's managed identity). Frontend deployed to Azure Static Web Apps; backend container deployed as a container app. Smoke testing. |

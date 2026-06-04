@@ -127,49 +127,25 @@ You need to make a POST request to Graph. The easiest way is to use [Graph Explo
 
 ---
 
-## 4. Azure OpenAI
+## 4. OpenAI API Key
 
-> Azure OpenAI requires approved access. If your subscription does not have it yet, apply at [aka.ms/oai/access](https://aka.ms/oai/access).
+The app uses the OpenAI API directly (not Azure OpenAI). No Azure resource is needed for this.
 
-### 4.1 Create the resource
+### 4.1 Get your API key
 
-1. Search for **Azure OpenAI** and select it.
-2. Click **+ Create**.
-3. Fill in:
-   - **Subscription** — select yours
-   - **Resource group** — `rg-group-one-rtp`
-   - **Region** — same as your resource group (or the nearest region with capacity)
-   - **Name** — `aoai-group-one-rtp`
-   - **Pricing tier** — Standard S0
-4. Click **Next** through the Network and Tags tabs (defaults are fine).
-5. Click **Review + create** → **Create**.
+1. Go to [platform.openai.com](https://platform.openai.com) and sign in.
+2. Click your profile → **API keys** → **+ Create new secret key**.
+3. Give it a name (e.g. `group-one-rtp`), click **Create secret key**.
+4. **Copy the key immediately** — it is only shown once.
 
-### 4.2 Deploy a chat model
+### 4.2 Choose a model
 
-1. Once the resource is created, click **Go to resource**.
-2. Click **Go to Azure OpenAI Studio** (or navigate to [oai.azure.com](https://oai.azure.com)).
-3. In the left menu select **Deployments** → **+ Create new deployment**.
-4. Fill in:
-   - **Model** — `gpt-4o`
-   - **Model version** — select the latest available
-   - **Deployment name** — `gpt-4o`
-   - **Deployment type** — Global Standard
-   - **Tokens per minute rate limit** — adjust to your quota (10K is a safe start)
-5. Click **Create**.
-
-### 4.3 Copy the endpoint and key
-
-1. Go back to the Azure OpenAI resource in the portal.
-2. In the left menu select **Keys and Endpoint**.
-3. Copy:
-   - **Endpoint** (e.g. `https://aoai-group-one-rtp.openai.azure.com/`)
-   - **KEY 1**
+The default model is `gpt-4o`. Ensure your account has access to it under **Settings → Limits**. Any model with tool/function calling support works.
 
 > **.env mapping after §4**
 > ```
-> AZURE_OPENAI_ENDPOINT=<Endpoint>
-> AZURE_OPENAI_API_KEY=<KEY 1>
-> AZURE_OPENAI_DEPLOYMENT=gpt-4o
+> OPENAI_API_KEY=sk-...
+> OPENAI_MODEL=gpt-4o
 > ```
 
 ---
@@ -209,8 +185,7 @@ In production, all secrets come from Key Vault via the container's managed ident
 | `AZURE-TENANT-ID` | your tenant ID (from §2.1) |
 | `AZURE-CLIENT-ID` | your client ID (from §2.1) |
 | `AZURE-CLIENT-SECRET` | your client secret (from §2.2) |
-| `AZURE-OPENAI-ENDPOINT` | your OpenAI endpoint (from §4.3) |
-| `AZURE-OPENAI-API-KEY` | your OpenAI key (from §4.3) |
+| `OPENAI-API-KEY` | your OpenAI API key (from §4.1) |
 | `SHAREPOINT-SITE-URL` | your SharePoint site URL |
 | `SHAREPOINT-LIST-ID` | your list GUID (see tip below) |
 
@@ -359,7 +334,7 @@ End users sign in with Entra ID before they can use the chat. This uses the **sa
 | Resource Group | `rg-group-one-rtp` | §1 |
 | Entra App Registration | `group-one-rtp-backend` | §2 |
 | Graph permission | `Sites.Selected` or `Sites.Read.All` | §3 |
-| Azure OpenAI | `aoai-group-one-rtp` | §4 |
+| OpenAI API key | — (platform.openai.com) | §4 |
 | Azure Key Vault | `kv-group-one-rtp` | §5 |
 | Container Registry | `acrGroupOneRtp` | §6 |
 | Container Apps Environment | `cae-group-one-rtp` | §7 |
@@ -373,9 +348,8 @@ End users sign in with Entra ID before they can use the chat. This uses the **sa
 | `AZURE_TENANT_ID` | §2.1 — Directory (tenant) ID |
 | `AZURE_CLIENT_ID` | §2.1 — Application (client) ID |
 | `AZURE_CLIENT_SECRET` | §2.2 — secret Value |
-| `AZURE_OPENAI_ENDPOINT` | §4.3 — Endpoint |
-| `AZURE_OPENAI_API_KEY` | §4.3 — KEY 1 |
-| `AZURE_OPENAI_DEPLOYMENT` | `gpt-4o` |
+| `OPENAI_API_KEY` | §4.1 — platform.openai.com API key |
+| `OPENAI_MODEL` | `gpt-4o` (default) |
 | `SHAREPOINT_SITE_URL` | your SharePoint site URL |
 | `SHAREPOINT_LIST_ID` | §5.3 tip — list GUID from list settings URL |
 | `CACHE_TTL_SECONDS` | default `60` |

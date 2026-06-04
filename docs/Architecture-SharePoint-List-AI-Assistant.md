@@ -27,9 +27,9 @@ It is the engineering reference for building Phases 1–5 (PRD §10). Where the 
 
 ## 2. Architectural Overview
 
-The system is a three-tier application: a stateless **Next.js frontend**, a **FastAPI backend** that owns all orchestration and secrets, and **external Azure services** (Azure OpenAI, Microsoft Graph / SharePoint Online, Entra ID, Key Vault).
+The system is a three-tier application: a stateless **Next.js frontend**, a **FastAPI backend** that owns all orchestration and secrets, and **external Azure services** (OpenAI, Microsoft Graph / SharePoint Online, Entra ID, Key Vault).
 
-The single most important architectural line is the **trust boundary** between the frontend and backend. Everything sensitive — the LangChain agent, Azure OpenAI access, Graph access, secrets — lives behind it.
+The single most important architectural line is the **trust boundary** between the frontend and backend. Everything sensitive — the LangChain agent, OpenAI access, Graph access, secrets — lives behind it.
 
 ```mermaid
 flowchart LR
@@ -47,7 +47,7 @@ flowchart LR
     end
 
     subgraph Azure["External Azure Services"]
-        AOAI[Azure OpenAI]
+        AOAI[OpenAI API]
         Graph[Microsoft Graph]
         SPO[(SharePoint Online List)]
         KV[Azure Key Vault]
@@ -99,11 +99,11 @@ The components map directly to the layers in PRD §6.2.
 - Invokes the LangChain agent and relays the model's output as an SSE token stream (FR-4).
 - Emits observability logs: the question, each tool call with arguments, and the final answer (NFR-7).
 
-### 3.3 LangChain agent + Azure OpenAI
+### 3.3 LangChain agent + OpenAI
 
 **Responsibility:** understand the question, decide which tools to call, and phrase the final answer — nothing else.
 
-- Agent with tool calling via `langchain-openai`'s `AzureChatOpenAI` against an Azure OpenAI chat deployment that supports function/tool calling (PRD §6.1).
+- Agent with tool calling via `langchain-openai`'s `ChatOpenAI` against OpenAI's API (PRD §6.1).
 - The model selects tools and arguments; it does **not** compute facts or figures (FR-7, §6.3).
 - Handles ambiguity by asking a clarifying question, and declines unrelated questions politely (FR-10, FR-11).
 - Tool names, descriptions, and argument schemas are written carefully — the model's correctness depends on them (§6.3, NFR-6).
@@ -136,7 +136,7 @@ All numeric computation runs in Python over retrieved data (FR-9, NFR-5). Tools 
 
 ### 3.6 External services
 
-Azure OpenAI, Microsoft Graph + SharePoint Online (the source list), Entra ID (identity), and Azure Key Vault (secrets at runtime).
+OpenAI, Microsoft Graph + SharePoint Online (the source list), Entra ID (identity), and Azure Key Vault (secrets at runtime).
 
 ---
 
@@ -150,7 +150,7 @@ sequenceDiagram
     participant FE as Next.js
     participant API as FastAPI Endpoint
     participant Agent as LangChain Agent
-    participant LLM as Azure OpenAI
+    participant LLM as OpenAI
     participant Tools as List Data Tools
     participant SP as SharePoint Service
     participant Graph as MS Graph / SPO
@@ -237,7 +237,7 @@ In v1 all authenticated users share the single read identity. **Constraint (D-1)
 
 ### 6.4 Secrets management
 
-- All secrets (Azure OpenAI keys, Entra client secret, connection settings) live in **Azure Key Vault** and are retrieved at runtime by the backend (NFR-1, D-5).
+- All secrets (OpenAI keys, Entra client secret, connection settings) live in **Azure Key Vault** and are retrieved at runtime by the backend (NFR-1, D-5).
 - The container's **managed identity** is granted read access to the vault.
 - Local development may use environment variables / `.env` standing in for the vault — **no secret is ever committed** (NFR-1).
 
@@ -256,7 +256,7 @@ flowchart TB
         BE[FastAPI Backend Container]
     end
     KV[Azure Key Vault]
-    AOAI[Azure OpenAI]
+    AOAI[OpenAI]
     Graph[Microsoft Graph / SharePoint Online]
     Entra[Entra ID]
 
@@ -286,7 +286,7 @@ Per NFR-7, the backend logs for every request:
 - Each tool the model chose to call, **with its arguments**.
 - The final answer.
 
-This supports debugging and trust verification — confirming that figures came from tool execution, not the model. Token usage should be monitored to manage Azure OpenAI cost (PRD §11 risk).
+This supports debugging and trust verification — confirming that figures came from tool execution, not the model. Token usage should be monitored to manage OpenAI cost (PRD §11 risk).
 
 ---
 
@@ -314,7 +314,7 @@ Drawn from PRD §11, framed architecturally.
 | Large list overflows context | `$filter` pushdown + row-count threshold in the SharePoint service (§5.2). |
 | Model calls wrong tool / misreads a column | Carefully written tool schemas (§3.4); `get_schema`; clarification behaviour (§3.3). |
 | Graph permissions over-broad | Prefer `Sites.Selected` scoped to one site (§6.3). |
-| Azure OpenAI cost | Caching (§5.3), concise prompts, token monitoring (§8). |
+| OpenAI cost | Caching (§5.3), concise prompts, token monitoring (§8). |
 
 ---
 

@@ -12,7 +12,7 @@ SharePoint List AI Assistant — a web app that answers plain-English questions 
 | Backend framework | FastAPI + uvicorn | >=0.115 / >=0.34 |
 | Package manager (backend) | uv | 0.6.x |
 | AI orchestration | LangChain + langchain-openai | >=0.3 |
-| LLM | Azure OpenAI (`AzureChatOpenAI`) | via langchain-openai |
+| LLM | OpenAI (`ChatOpenAI`) | via langchain-openai |
 | Graph access | msgraph-sdk + azure-identity | >=1.10 / >=1.19 |
 | Linting / formatting | ruff | >=0.9 |
 | Test runner | pytest + pytest-asyncio | >=8.3 / >=0.25 |

@@ -15,10 +15,9 @@ class Settings(BaseSettings):
     azure_client_id: str
     azure_client_secret: str
 
-    # Azure OpenAI
-    azure_openai_endpoint: str = ""
-    azure_openai_api_key: str = ""
-    azure_openai_deployment: str = "gpt-4o"
+    # OpenAI
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o"
 
     # SharePoint / Microsoft Graph
     sharepoint_site_url: str = ""
