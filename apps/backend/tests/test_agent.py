@@ -32,10 +32,12 @@ def test_system_prompt_handles_unrelated_questions():
 
 def test_build_agent_passes_correct_model_string():
     from app.agent import build_agent
+    from langchain_openai import ChatOpenAI
 
     mock_service = MagicMock()
     mock_settings = MagicMock()
     mock_settings.openai_model = "gpt-4o"
+    mock_settings.openai_api_key = "sk-test"
 
     with patch("app.agent.create_agent") as mock_create:
         mock_create.return_value = MagicMock()
@@ -43,7 +45,9 @@ def test_build_agent_passes_correct_model_string():
 
         assert mock_create.called
         kwargs = mock_create.call_args.kwargs
-        assert kwargs["model"] == "openai:gpt-4o"
+        llm = kwargs["model"]
+        assert isinstance(llm, ChatOpenAI)
+        assert llm.model_name == "gpt-4o"
 
 
 def test_build_agent_registers_all_six_tools():
@@ -52,6 +56,7 @@ def test_build_agent_registers_all_six_tools():
     mock_service = MagicMock()
     mock_settings = MagicMock()
     mock_settings.openai_model = "gpt-4o"
+    mock_settings.openai_api_key = "sk-test"
 
     with patch("app.agent.create_agent") as mock_create:
         mock_create.return_value = MagicMock()
@@ -75,6 +80,7 @@ def test_build_agent_passes_system_prompt():
     mock_service = MagicMock()
     mock_settings = MagicMock()
     mock_settings.openai_model = "gpt-4o"
+    mock_settings.openai_api_key = "sk-test"
 
     with patch("app.agent.create_agent") as mock_create:
         mock_create.return_value = MagicMock()

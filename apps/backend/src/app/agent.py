@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from langchain.agents import create_agent
+from langchain_openai import ChatOpenAI
 from langgraph.graph.state import CompiledStateGraph
 
 from app.config import Settings
@@ -23,8 +24,12 @@ Guidelines:
 def build_agent(service: SharePointService, settings: Settings) -> CompiledStateGraph:
     """Build a LangChain agent wired to the given SharePointService."""
     tools = make_tools(service)
+    llm = ChatOpenAI(
+        model=settings.openai_model,
+        api_key=settings.openai_api_key,  # type: ignore[arg-type]
+    )
     return create_agent(
-        model=f"openai:{settings.openai_model}",
+        model=llm,
         tools=tools,
         system_prompt=SYSTEM_PROMPT,
     )
