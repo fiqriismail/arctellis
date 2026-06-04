@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -8,6 +9,27 @@ from urllib.parse import urlparse
 from kiota_abstractions.base_request_configuration import RequestConfiguration
 from msgraph import GraphServiceClient
 from msgraph.generated.sites.item.lists.item.items import items_request_builder
+
+
+class _TTLCache:
+    """Simple in-memory TTL cache backed by a dict and monotonic timestamps."""
+
+    def __init__(self, ttl: int) -> None:
+        self._ttl = ttl
+        self._store: dict[str, tuple[Any, float]] = {}
+
+    def get(self, key: str) -> Any:
+        entry = self._store.get(key)
+        if entry is None:
+            return None
+        value, expiry = entry
+        if time.monotonic() >= expiry:
+            del self._store[key]
+            return None
+        return value
+
+    def set(self, key: str, value: Any) -> None:
+        self._store[key] = (value, time.monotonic() + self._ttl)
 
 
 @dataclass

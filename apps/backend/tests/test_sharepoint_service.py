@@ -403,3 +403,52 @@ async def test_create_sharepoint_service_resolves_site_id():
     mock_client.sites.by_site_id.assert_called_once_with(
         "barringtondigital.sharepoint.com:/sites/Procurement"
     )
+
+
+# --- _TTLCache tests ---
+
+import time
+
+
+def test_ttl_cache_get_returns_value_before_expiry():
+    from app.services.sharepoint import _TTLCache
+
+    cache = _TTLCache(ttl=60)
+    cache.set("key1", ["data"])
+    result = cache.get("key1")
+    assert result == ["data"]
+
+
+def test_ttl_cache_get_returns_none_for_missing_key():
+    from app.services.sharepoint import _TTLCache
+
+    cache = _TTLCache(ttl=60)
+    assert cache.get("missing") is None
+
+
+def test_ttl_cache_get_returns_none_after_expiry():
+    from app.services.sharepoint import _TTLCache
+
+    cache = _TTLCache(ttl=0)  # expires immediately
+    cache.set("key1", "value")
+    time.sleep(0.01)  # tiny sleep ensures monotonic clock has advanced
+    assert cache.get("key1") is None
+
+
+def test_ttl_cache_set_overwrites_existing_key():
+    from app.services.sharepoint import _TTLCache
+
+    cache = _TTLCache(ttl=60)
+    cache.set("key1", "first")
+    cache.set("key1", "second")
+    assert cache.get("key1") == "second"
+
+
+def test_ttl_cache_different_keys_are_independent():
+    from app.services.sharepoint import _TTLCache
+
+    cache = _TTLCache(ttl=60)
+    cache.set("a", 1)
+    cache.set("b", 2)
+    assert cache.get("a") == 1
+    assert cache.get("b") == 2
