@@ -13,6 +13,8 @@ docs/        PRD, Architecture, stories
 
 ## Quick start
 
+> **Prerequisites:** Run these commands after scaffolding is complete (the apps are set up in subsequent tasks).
+
 ### Backend
 ```bash
 cd apps/backend
