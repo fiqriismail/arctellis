@@ -4,7 +4,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from kiota_abstractions.base_request_configuration import RequestConfiguration
 from msgraph import GraphServiceClient
+from msgraph.generated.sites.item.lists.item.items import items_request_builder
 
 
 @dataclass
@@ -91,3 +93,30 @@ class SharePointService:
                 )
             )
         return columns
+
+    async def get_items(self, odata_filter: str | None = None) -> list[ListItem]:
+        query_params = items_request_builder.ItemsRequestBuilder.ItemsRequestBuilderGetQueryParameters(
+            expand=["fields"],
+        )
+        if odata_filter:
+            query_params.filter = odata_filter
+
+        request_configuration = RequestConfiguration(query_parameters=query_params)
+
+        result = await (
+            self._client.sites.by_site_id(self._site_id)
+            .lists.by_list_id(self._list_id)
+            .items.get(request_configuration=request_configuration)
+        )
+
+        items: list[ListItem] = []
+        if not result or not result.value:
+            return items
+
+        for item in result.value:
+            fields: dict[str, Any] = {}
+            if item.fields and item.fields.additional_data:
+                fields = dict(item.fields.additional_data)
+            items.append(ListItem(id=item.id or "", fields=fields))
+
+        return items

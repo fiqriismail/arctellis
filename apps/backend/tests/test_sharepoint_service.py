@@ -276,3 +276,95 @@ async def test_get_schema_returns_empty_on_no_columns():
     service = SharePointService(client=mock_client, site_id="site-1", list_id="list-1")
     columns = await service.get_schema()
     assert columns == []
+
+
+@pytest.mark.asyncio
+async def test_get_items_returns_list_items():
+    from app.services.sharepoint import SharePointService
+
+    mock_fields = MagicMock()
+    mock_fields.additional_data = {"Title": "Request 1", "Budget": "5000"}
+
+    mock_item = MagicMock()
+    mock_item.id = "42"
+    mock_item.fields = mock_fields
+
+    mock_response = MagicMock()
+    mock_response.value = [mock_item]
+    mock_response.odata_next_link = None
+
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.items.get = AsyncMock(
+        return_value=mock_response
+    )
+
+    service = SharePointService(client=mock_client, site_id="site-1", list_id="list-1")
+    items = await service.get_items()
+
+    assert len(items) == 1
+    assert items[0].id == "42"
+    assert items[0].fields["Title"] == "Request 1"
+    assert items[0].fields["Budget"] == "5000"
+
+
+@pytest.mark.asyncio
+async def test_get_items_returns_empty_on_no_items():
+    from app.services.sharepoint import SharePointService
+
+    mock_response = MagicMock()
+    mock_response.value = []
+    mock_response.odata_next_link = None
+
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.items.get = AsyncMock(
+        return_value=mock_response
+    )
+
+    service = SharePointService(client=mock_client, site_id="site-1", list_id="list-1")
+    items = await service.get_items()
+    assert items == []
+
+
+@pytest.mark.asyncio
+async def test_get_items_handles_none_fields():
+    from app.services.sharepoint import SharePointService
+
+    mock_item = MagicMock()
+    mock_item.id = "1"
+    mock_item.fields = None
+
+    mock_response = MagicMock()
+    mock_response.value = [mock_item]
+    mock_response.odata_next_link = None
+
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.items.get = AsyncMock(
+        return_value=mock_response
+    )
+
+    service = SharePointService(client=mock_client, site_id="site-1", list_id="list-1")
+    items = await service.get_items()
+
+    assert len(items) == 1
+    assert items[0].fields == {}
+
+
+@pytest.mark.asyncio
+async def test_get_items_passes_odata_filter():
+    from app.services.sharepoint import SharePointService
+
+    mock_response = MagicMock()
+    mock_response.value = []
+    mock_response.odata_next_link = None
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.items.get = get_mock
+
+    service = SharePointService(client=mock_client, site_id="site-1", list_id="list-1")
+    await service.get_items(odata_filter="fields/Status eq 'Active'")
+
+    get_mock.assert_called_once()
+    call_kwargs = get_mock.call_args
+    request_config = call_kwargs[1].get("request_configuration") or call_kwargs[0][0]
+    assert request_config is not None
