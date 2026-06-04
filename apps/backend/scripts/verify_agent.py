@@ -13,10 +13,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+from app.agent import build_agent, invoke_agent
 from app.config import Settings
 from app.services.graph_auth import GraphAuthService
 from app.services.sharepoint import create_sharepoint_service
-from app.agent import build_agent, invoke_agent
 
 
 async def verify() -> None:
@@ -49,7 +49,9 @@ async def verify() -> None:
     answer = await invoke_agent(agent, "How many items are in the list?")
     print(f"   Answer: {answer}\n")
     if not any(c.isdigit() for c in answer):
-        print("   FAIL — answer contains no number, agent may not have called count_rows")
+        print(
+            "   FAIL — answer contains no number, agent may not have called count_rows"
+        )
         sys.exit(1)
 
     print("5. Question: What is the weather today? (should politely decline)")

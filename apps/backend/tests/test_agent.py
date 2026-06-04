@@ -1,8 +1,9 @@
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
 # --- SYSTEM_PROMPT content ---
+
 
 def test_system_prompt_instructs_get_schema_first():
     from app.agent import SYSTEM_PROMPT
@@ -30,9 +31,11 @@ def test_system_prompt_handles_unrelated_questions():
 
 # --- build_agent ---
 
+
 def test_build_agent_passes_correct_model_string():
-    from app.agent import build_agent
     from langchain_openai import ChatOpenAI
+
+    from app.agent import build_agent
 
     mock_service = MagicMock()
     mock_settings = MagicMock()
@@ -76,7 +79,7 @@ def test_build_agent_registers_all_six_tools():
 
 
 def test_build_agent_passes_system_prompt():
-    from app.agent import build_agent, SYSTEM_PROMPT
+    from app.agent import SYSTEM_PROMPT, build_agent
 
     mock_service = MagicMock()
     mock_settings = MagicMock()
@@ -93,10 +96,12 @@ def test_build_agent_passes_system_prompt():
 
 # --- invoke_agent ---
 
+
 @pytest.mark.asyncio
 async def test_invoke_agent_returns_content_from_last_message():
-    from app.agent import invoke_agent
     from langchain_core.messages import AIMessage
+
+    from app.agent import invoke_agent
 
     mock_agent = MagicMock()
     mock_agent.ainvoke = AsyncMock(
@@ -109,8 +114,9 @@ async def test_invoke_agent_returns_content_from_last_message():
 
 @pytest.mark.asyncio
 async def test_invoke_agent_no_history_sends_one_message():
-    from app.agent import invoke_agent
     from langchain_core.messages import AIMessage
+
+    from app.agent import invoke_agent
 
     mock_agent = MagicMock()
     mock_agent.ainvoke = AsyncMock(
@@ -127,13 +133,12 @@ async def test_invoke_agent_no_history_sends_one_message():
 
 @pytest.mark.asyncio
 async def test_invoke_agent_prepends_history():
-    from app.agent import invoke_agent
     from langchain_core.messages import AIMessage
 
+    from app.agent import invoke_agent
+
     mock_agent = MagicMock()
-    mock_agent.ainvoke = AsyncMock(
-        return_value={"messages": [AIMessage(content="ok")]}
-    )
+    mock_agent.ainvoke = AsyncMock(return_value={"messages": [AIMessage(content="ok")]})
 
     history = [
         {"role": "user", "content": "hi"},
@@ -150,8 +155,9 @@ async def test_invoke_agent_prepends_history():
 
 @pytest.mark.asyncio
 async def test_invoke_agent_none_history_treated_as_empty():
-    from app.agent import invoke_agent
     from langchain_core.messages import AIMessage
+
+    from app.agent import invoke_agent
 
     mock_agent = MagicMock()
     mock_agent.ainvoke = AsyncMock(
