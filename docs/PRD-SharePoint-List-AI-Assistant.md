@@ -147,13 +147,28 @@ Write-back, multi-list support, per-user row security, attachment/document analy
 | Graph permissions over-broad. | Prefer `Sites.Selected` scoped to the one site. |
 | Cost of frequent Azure OpenAI calls. | Caching, concise prompts, monitor token usage. |
 
-## 12. Open Questions
+## 12. Decisions
 
-1. Should answers reflect each end user's own SharePoint permissions, or is a single shared read account acceptable for v1? (This determines client-credentials vs. delegated auth.)
-2. ~~Does the app need to be accessible to anonymous users, or only authenticated members of the organisation?~~ **Resolved:** authenticated members of the organisation only; no anonymous access (Entra ID sign-in required — see NFR-8).
-3. How frequently does the list change — does the 30–60s cache window need tuning?
-4. Is there a specific list already chosen, and what are its key columns and approximate row count?
-5. ~~Hosting target — Azure App Service, container, or other?~~ **Resolved:** frontend on Azure Static Web Apps; backend as a container-based application (e.g. Azure Container Apps). Secrets in Azure Key Vault (see NFR-1).
+These decisions were captured during review and resolve the questions that were previously open.
+
+| # | Decision | Rationale / notes |
+|---|---|---|
+| **D-1 — Data identity** | Single shared read account for v1; the list is read via the backend's own client-credentials identity (§6.4). | The SharePoint site/list is shared with a group whose members all have the same access, so there are no per-user/per-item distinctions to honour. *Constraint:* the users allowed to sign in to the app should match the SharePoint members group. Per-user (delegated/OBO) auth is a later-phase option if item-level security is ever introduced. |
+| **D-2 — Access control** | Authenticated organisation members only; no anonymous access (Entra ID sign-in). | See NFR-8. |
+| **D-3 — Cache window** | Keep the 30–60s cache window; TTL is a configuration value. | Avoids re-fetching within a single multi-step answer while keeping data near-real-time (FR-15 / NFR-4); configurable so it can be tuned without a code change. |
+| **D-4 — Target list** | A specific list is chosen; concrete details to be confirmed (see below). | Design stays list-agnostic and discovers structure at runtime via the get-schema tool; list site/ID are configuration (FR-13), not hard-coded. |
+| **D-5 — Hosting & secrets** | Frontend on Azure Static Web Apps; backend as a container-based app (e.g. Azure Container Apps); secrets in Azure Key Vault. | See §6.1 and NFR-1. |
+
+### Still to confirm — target list details (D-4)
+
+| Field | Value |
+|---|---|
+| Site URL | _TBC_ |
+| List name | _TBC_ |
+| List ID | _TBC_ |
+| Key columns (name → type) | _TBC_ |
+| Approx. row count | _TBC_ |
+| Filtered-retrieval row threshold | _TBC (see §8)_ |
 
 ## 13. Success Metrics
 
