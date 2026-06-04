@@ -470,3 +470,65 @@ def test_sharepoint_service_default_cache_ttl_is_60():
     service = SharePointService(client=mock_client, site_id="s", list_id="l")
     assert isinstance(service._cache, _TTLCache)
     assert service._cache._ttl == 60
+
+
+@pytest.mark.asyncio
+async def test_get_schema_cached_on_second_call():
+    from app.services.sharepoint import SharePointService
+
+    mock_col = MagicMock()
+    mock_col.name = "Title"
+    mock_col.display_name = "Title"
+    mock_col.hidden = False
+    mock_col.number = None
+    mock_col.date_time = None
+    mock_col.boolean = None
+    mock_col.choice = None
+    mock_col.lookup = None
+    mock_col.person_or_group = None
+
+    mock_response = MagicMock()
+    mock_response.value = [mock_col]
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.columns.get = get_mock
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l", cache_ttl=60)
+
+    first = await service.get_schema()
+    second = await service.get_schema()
+
+    assert first == second
+    assert get_mock.call_count == 1  # Graph called only once
+
+
+@pytest.mark.asyncio
+async def test_get_schema_refetches_after_ttl_expiry():
+    from app.services.sharepoint import SharePointService
+
+    mock_col = MagicMock()
+    mock_col.name = "Title"
+    mock_col.display_name = "Title"
+    mock_col.hidden = False
+    mock_col.number = None
+    mock_col.date_time = None
+    mock_col.boolean = None
+    mock_col.choice = None
+    mock_col.lookup = None
+    mock_col.person_or_group = None
+
+    mock_response = MagicMock()
+    mock_response.value = [mock_col]
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.columns.get = get_mock
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l", cache_ttl=0)
+
+    await service.get_schema()
+    time.sleep(0.01)
+    await service.get_schema()
+
+    assert get_mock.call_count == 2  # Graph called again after expiry

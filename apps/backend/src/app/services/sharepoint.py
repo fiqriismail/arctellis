@@ -101,6 +101,9 @@ class SharePointService:
         return str(value)
 
     async def get_schema(self) -> list[ColumnDefinition]:
+        cached = self._cache.get("schema")
+        if cached is not None:
+            return cached
         result = await (
             self._client.sites.by_site_id(self._site_id)
             .lists.by_list_id(self._list_id)
@@ -108,6 +111,7 @@ class SharePointService:
         )
         columns: list[ColumnDefinition] = []
         if not result or not result.value:
+            self._cache.set("schema", columns)
             return columns
         for col in result.value:
             if col.hidden or not col.name:
@@ -119,6 +123,7 @@ class SharePointService:
                     column_type=self._infer_column_type(col),
                 )
             )
+        self._cache.set("schema", columns)
         return columns
 
     async def get_items(self, odata_filter: str | None = None) -> list[ListItem]:
