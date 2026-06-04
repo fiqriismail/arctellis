@@ -1,4 +1,5 @@
-from unittest.mock import MagicMock, patch
+import pytest
+from unittest.mock import MagicMock, patch, AsyncMock
 
 
 # --- SYSTEM_PROMPT content ---
@@ -81,3 +82,76 @@ def test_build_agent_passes_system_prompt():
 
         kwargs = mock_create.call_args.kwargs
         assert kwargs["system_prompt"] == SYSTEM_PROMPT
+
+
+# --- invoke_agent ---
+
+@pytest.mark.asyncio
+async def test_invoke_agent_returns_content_from_last_message():
+    from app.agent import invoke_agent
+    from langchain_core.messages import AIMessage
+
+    mock_agent = MagicMock()
+    mock_agent.ainvoke = AsyncMock(
+        return_value={"messages": [AIMessage(content="The total budget is 5000.")]}
+    )
+
+    result = await invoke_agent(mock_agent, "What is the total budget?")
+    assert result == "The total budget is 5000."
+
+
+@pytest.mark.asyncio
+async def test_invoke_agent_no_history_sends_one_message():
+    from app.agent import invoke_agent
+    from langchain_core.messages import AIMessage
+
+    mock_agent = MagicMock()
+    mock_agent.ainvoke = AsyncMock(
+        return_value={"messages": [AIMessage(content="answer")]}
+    )
+
+    await invoke_agent(mock_agent, "How many items?")
+
+    sent = mock_agent.ainvoke.call_args[0][0]["messages"]
+    assert len(sent) == 1
+    assert sent[0]["content"] == "How many items?"
+    assert sent[0]["role"] == "user"
+
+
+@pytest.mark.asyncio
+async def test_invoke_agent_prepends_history():
+    from app.agent import invoke_agent
+    from langchain_core.messages import AIMessage
+
+    mock_agent = MagicMock()
+    mock_agent.ainvoke = AsyncMock(
+        return_value={"messages": [AIMessage(content="ok")]}
+    )
+
+    history = [
+        {"role": "user", "content": "hi"},
+        {"role": "assistant", "content": "hello"},
+    ]
+    await invoke_agent(mock_agent, "follow-up question", history=history)
+
+    sent = mock_agent.ainvoke.call_args[0][0]["messages"]
+    assert len(sent) == 3
+    assert sent[0]["content"] == "hi"
+    assert sent[1]["content"] == "hello"
+    assert sent[2]["content"] == "follow-up question"
+
+
+@pytest.mark.asyncio
+async def test_invoke_agent_none_history_treated_as_empty():
+    from app.agent import invoke_agent
+    from langchain_core.messages import AIMessage
+
+    mock_agent = MagicMock()
+    mock_agent.ainvoke = AsyncMock(
+        return_value={"messages": [AIMessage(content="answer")]}
+    )
+
+    await invoke_agent(mock_agent, "question", history=None)
+
+    sent = mock_agent.ainvoke.call_args[0][0]["messages"]
+    assert len(sent) == 1

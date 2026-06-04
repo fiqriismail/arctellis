@@ -28,3 +28,17 @@ def build_agent(service: SharePointService, settings: Settings) -> CompiledState
         tools=tools,
         system_prompt=SYSTEM_PROMPT,
     )
+
+
+async def invoke_agent(
+    agent: CompiledStateGraph,
+    question: str,
+    history: list[dict] | None = None,
+) -> str:
+    """Invoke the agent with optional conversation history and return the answer."""
+    messages = (history or []) + [{"role": "user", "content": question}]
+    result = await agent.ainvoke({"messages": messages})
+    final = result["messages"][-1]
+    if hasattr(final, "content"):
+        return final.content
+    return str(final)
