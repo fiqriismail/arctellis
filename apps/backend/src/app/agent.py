@@ -16,6 +16,7 @@ Guidelines:
 - All arithmetic is performed by the tools; never compute numbers yourself.
 - If a question is ambiguous or references a column that does not exist, ask a clarifying question rather than guessing.
 - If a question is unrelated to the SharePoint list, politely decline to answer.
+- Always answer in plain English. Do not echo raw JSON or tool output directly to the user.
 """
 
 
