@@ -25,3 +25,117 @@ def test_sharepoint_service_stores_client_and_ids():
     service = SharePointService(client=mock_client, site_id="site-1", list_id="list-1")
     assert service._site_id == "site-1"
     assert service._list_id == "list-1"
+
+
+def test_infer_column_type_number():
+    from app.services.sharepoint import SharePointService
+
+    mock_col = MagicMock()
+    mock_col.number = MagicMock()  # non-None = number column
+    mock_col.date_time = None
+    mock_col.boolean = None
+    mock_col.choice = None
+    mock_col.lookup = None
+    mock_col.person_or_group = None
+    assert SharePointService._infer_column_type(mock_col) == "number"
+
+
+def test_infer_column_type_datetime():
+    from app.services.sharepoint import SharePointService
+
+    mock_col = MagicMock()
+    mock_col.number = None
+    mock_col.date_time = MagicMock()
+    mock_col.boolean = None
+    mock_col.choice = None
+    mock_col.lookup = None
+    mock_col.person_or_group = None
+    assert SharePointService._infer_column_type(mock_col) == "dateTime"
+
+
+def test_infer_column_type_boolean():
+    from app.services.sharepoint import SharePointService
+
+    mock_col = MagicMock()
+    mock_col.number = None
+    mock_col.date_time = None
+    mock_col.boolean = MagicMock()
+    mock_col.choice = None
+    mock_col.lookup = None
+    mock_col.person_or_group = None
+    assert SharePointService._infer_column_type(mock_col) == "boolean"
+
+
+def test_infer_column_type_defaults_to_text():
+    from app.services.sharepoint import SharePointService
+
+    mock_col = MagicMock()
+    mock_col.number = None
+    mock_col.date_time = None
+    mock_col.boolean = None
+    mock_col.choice = None
+    mock_col.lookup = None
+    mock_col.person_or_group = None
+    assert SharePointService._infer_column_type(mock_col) == "text"
+
+
+def test_safe_parse_number_valid():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._safe_parse("42.5", "number") == 42.5
+
+
+def test_safe_parse_number_integer_string():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._safe_parse("10", "number") == 10.0
+
+
+def test_safe_parse_number_invalid_returns_none():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._safe_parse("not-a-number", "number") is None
+
+
+def test_safe_parse_datetime_valid():
+    from app.services.sharepoint import SharePointService
+
+    result = SharePointService._safe_parse("2026-01-15T10:00:00Z", "dateTime")
+    assert result is not None
+    assert result.year == 2026
+
+
+def test_safe_parse_datetime_invalid_returns_none():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._safe_parse("not-a-date", "dateTime") is None
+
+
+def test_safe_parse_boolean_true():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._safe_parse(True, "boolean") is True
+
+
+def test_safe_parse_boolean_string_true():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._safe_parse("true", "boolean") is True
+
+
+def test_safe_parse_boolean_string_false():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._safe_parse("false", "boolean") is False
+
+
+def test_safe_parse_none_returns_none():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._safe_parse(None, "text") is None
+
+
+def test_safe_parse_text_returns_string():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._safe_parse("hello", "text") == "hello"
