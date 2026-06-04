@@ -43,14 +43,10 @@ async def chat(
                         yield f"data: {token}\n\n"
             yield "data: [DONE]\n\n"
         except Exception:
-            logging.exception(
-                "Agent streaming error for session %s", body.session_id
-            )
+            logging.exception("Agent streaming error for session %s", body.session_id)
             yield "data: [ERROR] An error occurred. Please try again.\n\n"
         finally:
             if full_response:
-                append_to_history(
-                    body.session_id, "assistant", "".join(full_response)
-                )
+                append_to_history(body.session_id, "assistant", "".join(full_response))
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

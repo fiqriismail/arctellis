@@ -1,10 +1,14 @@
-import pytest
+from unittest.mock import MagicMock
 
+import pytest
+from httpx import ASGITransport, AsyncClient
 
 # ── session store ─────────────────────────────────────────────────────────────
 
+
 def setup_function():
     from app.session import reset_all
+
     reset_all()
 
 
@@ -57,11 +61,6 @@ def test_clear_session_removes_history():
     assert get_history("s3") == []
 
 
-import pytest
-from unittest.mock import MagicMock
-from httpx import AsyncClient, ASGITransport
-
-
 def _make_mock_agent(*tokens: str):
     """Return a mock agent that streams the given tokens."""
     mock = MagicMock()
@@ -80,9 +79,11 @@ def _make_mock_agent(*tokens: str):
 
 # ── /chat endpoint ─────────────────────────────────────────────────────────────
 
+
 @pytest.fixture(autouse=True)
 def reset_sessions():
     from app.session import reset_all
+
     reset_all()
     yield
     reset_all()
@@ -131,9 +132,7 @@ async def test_chat_persists_history_after_response():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
-        await client.post(
-            "/chat", json={"question": "How many?", "session_id": "t3"}
-        )
+        await client.post("/chat", json={"question": "How many?", "session_id": "t3"})
 
     history = get_history("t3")
     assert len(history) == 2
@@ -162,9 +161,7 @@ async def test_chat_second_question_receives_history():
         await client.post(
             "/chat", json={"question": "First question", "session_id": "t4"}
         )
-        await client.post(
-            "/chat", json={"question": "Follow-up", "session_id": "t4"}
-        )
+        await client.post("/chat", json={"question": "Follow-up", "session_id": "t4"})
 
     second_call_messages = received_messages[1]
     contents = [m["content"] for m in second_call_messages]
