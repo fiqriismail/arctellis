@@ -53,10 +53,12 @@ class SharePointService:
         client: GraphServiceClient,
         site_id: str,
         list_id: str,
+        cache_ttl: int = 60,
     ) -> None:
         self._client = client
         self._site_id = site_id
         self._list_id = list_id
+        self._cache = _TTLCache(ttl=cache_ttl)
 
     @staticmethod
     def _infer_column_type(col: Any) -> str:

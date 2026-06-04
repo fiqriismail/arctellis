@@ -452,3 +452,21 @@ def test_ttl_cache_different_keys_are_independent():
     cache.set("b", 2)
     assert cache.get("a") == 1
     assert cache.get("b") == 2
+
+
+def test_sharepoint_service_creates_cache_with_given_ttl():
+    from app.services.sharepoint import SharePointService, _TTLCache
+
+    mock_client = MagicMock()
+    service = SharePointService(client=mock_client, site_id="s", list_id="l", cache_ttl=30)
+    assert isinstance(service._cache, _TTLCache)
+    assert service._cache._ttl == 30
+
+
+def test_sharepoint_service_default_cache_ttl_is_60():
+    from app.services.sharepoint import SharePointService, _TTLCache
+
+    mock_client = MagicMock()
+    service = SharePointService(client=mock_client, site_id="s", list_id="l")
+    assert isinstance(service._cache, _TTLCache)
+    assert service._cache._ttl == 60
