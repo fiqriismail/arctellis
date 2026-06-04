@@ -180,4 +180,5 @@ async def create_sharepoint_service(
         client=client,
         site_id=site.id,
         list_id=settings.sharepoint_list_id,
+        cache_ttl=settings.cache_ttl_seconds,
     )

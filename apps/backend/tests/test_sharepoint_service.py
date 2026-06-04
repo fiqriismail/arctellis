@@ -622,3 +622,27 @@ async def test_get_items_same_filter_reuses_cache():
 
     # Same filter → cache hit on second call
     assert get_mock.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_create_sharepoint_service_passes_cache_ttl():
+    from app.services.sharepoint import create_sharepoint_service, SharePointService
+
+    mock_site = MagicMock()
+    mock_site.id = "barringtondigital.sharepoint.com,abc,def"
+
+    mock_client = MagicMock()
+    mock_client.sites.by_site_id.return_value.get = AsyncMock(return_value=mock_site)
+
+    mock_auth = MagicMock()
+    mock_auth.get_client.return_value = mock_client
+
+    mock_settings = MagicMock()
+    mock_settings.sharepoint_site_url = "https://barringtondigital.sharepoint.com/sites/Procurement"
+    mock_settings.sharepoint_list_id = "37b0d45b-4f69-42cf-b26f-7112033a83fb"
+    mock_settings.cache_ttl_seconds = 120
+
+    service = await create_sharepoint_service(auth_service=mock_auth, settings=mock_settings)
+
+    assert isinstance(service, SharePointService)
+    assert service._cache._ttl == 120
