@@ -13,6 +13,7 @@ dependencies = [
     "azure-identity>=1.19",
     "python-dotenv>=1.0",
     "pydantic-settings>=2.7",
+    "PyJWT[crypto]>=2.8",
 ]
 
 [project.optional-dependencies]
@@ -34,3 +35,8 @@ select = ["E", "F", "I", "UP"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 pythonpath = ["src"]
+filterwarnings = [
+    "ignore::starlette.exceptions.StarletteDeprecationWarning",
+    "ignore::DeprecationWarning:kiota_abstractions",
+    "ignore::DeprecationWarning:msgraph",
+]
