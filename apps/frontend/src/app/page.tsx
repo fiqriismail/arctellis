@@ -1,14 +1,29 @@
+import { ChatInput } from '@/features/chat/components/ChatInput'
+
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          SharePoint List AI Assistant
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Chat UI coming soon — see FE-01.
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+      <div className="w-full max-w-2xl space-y-6">
+        {/* Header */}
+        <div className="space-y-2 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            SharePoint List AI Assistant
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Ask a question about your list in plain English.
+          </p>
+        </div>
+
+        {/* Input */}
+        <ChatInput onSubmit={(q) => console.log('Question submitted:', q)} />
+
+        {/* Keyboard hint */}
+        <p className="text-center text-xs text-muted-foreground">
+          Press <kbd className="rounded border px-1 py-0.5 text-xs font-mono">Enter</kbd> to
+          send · <kbd className="rounded border px-1 py-0.5 text-xs font-mono">Shift+Enter</kbd>{' '}
+          for new line
         </p>
       </div>
-    </main>
+    </div>
   )
 }
