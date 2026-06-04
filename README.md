@@ -20,7 +20,7 @@ docs/        PRD, Architecture, stories
 cd apps/backend
 uv sync
 cp .env.example .env   # fill in your values
-uv run uvicorn app.main:app --reload
+uv run uvicorn app.main:app --app-dir src --reload
 # → http://localhost:8000/health
 ```
 
