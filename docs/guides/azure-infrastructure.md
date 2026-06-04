@@ -1,11 +1,10 @@
 # Azure Infrastructure Guide — SharePoint List AI Assistant
 
-This guide walks through every Azure resource the application needs, in the order they should be created. Each section maps back to the architecture and tells you which `.env` key to fill in from each step.
+Step-by-step guide to provisioning every Azure resource via the **Azure Portal** (portal.azure.com). Follow the sections in order — each one tells you which `.env` value to copy at the end.
 
-**Tools required**
-- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) (`az`) — install and run `az login` before starting
-- An Azure subscription with Owner or Contributor + User Access Administrator roles
-- A Microsoft 365 / SharePoint Online tenant
+**Before you start**
+- Sign in to [portal.azure.com](https://portal.azure.com) with an account that has **Owner** or **Contributor + User Access Administrator** on the subscription.
+- Have a Microsoft 365 / SharePoint Online tenant in the same Entra ID directory.
 
 **Reference files**
 - `.env` template: `apps/backend/.env.example`
@@ -15,203 +14,161 @@ This guide walks through every Azure resource the application needs, in the orde
 
 ## 1. Resource Group
 
-All resources for this app live in a single resource group. Create it once.
+All resources live in one resource group.
 
-```bash
-az group create \
-  --name rg-group-one-rtp \
-  --location australiaeast
-```
+1. In the portal search bar type **Resource groups** and select it.
+2. Click **+ Create**.
+3. Fill in:
+   - **Subscription** — select yours
+   - **Resource group name** — `rg-group-one-rtp`
+   - **Region** — choose the region closest to your users (e.g. Australia East)
+4. Click **Review + create** → **Create**.
 
-> Change `australiaeast` to your preferred region. Use the same region for all resources below to minimise latency and egress costs.
+> Use the same region for all resources below unless a service isn't available there.
 
 ---
 
 ## 2. Entra ID App Registration
 
-The backend uses a **client-credentials** identity to read SharePoint on the app's own behalf. This is separate from end-user sign-in (covered in §7).
+The backend uses a **client-credentials** identity to read SharePoint on the app's own behalf. This is distinct from end-user sign-in (covered in §7).
 
-### 2.1 Create the app registration
+### 2.1 Create the registration
 
-```bash
-az ad app create \
-  --display-name "group-one-rtp-backend" \
-  --sign-in-audience AzureADMyOrg
-```
+1. Search for **Microsoft Entra ID** and select it.
+2. In the left menu select **App registrations** → **+ New registration**.
+3. Fill in:
+   - **Name** — `group-one-rtp-backend`
+   - **Supported account types** — *Accounts in this organizational directory only (Single tenant)*
+   - **Redirect URI** — leave blank for now
+4. Click **Register**.
 
-Copy the `appId` from the output — this is your `AZURE_CLIENT_ID`.
+You are taken to the app's Overview page. Copy two values:
 
-```bash
-# Save the app ID to a shell variable for use in later steps
-APP_ID=<appId from above>
-```
+| Value | Where | `.env` key |
+|---|---|---|
+| **Application (client) ID** | Overview page | `AZURE_CLIENT_ID` |
+| **Directory (tenant) ID** | Overview page | `AZURE_TENANT_ID` |
 
-### 2.2 Create a service principal
+### 2.2 Create a client secret
 
-```bash
-az ad sp create --id $APP_ID
-```
+1. In the left menu select **Certificates & secrets**.
+2. Click **+ New client secret**.
+3. Fill in:
+   - **Description** — `backend-secret`
+   - **Expires** — 12 months (or your org policy)
+4. Click **Add**.
+5. **Copy the Value immediately** — it is only shown once.
 
-### 2.3 Get your Tenant ID
+| Value | `.env` key |
+|---|---|
+| Secret **Value** | `AZURE_CLIENT_SECRET` |
 
-```bash
-az account show --query tenantId -o tsv
-```
-
-Copy this value — this is your `AZURE_TENANT_ID`.
-
-### 2.4 Create a client secret
-
-```bash
-az ad app credential reset \
-  --id $APP_ID \
-  --years 1
-```
-
-Copy the `password` from the output — this is your `AZURE_CLIENT_SECRET`. This is the **only time** it is shown.
-
-> **.env mapping**
+> **.env mapping after §2**
 > ```
-> AZURE_TENANT_ID=<tenant ID from 2.3>
-> AZURE_CLIENT_ID=<appId from 2.1>
-> AZURE_CLIENT_SECRET=<password from 2.4>
+> AZURE_TENANT_ID=<Directory (tenant) ID>
+> AZURE_CLIENT_ID=<Application (client) ID>
+> AZURE_CLIENT_SECRET=<secret value>
 > ```
 
 ---
 
 ## 3. Microsoft Graph Permissions
 
-The app needs read access to SharePoint via Microsoft Graph. Prefer `Sites.Selected` (scoped to one site) over `Sites.Read.All` (entire tenant).
+The app needs read access to SharePoint via Microsoft Graph.
 
-### Option A — Sites.Selected (recommended)
+### 3.1 Add the permission
 
-#### 3A.1 Grant the application permission
+1. Still on the app registration, select **API permissions** in the left menu.
+2. Click **+ Add a permission** → **Microsoft Graph** → **Application permissions**.
+3. Search for and tick one of:
+   - **`Sites.Selected`** — recommended (scoped to one site only)
+   - **`Sites.Read.All`** — simpler for initial dev if the target site is not yet finalised
+4. Click **Add permissions**.
 
-```bash
-# Get the Graph API service principal object ID
-GRAPH_SP_ID=$(az ad sp show --id 00000003-0000-0000-c000-000000000000 --query id -o tsv)
+### 3.2 Grant admin consent
 
-# Get the Sites.Selected app role ID
-SITES_SELECTED_ID=$(az ad sp show \
-  --id 00000003-0000-0000-c000-000000000000 \
-  --query "appRoles[?value=='Sites.Selected'].id" -o tsv)
+1. Back on the API permissions page, click **Grant admin consent for \<your org\>**.
+2. Click **Yes** to confirm.
+3. The Status column should show a green tick ✓ next to the permission.
 
-# Add the permission to the app registration
-az ad app permission add \
-  --id $APP_ID \
-  --api 00000003-0000-0000-c000-000000000000 \
-  --api-permissions $SITES_SELECTED_ID=Role
-```
+> If you chose `Sites.Selected` in step 3.1, the permission alone is not enough — you also need to grant the app access to the specific SharePoint site. This cannot be done in the Portal and requires a Graph API call. See the note at the end of §3.
 
-#### 3A.2 Grant admin consent
+### 3.3 Sites.Selected — grant access to the specific site (Graph API call)
 
-```bash
-az ad app permission admin-consent --id $APP_ID
-```
+Skip this if you used `Sites.Read.All`.
 
-#### 3A.3 Grant the app access to the specific SharePoint site
+You need to make a POST request to Graph. The easiest way is to use [Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer):
 
-`Sites.Selected` permission alone is not enough — you must also explicitly grant the app access to the target site. This requires a Graph API call using a token with `Sites.FullControl.All` (i.e., a Global Admin token).
+1. Go to **Graph Explorer** and sign in with a **Global Admin** account.
+2. First, look up your site ID:
+   - Method: **GET**
+   - URL: `https://graph.microsoft.com/v1.0/sites/<tenant>.sharepoint.com:/sites/<site-name>`
+   - Click **Run query**. Copy the `id` field from the response — this is your **site ID**.
+3. Grant the app read access to that site:
+   - Method: **POST**
+   - URL: `https://graph.microsoft.com/v1.0/sites/<site-id>/permissions`
+   - Request body:
+     ```json
+     {
+       "roles": ["read"],
+       "grantedToIdentities": [
+         {
+           "application": {
+             "id": "<AZURE_CLIENT_ID>",
+             "displayName": "group-one-rtp-backend"
+           }
+         }
+       ]
+     }
+     ```
+   - Click **Run query**. The response should contain `"roles": ["read"]`.
 
-```bash
-# Get an admin access token
-ADMIN_TOKEN=$(az account get-access-token \
-  --resource https://graph.microsoft.com \
-  --query accessToken -o tsv)
-
-# Get the site ID (replace with your SharePoint site URL)
-SITE_HOST=<tenant>.sharepoint.com
-SITE_PATH=/sites/<site-name>
-
-SITE_ID=$(curl -s \
-  -H "Authorization: Bearer $ADMIN_TOKEN" \
-  "https://graph.microsoft.com/v1.0/sites/$SITE_HOST:$SITE_PATH" \
-  | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
-
-echo "Site ID: $SITE_ID"
-
-# Grant the app read access to that site
-curl -s -X POST \
-  -H "Authorization: Bearer $ADMIN_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{\"roles\":[\"read\"],\"grantedToIdentities\":[{\"application\":{\"id\":\"$APP_ID\",\"displayName\":\"group-one-rtp-backend\"}}]}" \
-  "https://graph.microsoft.com/v1.0/sites/$SITE_ID/permissions"
-```
-
-Expected response: a permission object with `"roles": ["read"]`.
-
----
-
-### Option B — Sites.Read.All (simpler for initial dev)
-
-Use this during development if the target site is not yet finalised.
-
-```bash
-SITES_READ_ALL_ID=$(az ad sp show \
-  --id 00000003-0000-0000-c000-000000000000 \
-  --query "appRoles[?value=='Sites.Read.All'].id" -o tsv)
-
-az ad app permission add \
-  --id $APP_ID \
-  --api 00000003-0000-0000-c000-000000000000 \
-  --api-permissions $SITES_READ_ALL_ID=Role
-
-az ad app permission admin-consent --id $APP_ID
-```
-
-> Switch to `Sites.Selected` before going to production.
+> Switch from `Sites.Read.All` to `Sites.Selected` before going to production.
 
 ---
 
 ## 4. Azure OpenAI
 
-### 4.1 Create the Azure OpenAI resource
+> Azure OpenAI requires approved access. If your subscription does not have it yet, apply at [aka.ms/oai/access](https://aka.ms/oai/access).
 
-```bash
-az cognitiveservices account create \
-  --name aoai-group-one-rtp \
-  --resource-group rg-group-one-rtp \
-  --kind OpenAI \
-  --sku S0 \
-  --location australiaeast
-```
+### 4.1 Create the resource
+
+1. Search for **Azure OpenAI** and select it.
+2. Click **+ Create**.
+3. Fill in:
+   - **Subscription** — select yours
+   - **Resource group** — `rg-group-one-rtp`
+   - **Region** — same as your resource group (or the nearest region with capacity)
+   - **Name** — `aoai-group-one-rtp`
+   - **Pricing tier** — Standard S0
+4. Click **Next** through the Network and Tags tabs (defaults are fine).
+5. Click **Review + create** → **Create**.
 
 ### 4.2 Deploy a chat model
 
-```bash
-az cognitiveservices account deployment create \
-  --name aoai-group-one-rtp \
-  --resource-group rg-group-one-rtp \
-  --deployment-name gpt-4o \
-  --model-name gpt-4o \
-  --model-version "2024-11-20" \
-  --model-format OpenAI \
-  --sku-capacity 10 \
-  --sku-name GlobalStandard
-```
+1. Once the resource is created, click **Go to resource**.
+2. Click **Go to Azure OpenAI Studio** (or navigate to [oai.azure.com](https://oai.azure.com)).
+3. In the left menu select **Deployments** → **+ Create new deployment**.
+4. Fill in:
+   - **Model** — `gpt-4o`
+   - **Model version** — select the latest available
+   - **Deployment name** — `gpt-4o`
+   - **Deployment type** — Global Standard
+   - **Tokens per minute rate limit** — adjust to your quota (10K is a safe start)
+5. Click **Create**.
 
-> `--sku-capacity` is in thousands of tokens per minute. Adjust based on your quota.
+### 4.3 Copy the endpoint and key
 
-### 4.3 Get the endpoint and key
+1. Go back to the Azure OpenAI resource in the portal.
+2. In the left menu select **Keys and Endpoint**.
+3. Copy:
+   - **Endpoint** (e.g. `https://aoai-group-one-rtp.openai.azure.com/`)
+   - **KEY 1**
 
-```bash
-# Endpoint
-az cognitiveservices account show \
-  --name aoai-group-one-rtp \
-  --resource-group rg-group-one-rtp \
-  --query properties.endpoint -o tsv
-
-# API key
-az cognitiveservices account keys list \
-  --name aoai-group-one-rtp \
-  --resource-group rg-group-one-rtp \
-  --query key1 -o tsv
-```
-
-> **.env mapping**
+> **.env mapping after §4**
 > ```
-> AZURE_OPENAI_ENDPOINT=<endpoint from above>
-> AZURE_OPENAI_API_KEY=<key1 from above>
+> AZURE_OPENAI_ENDPOINT=<Endpoint>
+> AZURE_OPENAI_API_KEY=<KEY 1>
 > AZURE_OPENAI_DEPLOYMENT=gpt-4o
 > ```
 
@@ -219,212 +176,207 @@ az cognitiveservices account keys list \
 
 ## 5. Azure Key Vault
 
-In production, secrets are read from Key Vault via the container's managed identity — never from environment variables or code.
+In production, all secrets come from Key Vault via the container's managed identity — never from environment variables or code.
 
-### 5.1 Create the Key Vault
+### 5.1 Create the vault
 
-```bash
-az keyvault create \
-  --name kv-group-one-rtp \
-  --resource-group rg-group-one-rtp \
-  --location australiaeast \
-  --sku standard \
-  --enable-rbac-authorization true
-```
+1. Search for **Key vaults** and select it.
+2. Click **+ Create**.
+3. Fill in:
+   - **Subscription** — select yours
+   - **Resource group** — `rg-group-one-rtp`
+   - **Key vault name** — `kv-group-one-rtp`
+   - **Region** — same as resource group
+   - **Pricing tier** — Standard
+4. On the **Access configuration** tab:
+   - **Permission model** — select **Azure role-based access control**
+5. Click **Review + create** → **Create**.
 
-### 5.2 Add secrets
+### 5.2 Add yourself as Key Vault Administrator
 
-```bash
-az keyvault secret set --vault-name kv-group-one-rtp --name AZURE-TENANT-ID       --value "<your tenant id>"
-az keyvault secret set --vault-name kv-group-one-rtp --name AZURE-CLIENT-ID       --value "<your client id>"
-az keyvault secret set --vault-name kv-group-one-rtp --name AZURE-CLIENT-SECRET   --value "<your client secret>"
-az keyvault secret set --vault-name kv-group-one-rtp --name AZURE-OPENAI-ENDPOINT --value "<your openai endpoint>"
-az keyvault secret set --vault-name kv-group-one-rtp --name AZURE-OPENAI-API-KEY  --value "<your openai key>"
-az keyvault secret set --vault-name kv-group-one-rtp --name SHAREPOINT-SITE-URL   --value "<your site url>"
-az keyvault secret set --vault-name kv-group-one-rtp --name SHAREPOINT-LIST-ID    --value "<your list id>"
-```
+1. Go to the Key Vault resource.
+2. In the left menu select **Access control (IAM)** → **+ Add** → **Add role assignment**.
+3. Select role **Key Vault Administrator** → **Next**.
+4. Click **+ Select members**, search for your own account, select it → **Review + assign**.
 
-> The managed identity grant (step 6.4) allows the container to read these secrets at runtime — no secret is ever baked into the container image or passed as a plain environment variable in production.
+### 5.3 Add all secrets
 
----
+1. In the left menu select **Secrets** → **+ Generate/Import** for each secret below.
+2. Set **Upload options** to **Manual**, enter the **Name** and **Value**, click **Create**.
 
-## 6. Azure Container Apps (Backend)
+| Secret name | Value |
+|---|---|
+| `AZURE-TENANT-ID` | your tenant ID (from §2.1) |
+| `AZURE-CLIENT-ID` | your client ID (from §2.1) |
+| `AZURE-CLIENT-SECRET` | your client secret (from §2.2) |
+| `AZURE-OPENAI-ENDPOINT` | your OpenAI endpoint (from §4.3) |
+| `AZURE-OPENAI-API-KEY` | your OpenAI key (from §4.3) |
+| `SHAREPOINT-SITE-URL` | your SharePoint site URL |
+| `SHAREPOINT-LIST-ID` | your list GUID (see tip below) |
 
-### 6.1 Create a Container Apps environment
-
-```bash
-az containerapp env create \
-  --name cae-group-one-rtp \
-  --resource-group rg-group-one-rtp \
-  --location australiaeast
-```
-
-### 6.2 Create a Container Registry (to host the backend image)
-
-```bash
-az acr create \
-  --name acrGroupOneRtp \
-  --resource-group rg-group-one-rtp \
-  --sku Basic \
-  --admin-enabled false
-```
-
-### 6.3 Create the Container App with a system-assigned managed identity
-
-```bash
-az containerapp create \
-  --name ca-group-one-rtp-backend \
-  --resource-group rg-group-one-rtp \
-  --environment cae-group-one-rtp \
-  --image mcr.microsoft.com/azuredocs/containerapps-helloworld:latest \
-  --target-port 8000 \
-  --ingress external \
-  --min-replicas 1 \
-  --max-replicas 3 \
-  --system-assigned
-```
-
-> The placeholder image is used for initial provisioning. It will be replaced when the real image is pushed in Phase 5.
-
-### 6.4 Grant the managed identity access to Key Vault
-
-```bash
-# Get the managed identity principal ID
-PRINCIPAL_ID=$(az containerapp show \
-  --name ca-group-one-rtp-backend \
-  --resource-group rg-group-one-rtp \
-  --query identity.principalId -o tsv)
-
-# Get the Key Vault resource ID
-KV_ID=$(az keyvault show \
-  --name kv-group-one-rtp \
-  --resource-group rg-group-one-rtp \
-  --query id -o tsv)
-
-# Assign Key Vault Secrets User role
-az role assignment create \
-  --assignee $PRINCIPAL_ID \
-  --role "Key Vault Secrets User" \
-  --scope $KV_ID
-```
-
-### 6.5 Grant the managed identity pull access to the Container Registry
-
-```bash
-ACR_ID=$(az acr show \
-  --name acrGroupOneRtp \
-  --resource-group rg-group-one-rtp \
-  --query id -o tsv)
-
-az role assignment create \
-  --assignee $PRINCIPAL_ID \
-  --role AcrPull \
-  --scope $ACR_ID
-```
+> **Finding your List ID:** Go to the SharePoint site → open the list → **Settings** (gear icon) → **List settings**. The URL contains `List=%7B<guid>%7D` — URL-decode the braces (`%7B` = `{`, `%7D` = `}`) to get the GUID.
 
 ---
 
-## 7. Entra ID — End-User Sign-In (separate from app identity)
+## 6. Azure Container Registry
 
-The backend validates end-user tokens on every request. This requires a **separate** app registration (or the same one with a redirect URI added) for the web frontend.
+The backend container image is stored here before being deployed to Container Apps.
 
-> This is distinct from §2 — §2 is the app's own identity for reading SharePoint; this section is for authenticating human users.
+1. Search for **Container registries** and select it.
+2. Click **+ Create**.
+3. Fill in:
+   - **Subscription** — select yours
+   - **Resource group** — `rg-group-one-rtp`
+   - **Registry name** — `acrGroupOneRtp` (must be globally unique, lowercase/numbers only)
+   - **Location** — same as resource group
+   - **Pricing plan** — Basic
+4. Click **Review + create** → **Create**.
 
-### 7.1 Add a redirect URI to the existing app registration
+---
 
-```bash
-az ad app update \
-  --id $APP_ID \
-  --web-redirect-uris "http://localhost:3000/api/auth/callback" \
-                      "https://<your-static-web-app>.azurestaticapps.net/api/auth/callback"
-```
+## 7. Azure Container Apps (Backend)
 
-### 7.2 Enable ID tokens
+### 7.1 Create a Container Apps environment
 
-```bash
-az ad app update \
-  --id $APP_ID \
-  --enable-id-token-issuance true
-```
+1. Search for **Container Apps Environments** and select it.
+2. Click **+ Create**.
+3. Fill in:
+   - **Subscription** — select yours
+   - **Resource group** — `rg-group-one-rtp`
+   - **Name** — `cae-group-one-rtp`
+   - **Region** — same as resource group
+4. Click **Review + create** → **Create**.
 
-### 7.3 Note the values for the frontend
+### 7.2 Create the Container App
+
+1. Search for **Container Apps** and select it.
+2. Click **+ Create**.
+3. **Basics** tab:
+   - **Subscription** — select yours
+   - **Resource group** — `rg-group-one-rtp`
+   - **Container app name** — `ca-group-one-rtp-backend`
+   - **Region** — same as resource group
+   - **Container Apps Environment** — select `cae-group-one-rtp`
+4. **Container** tab:
+   - Uncheck **Use quickstart image**
+   - **Image source** — Azure Container Registry
+   - **Registry** — `acrGroupOneRtp`
+   - **Image** — leave as placeholder for now; a real image is pushed in Phase 5
+   - **CPU and memory** — 0.5 CPU / 1 Gi (sufficient for dev)
+5. **Ingress** tab:
+   - Enable ingress: **On**
+   - Ingress traffic: **Accepting traffic from anywhere**
+   - Target port: `8000`
+6. Click **Review + create** → **Create**.
+
+### 7.3 Enable system-assigned managed identity
+
+1. Go to the Container App resource.
+2. In the left menu select **Identity**.
+3. On the **System assigned** tab, toggle **Status** to **On** → **Save** → **Yes**.
+4. Copy the **Object (principal) ID** that appears — you need it in §7.4.
+
+### 7.4 Grant the identity access to Key Vault
+
+1. Go to the **Key Vault** (`kv-group-one-rtp`).
+2. In the left menu select **Access control (IAM)** → **+ Add** → **Add role assignment**.
+3. Select role **Key Vault Secrets User** → **Next**.
+4. **Assign access to** — select **Managed identity**.
+5. Click **+ Select members** → **Managed identity** dropdown → **Container App** → select `ca-group-one-rtp-backend` → **Select** → **Review + assign**.
+
+### 7.5 Grant the identity pull access to the Container Registry
+
+1. Go to the **Container Registry** (`acrGroupOneRtp`).
+2. In the left menu select **Access control (IAM)** → **+ Add** → **Add role assignment**.
+3. Select role **AcrPull** → **Next**.
+4. **Assign access to** — **Managed identity** → select `ca-group-one-rtp-backend` → **Review + assign**.
+
+---
+
+## 8. Entra ID — End-User Sign-In
+
+End users sign in with Entra ID before they can use the chat. This uses the **same app registration** from §2 but needs a redirect URI added.
+
+### 8.1 Add redirect URIs
+
+1. Go to **Microsoft Entra ID** → **App registrations** → select `group-one-rtp-backend`.
+2. In the left menu select **Authentication** → **+ Add a platform** → **Web**.
+3. Add the following redirect URIs:
+   - `http://localhost:3000/api/auth/callback` (local dev)
+   - `https://<your-static-web-app>.azurestaticapps.net/api/auth/callback` (production — fill in after §9)
+4. Under **Implicit grant and hybrid flows** tick **ID tokens**.
+5. Click **Save**.
+
+### 8.2 Frontend .env values
 
 > **.env.local mapping (frontend)**
 > ```
-> NEXT_PUBLIC_ENTRA_TENANT_ID=<AZURE_TENANT_ID>
-> NEXT_PUBLIC_ENTRA_CLIENT_ID=<AZURE_CLIENT_ID>
+> NEXT_PUBLIC_ENTRA_TENANT_ID=<AZURE_TENANT_ID from §2.1>
+> NEXT_PUBLIC_ENTRA_CLIENT_ID=<AZURE_CLIENT_ID from §2.1>
 > ```
 
 ---
 
-## 8. Azure Static Web Apps (Frontend)
+## 9. Azure Static Web Apps (Frontend)
 
-### 8.1 Create the Static Web App
+### 9.1 Create the Static Web App
 
-```bash
-az staticwebapp create \
-  --name swa-group-one-rtp \
-  --resource-group rg-group-one-rtp \
-  --location eastasia \
-  --sku Free
-```
+1. Search for **Static Web Apps** and select it.
+2. Click **+ Create**.
+3. Fill in:
+   - **Subscription** — select yours
+   - **Resource group** — `rg-group-one-rtp`
+   - **Name** — `swa-group-one-rtp`
+   - **Plan type** — Free
+   - **Region** — choose the closest available (options are limited; East Asia and East US 2 are broadly available)
+   - **Deployment source** — **GitHub** (connect your repo and branch) or **Other** for manual deploy
+4. Click **Review + create** → **Create**.
 
-> Static Web Apps has a limited set of supported regions. `eastasia` and `eastus2` are the most broadly available. Check `az staticwebapp list-locations` for current options.
+### 9.2 Copy the deployment token (for CI)
 
-### 8.2 Get the deployment token (for CI)
+1. Go to the Static Web App resource.
+2. In the left menu select **Manage deployment token**.
+3. Copy the token and save it as a GitHub Actions secret named `AZURE_STATIC_WEB_APPS_API_TOKEN`.
 
-```bash
-az staticwebapp secrets list \
-  --name swa-group-one-rtp \
-  --resource-group rg-group-one-rtp \
-  --query properties.apiKey -o tsv
-```
+### 9.3 Set the backend API URL
 
-Store this token in your CI/CD system (e.g. GitHub Actions secret `AZURE_STATIC_WEB_APPS_API_TOKEN`). It is used by the deployment action, not by the running app.
+1. In the left menu select **Configuration** → **+ Add**.
+2. Add the application setting:
+   - **Name** — `NEXT_PUBLIC_API_URL`
+   - **Value** — the Container App FQDN from §7.2 (find it on the Container App overview page under **Application URL**)
+3. Click **OK** → **Save**.
 
-### 8.3 Set the backend API URL
+### 9.4 Update the Entra redirect URI
 
-In the Static Web App settings → Configuration → Add application setting:
-
-| Name | Value |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | `https://<containerapp-fqdn>` |
-
-Get the container app FQDN:
-```bash
-az containerapp show \
-  --name ca-group-one-rtp-backend \
-  --resource-group rg-group-one-rtp \
-  --query properties.configuration.ingress.fqdn -o tsv
-```
+1. Go back to the app registration (§8.1) and update the production redirect URI with the actual Static Web App URL now that you have it.
 
 ---
 
 ## Summary — resource checklist
 
-| Resource | Name | Created |
+| Resource | Name | Section |
 |---|---|---|
 | Resource Group | `rg-group-one-rtp` | §1 |
 | Entra App Registration | `group-one-rtp-backend` | §2 |
-| Graph permissions (Sites.Selected) | — | §3 |
+| Graph permission | `Sites.Selected` or `Sites.Read.All` | §3 |
 | Azure OpenAI | `aoai-group-one-rtp` | §4 |
 | Azure Key Vault | `kv-group-one-rtp` | §5 |
-| Container Apps Environment | `cae-group-one-rtp` | §6 |
 | Container Registry | `acrGroupOneRtp` | §6 |
-| Container App (backend) | `ca-group-one-rtp-backend` | §6 |
-| Static Web App (frontend) | `swa-group-one-rtp` | §8 |
+| Container Apps Environment | `cae-group-one-rtp` | §7 |
+| Container App (backend) | `ca-group-one-rtp-backend` | §7 |
+| Static Web App (frontend) | `swa-group-one-rtp` | §9 |
 
 ## Summary — .env mapping
 
 | `.env` key | Source |
 |---|---|
-| `AZURE_TENANT_ID` | §2.3 |
-| `AZURE_CLIENT_ID` | §2.1 |
-| `AZURE_CLIENT_SECRET` | §2.4 |
-| `AZURE_OPENAI_ENDPOINT` | §4.3 |
-| `AZURE_OPENAI_API_KEY` | §4.3 |
-| `AZURE_OPENAI_DEPLOYMENT` | `gpt-4o` (hardcoded default) |
+| `AZURE_TENANT_ID` | §2.1 — Directory (tenant) ID |
+| `AZURE_CLIENT_ID` | §2.1 — Application (client) ID |
+| `AZURE_CLIENT_SECRET` | §2.2 — secret Value |
+| `AZURE_OPENAI_ENDPOINT` | §4.3 — Endpoint |
+| `AZURE_OPENAI_API_KEY` | §4.3 — KEY 1 |
+| `AZURE_OPENAI_DEPLOYMENT` | `gpt-4o` |
 | `SHAREPOINT_SITE_URL` | your SharePoint site URL |
-| `SHAREPOINT_LIST_ID` | your list GUID (from Graph or site settings) |
+| `SHAREPOINT_LIST_ID` | §5.3 tip — list GUID from list settings URL |
 | `CACHE_TTL_SECONDS` | default `60` |
 | `LIST_ROW_THRESHOLD` | default `1000` |
