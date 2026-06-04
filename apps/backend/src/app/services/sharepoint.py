@@ -110,6 +110,7 @@ class SharePointService:
             .items.get(request_configuration=request_configuration)
         )
 
+        # Note: only fetches first page (~200 items). Pagination via odata_next_link not implemented.
         items: list[ListItem] = []
         if not result or not result.value:
             return items
@@ -133,6 +134,8 @@ async def create_sharepoint_service(
     hostname = parsed.netloc
     site_path = parsed.path.rstrip("/")
     site = await client.sites.by_site_id(f"{hostname}:{site_path}").get()
+    if not site or not site.id:
+        raise ValueError(f"Could not resolve site ID for URL: {settings.sharepoint_site_url}")
     return SharePointService(
         client=client,
         site_id=site.id,
