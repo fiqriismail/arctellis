@@ -12,7 +12,11 @@ Optionally:
 
 import asyncio
 import sys
+from pathlib import Path
 from urllib.parse import urlparse
+
+# Add src/ to path so `app` is importable when running as a script
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from app.config import Settings
 from app.services.graph_auth import GraphAuthService
