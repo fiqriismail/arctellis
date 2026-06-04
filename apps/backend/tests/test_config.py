@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from pydantic import ValidationError
 
@@ -26,6 +28,10 @@ def test_settings_defaults():
     assert s.cache_ttl_seconds == 60
     assert s.list_row_threshold == 1000
     assert s.azure_openai_deployment == "gpt-4o"
+    assert s.azure_openai_endpoint == ""
+    assert s.azure_openai_api_key == ""
+    assert s.sharepoint_site_url == ""
+    assert s.sharepoint_list_id == ""
 
 
 def test_settings_missing_tenant_id_raises():
@@ -53,7 +59,6 @@ def test_get_settings_returns_settings_instance():
     from app.config import Settings, get_settings
 
     get_settings.cache_clear()
-    import os
     os.environ.setdefault("AZURE_TENANT_ID", "t")
     os.environ.setdefault("AZURE_CLIENT_ID", "c")
     os.environ.setdefault("AZURE_CLIENT_SECRET", "s")
