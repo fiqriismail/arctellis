@@ -54,13 +54,14 @@ def test_build_agent_passes_correct_model_string():
         assert llm.openai_api_key.get_secret_value() == "sk-test"
 
 
-def test_build_agent_registers_all_six_tools():
+def test_build_agent_registers_all_tools():
     from app.agent import build_agent
 
     mock_service = MagicMock()
     mock_settings = MagicMock()
     mock_settings.openai_model = "gpt-4o"
     mock_settings.openai_api_key = "sk-test"
+    mock_settings.site_timezone = "Europe/London"
 
     with patch("app.agent.create_agent") as mock_create:
         mock_create.return_value = MagicMock()
@@ -75,6 +76,7 @@ def test_build_agent_registers_all_six_tools():
             "sum_column",
             "average_column",
             "group_and_aggregate",
+            "filter_by_date",
         }
 
 

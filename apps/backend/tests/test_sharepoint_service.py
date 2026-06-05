@@ -673,6 +673,24 @@ async def test_get_items_same_filter_reuses_cache():
     assert get_mock.call_count == 1
 
 
+def test_normalize_filter_prefixes_bare_date_column():
+    from app.services.sharepoint import SharePointService
+
+    out = SharePointService._normalize_filter("Created ge '2026-05-26T00:00:00Z'")
+    assert out == "fields/Created ge '2026-05-26T00:00:00Z'"
+
+
+def test_normalize_filter_preserves_quoted_datetime_range():
+    from app.services.sharepoint import SharePointService
+
+    f = (
+        "fields/Created ge '2026-05-26T00:00:00Z'"
+        " and fields/Created lt '2026-05-27T00:00:00Z'"
+    )
+    # Already prefixed and the quoted datetime literals must be left intact.
+    assert SharePointService._normalize_filter(f) == f
+
+
 # --- person column resolution (LookupId -> display name + email) ---
 
 

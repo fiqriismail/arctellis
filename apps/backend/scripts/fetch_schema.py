@@ -1,5 +1,6 @@
 """
-Fetch the SharePoint list schema and write docs/sharepoint_schema.md.
+Fetch the SharePoint list schema and write src/app/data/sharepoint_schema.md
+(loaded into the agent system prompt at startup).
 
 Run from apps/backend/:
     uv run python scripts/fetch_schema.py
@@ -19,7 +20,7 @@ from app.config import Settings
 from app.services.graph_auth import GraphAuthService
 from app.services.sharepoint import create_sharepoint_service
 
-OUT = Path(__file__).parent.parent / "docs" / "sharepoint_schema.md"
+OUT = Path(__file__).parent.parent / "src" / "app" / "data" / "sharepoint_schema.md"
 
 TYPE_NOTES = {
     "person": "Person/group — fields dict contains {LookupValue, Email}",
@@ -94,6 +95,13 @@ async def main() -> None:
         "```",
         "fields/Department eq 'CIO'",
         "fields/Status eq 'Active'",
+        "```",
+        "",
+        "Datetime values must be quoted ISO-8601 strings. Match a single day with"
+        " a half-open range (not `eq`):",
+        "```",
+        "fields/Created ge '2026-05-26T00:00:00Z'"
+        " and fields/Created lt '2026-05-27T00:00:00Z'",
         "```",
     ]
 

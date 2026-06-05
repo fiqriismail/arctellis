@@ -1,15 +1,42 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from langchain_core.tools import tool
 
 from app.services.sharepoint import SharePointService
 
 
-def make_tools(service: SharePointService) -> list:
-    """Return LangChain @tool callables wired to the given SharePointService."""
+def _local_day_range_utc(
+    start_date: str, end_date: str, site_timezone: str
+) -> tuple[str, str]:
+    """Convert a local calendar day (or inclusive range) to a UTC half-open range.
+
+    start_date / end_date are 'YYYY-MM-DD' in site_timezone. Returns
+    (start_utc, end_utc) as quoted-ready ISO-8601 'Z' strings, where end_utc is
+    exclusive (00:00 local of the day after end_date). Raises ValueError on bad
+    input.
+    """
+    zone = ZoneInfo(site_timezone)
+    start_local = datetime.fromisoformat(start_date).replace(tzinfo=zone)
+    last_day = datetime.fromisoformat(end_date) if end_date else start_local
+    end_local = (last_day + timedelta(days=1)).replace(tzinfo=zone)
+
+    def _to_utc(d: datetime) -> str:
+        return d.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    return _to_utc(start_local), _to_utc(end_local)
+
+
+def make_tools(service: SharePointService, site_timezone: str = "UTC") -> list:
+    """Return LangChain @tool callables wired to the given SharePointService.
+
+    site_timezone is the IANA zone in which user-typed calendar dates are
+    interpreted before converting to the UTC range Graph filters on.
+    """
 
     @tool
     async def get_schema() -> str:
@@ -36,6 +63,34 @@ def make_tools(service: SharePointService) -> list:
         Leave odata_filter empty to retrieve all rows.
         Returns the row data as JSON."""
         items = await service.get_items(odata_filter=odata_filter or None)
+        if not items:
+            return "No rows found."
+        rows = [item.fields for item in items]
+        return json.dumps(rows, default=str)
+
+    @tool
+    async def filter_by_date(
+        column_name: str, start_date: str, end_date: str = ""
+    ) -> str:
+        """Retrieve rows where a date/time column falls on a local calendar day
+        or range. ALWAYS use this for any question about a date or day on a
+        date/time column (e.g. Created, Modified) instead of building a datetime
+        OData filter yourself — it handles timezone conversion correctly.
+        column_name: internal name of a dateTime column (e.g. 'Created').
+        start_date: 'YYYY-MM-DD' interpreted in the site's local timezone.
+        end_date: optional inclusive end 'YYYY-MM-DD'; omit for a single day.
+        Returns the matching rows as JSON."""
+        try:
+            start_utc, end_utc = _local_day_range_utc(
+                start_date, end_date, site_timezone
+            )
+        except ValueError:
+            return "Invalid date. Use the format YYYY-MM-DD."
+        odata = (
+            f"fields/{column_name} ge '{start_utc}' "
+            f"and fields/{column_name} lt '{end_utc}'"
+        )
+        items = await service.get_items(odata_filter=odata)
         if not items:
             return "No rows found."
         rows = [item.fields for item in items]
@@ -145,6 +200,7 @@ def make_tools(service: SharePointService) -> list:
     return [
         get_schema,
         filter_rows,
+        filter_by_date,
         count_rows,
         sum_column,
         average_column,

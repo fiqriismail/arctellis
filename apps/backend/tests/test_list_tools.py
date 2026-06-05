@@ -4,6 +4,81 @@ import pytest
 
 from app.services.sharepoint import ColumnDefinition, ListItem
 
+# --- _local_day_range_utc ---
+
+
+def test_local_day_range_utc_london_summer_is_bst():
+    from app.tools.list_tools import _local_day_range_utc
+
+    # 25 May 2026 is BST (UTC+1) → local midnight is 23:00 the prior UTC day.
+    start, end = _local_day_range_utc("2026-05-25", "", "Europe/London")
+    assert start == "2026-05-24T23:00:00Z"
+    assert end == "2026-05-25T23:00:00Z"
+
+
+def test_local_day_range_utc_london_winter_is_utc():
+    from app.tools.list_tools import _local_day_range_utc
+
+    # 15 Jan 2026 is GMT (UTC+0).
+    start, end = _local_day_range_utc("2026-01-15", "", "Europe/London")
+    assert start == "2026-01-15T00:00:00Z"
+    assert end == "2026-01-16T00:00:00Z"
+
+
+def test_local_day_range_utc_utc_zone():
+    from app.tools.list_tools import _local_day_range_utc
+
+    start, end = _local_day_range_utc("2026-05-25", "", "UTC")
+    assert start == "2026-05-25T00:00:00Z"
+    assert end == "2026-05-26T00:00:00Z"
+
+
+def test_local_day_range_utc_inclusive_end_date():
+    from app.tools.list_tools import _local_day_range_utc
+
+    # Range 25–26 May in UTC → end is exclusive start of 27 May.
+    start, end = _local_day_range_utc("2026-05-25", "2026-05-26", "UTC")
+    assert start == "2026-05-25T00:00:00Z"
+    assert end == "2026-05-27T00:00:00Z"
+
+
+@pytest.mark.asyncio
+async def test_filter_by_date_builds_utc_range_filter():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_items = AsyncMock(
+        return_value=[ListItem(id="1", fields={"Title": "X"})]
+    )
+
+    tools = make_tools(mock_service, site_timezone="Europe/London")
+    tool = next(t for t in tools if t.name == "filter_by_date")
+    result = await tool.ainvoke({"column_name": "Created", "start_date": "2026-05-25"})
+
+    mock_service.get_items.assert_awaited_once()
+    odata = mock_service.get_items.await_args.kwargs["odata_filter"]
+    assert odata == (
+        "fields/Created ge '2026-05-24T23:00:00Z' "
+        "and fields/Created lt '2026-05-25T23:00:00Z'"
+    )
+    assert "X" in result
+
+
+@pytest.mark.asyncio
+async def test_filter_by_date_invalid_date_returns_message():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_items = AsyncMock()
+
+    tools = make_tools(mock_service, site_timezone="UTC")
+    tool = next(t for t in tools if t.name == "filter_by_date")
+    result = await tool.ainvoke({"column_name": "Created", "start_date": "not-a-date"})
+
+    assert "Invalid date" in result
+    mock_service.get_items.assert_not_awaited()
+
+
 # --- _parse_number ---
 
 
