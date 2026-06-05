@@ -17,14 +17,22 @@ beforeEach(() => {
 
 describe('useChat', () => {
   it('appends the user message to messages immediately on sendMessage', async () => {
-    mockStreamMessage.mockImplementation(() => makeTokenStream(['Hello']))
+    let resolveStream: () => void
+    mockStreamMessage.mockImplementation(async function* () {
+      await new Promise<void>(r => { resolveStream = r })
+      yield 'Hello'
+    })
     const { result } = renderHook(() => useChat())
 
-    await act(async () => {
-      await result.current.sendMessage('test question')
-    })
+    act(() => { result.current.sendMessage('test question') })
 
+    await waitFor(() => expect(result.current.isStreaming).toBe(true))
+    expect(result.current.messages).toHaveLength(1)
     expect(result.current.messages[0]).toEqual({ role: 'user', text: 'test question' })
+
+    // Let stream complete for cleanup
+    resolveStream!()
+    await waitFor(() => expect(result.current.isStreaming).toBe(false))
   })
 
   it('accumulates tokens and adds a completed assistant message when stream ends', async () => {
@@ -79,6 +87,7 @@ describe('useChat', () => {
     })
 
     expect(result.current.streamError).toBe('Something went wrong — please try again')
+    expect(result.current.messages).toHaveLength(2) // user message and assistant with partial text
     expect(result.current.messages[1]).toEqual({ role: 'assistant', text: 'Partial ' })
     expect(result.current.isStreaming).toBe(false)
   })
