@@ -25,8 +25,11 @@ def validate_entra_token(token: str, tenant_id: str, client_id: str) -> dict:
         token,
         signing_key.key,
         algorithms=["RS256"],
-        audience=client_id,
-        issuer=f"https://login.microsoftonline.com/{tenant_id}/v2.0",
+        audience=[client_id, f"api://{client_id}"],
+        issuer=[
+            f"https://login.microsoftonline.com/{tenant_id}/v2.0",
+            f"https://sts.windows.net/{tenant_id}/",
+        ],
     )
 
 

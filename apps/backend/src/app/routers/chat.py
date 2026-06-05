@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 
 from fastapi import APIRouter, Depends, Request
@@ -41,7 +42,7 @@ async def chat(
                     if chunk.content:
                         token = chunk.content
                         full_response.append(token)
-                        yield f"data: {token}\n\n"
+                        yield f"data: {json.dumps(token)}\n\n"
             yield "data: [DONE]\n\n"
         except Exception:
             logging.exception("Agent streaming error for session %s", body.session_id)

@@ -56,13 +56,12 @@ export async function* streamMessage(
 
         for (const line of rawEvent.split('\n')) {
           if (!line.startsWith('data:')) continue
-          // Strip 'data:' and a single SSE delimiter space, preserving the token's own spaces.
-          const payload = line.slice(5).replace(/^ /, '')
-          if (payload === '[DONE]') return
-          if (payload.startsWith('[ERROR]')) {
-            throw new ApiError('server', payload.slice('[ERROR]'.length).trim())
+          const raw = line.slice(5).replace(/^ /, '')
+          if (raw === '[DONE]') return
+          if (raw.startsWith('[ERROR]')) {
+            throw new ApiError('server', raw.slice('[ERROR]'.length).trim())
           }
-          yield payload
+          yield JSON.parse(raw) as string
         }
       }
     }

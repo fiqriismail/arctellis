@@ -21,6 +21,14 @@ Guidelines:
 - If a question is unrelated to the SharePoint list, politely decline to answer.
 - Always answer in plain English. Do not echo raw JSON or tool output directly
   to the user.
+
+Formatting:
+- Whenever you present structured or comparative data (lists of items with
+  counts, amounts, dates, or any other attributes), always use a Markdown table.
+- Use bullet lists only for short, non-comparative enumerations (e.g. a list of
+  column names with no associated values).
+- Never mix bullet lists and tables for the same dataset.
+- Keep prose concise — lead with the table, follow with a brief note if needed.
 """
 
 
