@@ -1,6 +1,12 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import HomePage from '@/app/page'
+
+jest.mock('@/features/chat/api/streamMessage', () => ({
+  streamMessage: jest.fn().mockImplementation(async function* () {
+    yield 'Streamed response'
+  }),
+}))
 
 describe('HomePage', () => {
   it('shows empty state by default', () => {
@@ -18,19 +24,19 @@ describe('HomePage', () => {
     expect(screen.getByText('Test question')).toBeInTheDocument()
   })
 
-  it('shows stub assistant response after submit', async () => {
+  it('shows assistant response after submit', async () => {
     const user = userEvent.setup()
     render(<HomePage />)
     await user.type(screen.getByPlaceholderText(/ask a question/i), 'Hello')
     await user.keyboard('{Enter}')
-    expect(screen.getByText(/Connected to the backend in FE-08/)).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Streamed response')).toBeInTheDocument())
   })
 
-  it('clicking a suggestion card submits it as a user message', async () => {
+  it('clicking a suggestion card submits it as a user message and shows response', async () => {
     const user = userEvent.setup()
     render(<HomePage />)
     await user.click(screen.getByText('Show overdue tasks'))
     expect(screen.getByText('Show overdue tasks')).toBeInTheDocument()
-    expect(screen.getByText(/Connected to the backend in FE-08/)).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Streamed response')).toBeInTheDocument())
   })
 })

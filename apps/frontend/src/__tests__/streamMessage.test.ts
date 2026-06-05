@@ -42,7 +42,7 @@ describe('streamMessage', () => {
 
     expect(tokens.length).toBe(1)
     expect(caughtError).not.toBeNull()
-    expect(caughtError?.name).toBe('AbortError')
+    expect(caughtError!.name).toBe('AbortError')
   })
 
   it('throws AbortError immediately if signal is already aborted before first token', async () => {
