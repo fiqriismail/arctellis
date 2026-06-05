@@ -14,12 +14,12 @@ function delay(ms: number, signal: AbortSignal): Promise<void> {
 }
 
 export async function* streamMessage(
-  _text: string,
+  _text: string, // FE-08 will POST this to the backend SSE endpoint
   signal: AbortSignal
 ): AsyncGenerator<string> {
   const tokens = 'This is a stub response — real answers arrive in FE-08.'.split(' ')
   for (const token of tokens) {
     await delay(80, signal)
-    yield token + ' '
+    yield token + ' ' // stub adds trailing space; real SSE tokens won't
   }
 }
