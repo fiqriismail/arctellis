@@ -27,3 +27,6 @@ out/
 # Misc
 *.log
 docs/superpowers
+.superpowers/
+apps/backend/uv.lock
+docs/design
