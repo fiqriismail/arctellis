@@ -1,5 +1,6 @@
 """
-Fetch the SharePoint list schema and write docs/sharepoint_schema.md.
+Fetch the SharePoint list schema and write src/app/data/sharepoint_schema.md
+(loaded into the agent system prompt at startup).
 
 Run from apps/backend/:
     uv run python scripts/fetch_schema.py
@@ -19,7 +20,7 @@ from app.config import Settings
 from app.services.graph_auth import GraphAuthService
 from app.services.sharepoint import create_sharepoint_service
 
-OUT = Path(__file__).parent.parent / "docs" / "sharepoint_schema.md"
+OUT = Path(__file__).parent.parent / "src" / "app" / "data" / "sharepoint_schema.md"
 
 TYPE_NOTES = {
     "person": "Person/group — fields dict contains {LookupValue, Email}",

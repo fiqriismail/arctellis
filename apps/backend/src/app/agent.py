@@ -13,7 +13,7 @@ from app.tools.list_tools import make_tools
 
 logger = logging.getLogger(__name__)
 
-_SCHEMA_DOC = Path(__file__).parent.parent.parent / "docs" / "sharepoint_schema.md"
+_SCHEMA_DOC = Path(__file__).parent / "data" / "sharepoint_schema.md"
 
 _BASE_PROMPT = """\
 You are an assistant that answers questions about a SharePoint list.
