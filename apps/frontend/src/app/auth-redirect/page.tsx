@@ -1,16 +1,14 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useMsal } from '@azure/msal-react'
+import { msalInstance } from '@/features/auth/msalConfig'
 
 export default function AuthRedirect() {
-  const { instance } = useMsal()
-
   useEffect(() => {
-    instance.initialize()
-      .then(() => instance.handleRedirectPromise())
+    msalInstance.initialize()
+      .then(() => msalInstance.handleRedirectPromise())
       .catch(console.error)
-  }, [instance])
+  }, [])
 
   return null
 }
