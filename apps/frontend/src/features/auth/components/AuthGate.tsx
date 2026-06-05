@@ -11,10 +11,15 @@ export function AuthGate({ children }: AuthGateProps) {
   const isAuthenticated = useIsAuthenticated()
   const { instance } = useMsal()
 
-  const handleSignIn = () => {
-    instance.loginPopup({
-      scopes: [process.env.NEXT_PUBLIC_ENTRA_API_SCOPE!],
-    })
+  const handleSignIn = async () => {
+    try {
+      await instance.loginPopup({
+        scopes: [process.env.NEXT_PUBLIC_ENTRA_API_SCOPE!],
+      })
+    } catch (e) {
+      // user_cancelled or popup_window_error — no action needed
+      console.warn('loginPopup dismissed', e)
+    }
   }
 
   if (!isAuthenticated) {

@@ -8,10 +8,11 @@ export function useToken() {
   const scope = process.env.NEXT_PUBLIC_ENTRA_API_SCOPE!
 
   const getToken = async (): Promise<string> => {
+    const account = accounts[0] ?? instance.getActiveAccount() ?? undefined
     try {
       const response = await instance.acquireTokenSilent({
         scopes: [scope],
-        account: accounts[0],
+        account,
       })
       return response.accessToken
     } catch (err) {

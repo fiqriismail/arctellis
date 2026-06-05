@@ -56,7 +56,7 @@ export default function HomePage() {
               <div style={{ textAlign: 'center', marginBottom: 26 }}>
                 <div style={{
                   width: 52, height: 52, borderRadius: 14,
-                  background: 'var(--brand)', color: '#fff',
+                  background: 'var(--brand)', color: 'var(--primary-foreground)',
                   margin: '0 auto 18px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: 'var(--shadow-card-md)',
