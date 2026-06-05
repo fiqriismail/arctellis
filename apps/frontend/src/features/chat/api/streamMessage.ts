@@ -7,7 +7,12 @@ export async function* streamMessage(
   signal: AbortSignal,
   getToken: () => Promise<string>
 ): AsyncGenerator<string> {
-  const token = await getToken()
+  let token: string
+  try {
+    token = await getToken()
+  } catch {
+    throw new ApiError('auth', 'Failed to acquire access token')
+  }
 
   let response: Response
   try {

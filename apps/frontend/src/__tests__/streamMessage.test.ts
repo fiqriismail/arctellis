@@ -129,4 +129,13 @@ describe('streamMessage', () => {
     )
     expect(tokens).toEqual(['Hi'])
   })
+
+  it('throws ApiError(auth) when getToken rejects', async () => {
+    const failingGetToken = async () => { throw new Error('popup closed') }
+    global.fetch = jest.fn()
+    await expect(
+      collect(streamMessage('q', 'sess', new AbortController().signal, failingGetToken))
+    ).rejects.toMatchObject({ name: 'ApiError', kind: 'auth' })
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
 })
