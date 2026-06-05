@@ -2,31 +2,31 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-# --- SYSTEM_PROMPT content ---
+# --- base prompt content ---
 
 
 def test_system_prompt_instructs_get_schema_first():
-    from app.agent import SYSTEM_PROMPT
+    from app.agent import _BASE_PROMPT
 
-    assert "get_schema" in SYSTEM_PROMPT
+    assert "get_schema" in _BASE_PROMPT
 
 
 def test_system_prompt_prohibits_fabrication():
-    from app.agent import SYSTEM_PROMPT
+    from app.agent import _BASE_PROMPT
 
-    assert "fabricat" in SYSTEM_PROMPT
+    assert "fabricat" in _BASE_PROMPT
 
 
 def test_system_prompt_requests_clarification():
-    from app.agent import SYSTEM_PROMPT
+    from app.agent import _BASE_PROMPT
 
-    assert "clarif" in SYSTEM_PROMPT
+    assert "clarif" in _BASE_PROMPT
 
 
 def test_system_prompt_handles_unrelated_questions():
-    from app.agent import SYSTEM_PROMPT
+    from app.agent import _BASE_PROMPT
 
-    assert "decline" in SYSTEM_PROMPT or "unrelated" in SYSTEM_PROMPT
+    assert "decline" in _BASE_PROMPT or "unrelated" in _BASE_PROMPT
 
 
 # --- build_agent ---
@@ -79,7 +79,7 @@ def test_build_agent_registers_all_six_tools():
 
 
 def test_build_agent_passes_system_prompt():
-    from app.agent import SYSTEM_PROMPT, build_agent
+    from app.agent import _BASE_PROMPT, build_agent
 
     mock_service = MagicMock()
     mock_settings = MagicMock()
@@ -91,7 +91,8 @@ def test_build_agent_passes_system_prompt():
         build_agent(mock_service, mock_settings)
 
         kwargs = mock_create.call_args.kwargs
-        assert kwargs["system_prompt"] == SYSTEM_PROMPT
+        # The full prompt is the base prompt plus any generated schema doc.
+        assert kwargs["system_prompt"].startswith(_BASE_PROMPT)
 
 
 # --- invoke_agent ---

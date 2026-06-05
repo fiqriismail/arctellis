@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import re
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -9,6 +11,8 @@ from urllib.parse import urlparse
 from kiota_abstractions.base_request_configuration import RequestConfiguration
 from msgraph import GraphServiceClient
 from msgraph.generated.sites.item.lists.item.items import items_request_builder
+
+logger = logging.getLogger(__name__)
 
 
 class _TTLCache:
@@ -59,6 +63,9 @@ class SharePointService:
         self._site_id = site_id
         self._list_id = list_id
         self._cache = _TTLCache(ttl=cache_ttl)
+        # Resolved User Information List entries: {lookup_id: {LookupValue, Email}}.
+        # Users change rarely, so resolutions are cached for the process lifetime.
+        self._user_cache: dict[str, dict] = {}
 
     @staticmethod
     def _infer_column_type(col: Any) -> str:
@@ -126,7 +133,87 @@ class SharePointService:
         self._cache.set("schema", columns)
         return columns
 
+    async def _person_field_names(self) -> set[str]:
+        """Internal names of columns whose type is 'person', from the schema."""
+        columns = await self.get_schema()
+        return {c.name for c in columns if c.column_type == "person"}
+
+    async def _resolve_user_ids(self, ids: set[str]) -> dict[str, dict]:
+        """Resolve User Information List item ids to {LookupValue, Email}.
+
+        Graph returns person columns only as '{Field}LookupId' holding a numeric
+        id into the site's hidden 'User Information List'. We fetch each id from
+        that list (Title = display name, EMail = email) and cache the result.
+        """
+        resolved: dict[str, dict] = {}
+        for uid in ids:
+            if uid in self._user_cache:
+                resolved[uid] = self._user_cache[uid]
+                continue
+            try:
+                item = await (
+                    self._client.sites.by_site_id(self._site_id)
+                    .lists.by_list_id("User Information List")
+                    .items.by_list_item_id(uid)
+                    .get()
+                )
+                ad = item.fields.additional_data if item and item.fields else {}
+                info = {"LookupValue": ad.get("Title"), "Email": ad.get("EMail")}
+            except Exception:
+                logger.warning("Could not resolve User Information List id %s", uid)
+                info = {"LookupValue": None, "Email": None}
+            self._user_cache[uid] = info
+            resolved[uid] = info
+        return resolved
+
+    @staticmethod
+    def _merge_person_fields(
+        fields: dict[str, Any],
+        person_names: set[str],
+        user_map: dict[str, dict],
+    ) -> dict[str, Any]:
+        """Replace '{Person}LookupId' keys with resolved {LookupValue, Email}.
+
+        Pure function: given raw fields, the set of person-column internal names,
+        and an id->info map, return fields with each person column populated under
+        its internal name and the raw LookupId key removed. Non-person lookups
+        (e.g. Category) are left untouched.
+        """
+        unresolved = {"LookupValue": None, "Email": None}
+        out = dict(fields)
+        for name in person_names:
+            key = f"{name}LookupId"
+            if key not in out:
+                continue
+            raw = out.pop(key)
+            if isinstance(raw, list):
+                out[name] = [user_map.get(str(i), unresolved) for i in raw]
+            else:
+                out[name] = user_map.get(str(raw), unresolved)
+        return out
+
+    @staticmethod
+    def _normalize_filter(f: str) -> str:
+        """Prepend 'fields/' to bare column names in OData filter expressions.
+
+        SharePoint Graph requires 'fields/ColumnName eq value' — bare column
+        names (without a path separator) are invalid. The LLM sometimes omits
+        the prefix, so we patch it up here as a safety net.
+        """
+        def _prefix(match: re.Match) -> str:
+            prop, op = match.group(1), match.group(2)
+            return f"fields/{prop} {op}"
+
+        return re.sub(
+            r"(?<!/)\b([A-Za-z_]\w*)\s+(eq|ne|lt|le|gt|ge|startswith|endswith|contains)\b",
+            _prefix,
+            f,
+            flags=re.IGNORECASE,
+        )
+
     async def get_items(self, odata_filter: str | None = None) -> list[ListItem]:
+        if odata_filter:
+            odata_filter = self._normalize_filter(odata_filter)
         cache_key = f"items:{odata_filter or ''}"
         cached = self._cache.get(cache_key)
         if cached is not None:
@@ -138,6 +225,13 @@ class SharePointService:
             query_params.filter = odata_filter
 
         request_configuration = RequestConfiguration(query_parameters=query_params)
+        if odata_filter:
+            # SharePoint rejects filters on non-indexed columns unless this
+            # header is present. The list is small (well under the row
+            # threshold), so the "may fail randomly" caveat does not apply.
+            request_configuration.headers.add(
+                "Prefer", "HonorNonIndexedQueriesWarningMayFailRandomly"
+            )
 
         result = await (
             self._client.sites.by_site_id(self._site_id)
@@ -152,11 +246,39 @@ class SharePointService:
             self._cache.set(cache_key, items)
             return items
 
+        raw_items: list[tuple[str, dict[str, Any]]] = []
         for item in result.value:
-            fields: dict[str, Any] = {}
+            raw: dict[str, Any] = {}
             if item.fields and item.fields.additional_data:
-                fields = dict(item.fields.additional_data)
-            items.append(ListItem(id=item.id or "", fields=fields))
+                raw = dict(item.fields.additional_data)
+            raw_items.append((item.id or "", raw))
+
+        # Person columns arrive only as '{Field}LookupId' numeric ids. Resolve
+        # them to display names + emails. Skip entirely when no lookup keys are
+        # present (keeps the common path free of extra Graph calls).
+        has_lookup = any(
+            k.endswith("LookupId") for _, raw in raw_items for k in raw
+        )
+        if has_lookup:
+            person_names = await self._person_field_names()
+            needed: set[str] = set()
+            for _, raw in raw_items:
+                for name in person_names:
+                    val = raw.get(f"{name}LookupId")
+                    if isinstance(val, list):
+                        needed.update(str(v) for v in val)
+                    elif val is not None:
+                        needed.add(str(val))
+            user_map = await self._resolve_user_ids(needed) if needed else {}
+            items = [
+                ListItem(
+                    id=i,
+                    fields=self._merge_person_fields(raw, person_names, user_map),
+                )
+                for i, raw in raw_items
+            ]
+        else:
+            items = [ListItem(id=i, fields=raw) for i, raw in raw_items]
 
         self._cache.set(cache_key, items)
         return items

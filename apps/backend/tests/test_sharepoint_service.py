@@ -310,6 +310,30 @@ async def test_get_items_returns_list_items():
 
 
 @pytest.mark.asyncio
+async def test_get_items_adds_prefer_header_when_filtering():
+    from app.services.sharepoint import SharePointService
+
+    mock_response = MagicMock()
+    mock_response.value = []
+    mock_response.odata_next_link = None
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    (
+        mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.items.get
+    ) = get_mock
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l")
+    await service.get_items(odata_filter="fields/Status eq 'Active'")
+
+    cfg = get_mock.call_args.kwargs["request_configuration"]
+    # Non-indexed columns require this header or Graph rejects the filter.
+    assert "HonorNonIndexedQueriesWarningMayFailRandomly" in (
+        cfg.headers.get("Prefer") or set()
+    )
+
+
+@pytest.mark.asyncio
 async def test_get_items_returns_empty_on_no_items():
     from app.services.sharepoint import SharePointService
 
@@ -647,6 +671,151 @@ async def test_get_items_same_filter_reuses_cache():
 
     # Same filter → cache hit on second call
     assert get_mock.call_count == 1
+
+
+# --- person column resolution (LookupId -> display name + email) ---
+
+
+def test_merge_person_fields_resolves_single_person():
+    from app.services.sharepoint import SharePointService
+
+    fields = {"Title": "Req", "SMEEmailLookupId": "7"}
+    person_names = {"SMEEmail"}
+    user_map = {"7": {"LookupValue": "Kit Wood", "Email": "kit@trustpredict.ai"}}
+
+    out = SharePointService._merge_person_fields(fields, person_names, user_map)
+
+    assert out["SMEEmail"] == {
+        "LookupValue": "Kit Wood",
+        "Email": "kit@trustpredict.ai",
+    }
+    assert "SMEEmailLookupId" not in out
+    assert out["Title"] == "Req"
+
+
+def test_merge_person_fields_resolves_multi_value():
+    from app.services.sharepoint import SharePointService
+
+    fields = {"ReviewersLookupId": ["7", "8"]}
+    person_names = {"Reviewers"}
+    user_map = {
+        "7": {"LookupValue": "Kit Wood", "Email": "kit@trustpredict.ai"},
+        "8": {"LookupValue": "Jo Bloggs", "Email": "jo@example.com"},
+    }
+
+    out = SharePointService._merge_person_fields(fields, person_names, user_map)
+
+    assert out["Reviewers"] == [
+        {"LookupValue": "Kit Wood", "Email": "kit@trustpredict.ai"},
+        {"LookupValue": "Jo Bloggs", "Email": "jo@example.com"},
+    ]
+
+
+def test_merge_person_fields_unknown_id_yields_nulls():
+    from app.services.sharepoint import SharePointService
+
+    out = SharePointService._merge_person_fields(
+        {"SMEEmailLookupId": "999"}, {"SMEEmail"}, {}
+    )
+    assert out["SMEEmail"] == {"LookupValue": None, "Email": None}
+
+
+def test_merge_person_fields_ignores_non_person_lookups():
+    from app.services.sharepoint import SharePointService
+
+    # Category is a lookup column, NOT a person column — leave it untouched.
+    out = SharePointService._merge_person_fields(
+        {"CategoryLookupId": "99"}, {"SMEEmail"}, {}
+    )
+    assert out["CategoryLookupId"] == "99"
+
+
+@pytest.mark.asyncio
+async def test_resolve_user_ids_queries_user_info_list_and_caches():
+    from app.services.sharepoint import SharePointService
+
+    mock_fields = MagicMock()
+    mock_fields.additional_data = {"Title": "Kit Wood", "EMail": "kit@trustpredict.ai"}
+    mock_item = MagicMock()
+    mock_item.fields = mock_fields
+
+    get_mock = AsyncMock(return_value=mock_item)
+    mock_client = MagicMock()
+    (
+        mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.items.by_list_item_id.return_value.get
+    ) = get_mock
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l")
+
+    first = await service._resolve_user_ids({"7"})
+    assert first["7"] == {"LookupValue": "Kit Wood", "Email": "kit@trustpredict.ai"}
+
+    second = await service._resolve_user_ids({"7"})
+    assert second["7"] == {"LookupValue": "Kit Wood", "Email": "kit@trustpredict.ai"}
+    assert get_mock.call_count == 1  # cached, no second Graph call
+
+
+@pytest.mark.asyncio
+async def test_resolve_user_ids_handles_resolution_failure():
+    from app.services.sharepoint import SharePointService
+
+    get_mock = AsyncMock(side_effect=Exception("404"))
+    mock_client = MagicMock()
+    (
+        mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.items.by_list_item_id.return_value.get
+    ) = get_mock
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l")
+    result = await service._resolve_user_ids({"7"})
+    assert result["7"] == {"LookupValue": None, "Email": None}
+
+
+@pytest.mark.asyncio
+async def test_get_items_resolves_person_columns():
+    from app.services.sharepoint import SharePointService
+
+    sme_col = MagicMock()
+    sme_col.name = "SMEEmail"
+    sme_col.display_name = "SME"
+    sme_col.hidden = False
+    sme_col.number = None
+    sme_col.date_time = None
+    sme_col.boolean = None
+    sme_col.choice = None
+    sme_col.lookup = None
+    sme_col.person_or_group = MagicMock()
+    schema_resp = MagicMock()
+    schema_resp.value = [sme_col]
+
+    mf = MagicMock()
+    mf.additional_data = {"Title": "Req", "SMEEmailLookupId": "7"}
+    mi = MagicMock()
+    mi.id = "1"
+    mi.fields = mf
+    items_resp = MagicMock()
+    items_resp.value = [mi]
+    items_resp.odata_next_link = None
+
+    uf = MagicMock()
+    uf.additional_data = {"Title": "Kit Wood", "EMail": "kit@trustpredict.ai"}
+    ui = MagicMock()
+    ui.fields = uf
+
+    mock_client = MagicMock()
+    mock_list = mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value
+    mock_list.items.get = AsyncMock(return_value=items_resp)
+    mock_list.columns.get = AsyncMock(return_value=schema_resp)
+    mock_list.items.by_list_item_id.return_value.get = AsyncMock(return_value=ui)
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l")
+    items = await service.get_items()
+
+    assert items[0].fields["SMEEmail"] == {
+        "LookupValue": "Kit Wood",
+        "Email": "kit@trustpredict.ai",
+    }
+    assert "SMEEmailLookupId" not in items[0].fields
+    assert items[0].fields["Title"] == "Req"
 
 
 @pytest.mark.asyncio
