@@ -41,4 +41,23 @@ describe('HomePage', () => {
     expect(screen.getByText('Show overdue tasks')).toBeInTheDocument()
     await waitFor(() => expect(screen.getByText('Streamed response')).toBeInTheDocument())
   })
+
+  it('shows new conversation button after a message is sent and clicking it returns to empty state', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+
+    // Send a message to enter conversation view
+    await user.type(screen.getByPlaceholderText(/ask a question/i), 'Hello')
+    await user.keyboard('{Enter}')
+    await waitFor(() => expect(screen.getByText('Streamed response')).toBeInTheDocument())
+
+    // New conversation button should now be visible
+    const newConvButton = screen.getByRole('button', { name: /new conversation/i })
+    expect(newConvButton).toBeInTheDocument()
+
+    // Click it — thread clears, landing heading returns
+    await user.click(newConvButton)
+    expect(screen.getByText('SharePoint List AI Assistant')).toBeInTheDocument()
+    expect(screen.queryByText('Hello')).not.toBeInTheDocument()
+  })
 })
