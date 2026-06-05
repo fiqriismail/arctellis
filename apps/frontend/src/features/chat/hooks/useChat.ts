@@ -3,6 +3,8 @@
 import { useState, useRef, useCallback } from 'react'
 import { streamMessage } from '@/features/chat/api/streamMessage'
 import type { Message } from '@/features/chat/types'
+import { useToken } from '@/features/auth/hooks/useToken'
+import { ApiError } from '@/features/chat/api/apiError'
 
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([])
@@ -11,6 +13,9 @@ export function useChat() {
   const [streamError, setStreamError] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const sessionIdRef = useRef(crypto.randomUUID())
+  const { getToken } = useToken()
+  const getTokenRef = useRef(getToken)
+  getTokenRef.current = getToken
 
   const sendMessage = useCallback(async (text: string) => {
     if (abortRef.current) return
@@ -26,7 +31,7 @@ export function useChat() {
     let accumulated = ''
 
     try {
-      for await (const token of streamMessage(text, sessionIdRef.current, controller.signal)) {
+      for await (const token of streamMessage(text, sessionIdRef.current, controller.signal, getTokenRef.current)) {
         accumulated += token
         setStreamingText(accumulated)
       }
@@ -34,15 +39,15 @@ export function useChat() {
         setMessages(prev => [...prev, { role: 'assistant', text: accumulated }])
       }
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        if (accumulated) {
-          setMessages(prev => [...prev, { role: 'assistant', text: accumulated }])
-        }
-      } else {
-        if (accumulated) {
-          setMessages(prev => [...prev, { role: 'assistant', text: accumulated }])
-        }
-        setStreamError('Something went wrong — please try again')
+      if (accumulated) {
+        setMessages(prev => [...prev, { role: 'assistant', text: accumulated }])
+      }
+      if (!(err instanceof DOMException && err.name === 'AbortError')) {
+        setStreamError(
+          err instanceof ApiError && err.kind === 'auth'
+            ? 'Session expired — please sign in again'
+            : 'Something went wrong — please try again'
+        )
       }
     } finally {
       setStreamingText('')
