@@ -15,9 +15,12 @@ export function AuthGate({ children }: AuthGateProps) {
     try {
       const result = await instance.loginPopup({
         scopes: [process.env.NEXT_PUBLIC_ENTRA_API_SCOPE!],
+        redirectUri: `${window.location.origin}/auth-redirect`,
       })
       if (result?.account) {
         instance.setActiveAccount(result.account)
+        // DEBUG: remove before merge
+        console.log('[FE-07 debug] access token:', result.accessToken)
       }
     } catch (e) {
       // user_cancelled or popup_window_error — no action needed
