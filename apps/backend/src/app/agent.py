@@ -35,8 +35,12 @@ Data conventions:
 - Person/people columns (type 'person') are returned as objects with two keys:
     - "LookupValue": the person's display name (e.g. "John Doe")
     - "Email": their email address (may be absent on some columns)
-- When a user asks to filter or search by a person's name, match against
-  LookupValue. When they provide an email address, match against Email.
+- Person/people columns CANNOT be used in an odata_filter — they store a hidden
+  user id (not the display name) and are usually not indexed, so an OData filter
+  on them fails or never matches. To find rows by a person's name or email, call
+  filter_rows with NO odata_filter (or filter only on an indexed non-person
+  column), then select the rows whose person column matches: compare the name to
+  LookupValue and the email to Email.
 - When displaying person columns to the user, always show LookupValue (the
   display name). Never expose LookupId or raw email unless explicitly asked.
 

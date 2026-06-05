@@ -225,6 +225,13 @@ class SharePointService:
             query_params.filter = odata_filter
 
         request_configuration = RequestConfiguration(query_parameters=query_params)
+        if odata_filter:
+            # SharePoint rejects filters on non-indexed columns unless this
+            # header is present. The list is small (well under the row
+            # threshold), so the "may fail randomly" caveat does not apply.
+            request_configuration.headers.add(
+                "Prefer", "HonorNonIndexedQueriesWarningMayFailRandomly"
+            )
 
         result = await (
             self._client.sites.by_site_id(self._site_id)

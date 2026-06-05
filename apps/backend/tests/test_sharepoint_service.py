@@ -310,6 +310,30 @@ async def test_get_items_returns_list_items():
 
 
 @pytest.mark.asyncio
+async def test_get_items_adds_prefer_header_when_filtering():
+    from app.services.sharepoint import SharePointService
+
+    mock_response = MagicMock()
+    mock_response.value = []
+    mock_response.odata_next_link = None
+
+    get_mock = AsyncMock(return_value=mock_response)
+    mock_client = MagicMock()
+    (
+        mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value.items.get
+    ) = get_mock
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l")
+    await service.get_items(odata_filter="fields/Status eq 'Active'")
+
+    cfg = get_mock.call_args.kwargs["request_configuration"]
+    # Non-indexed columns require this header or Graph rejects the filter.
+    assert "HonorNonIndexedQueriesWarningMayFailRandomly" in (
+        cfg.headers.get("Prefer") or set()
+    )
+
+
+@pytest.mark.asyncio
 async def test_get_items_returns_empty_on_no_items():
     from app.services.sharepoint import SharePointService
 
