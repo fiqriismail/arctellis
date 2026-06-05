@@ -39,19 +39,15 @@ export function useChat() {
         setMessages(prev => [...prev, { role: 'assistant', text: accumulated }])
       }
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        if (accumulated) {
-          setMessages(prev => [...prev, { role: 'assistant', text: accumulated }])
-        }
-      } else {
-        if (accumulated) {
-          setMessages(prev => [...prev, { role: 'assistant', text: accumulated }])
-        }
-        if (err instanceof ApiError && err.kind === 'auth') {
-          setStreamError('Session expired — please sign in again')
-        } else {
-          setStreamError('Something went wrong — please try again')
-        }
+      if (accumulated) {
+        setMessages(prev => [...prev, { role: 'assistant', text: accumulated }])
+      }
+      if (!(err instanceof DOMException && err.name === 'AbortError')) {
+        setStreamError(
+          err instanceof ApiError && err.kind === 'auth'
+            ? 'Session expired — please sign in again'
+            : 'Something went wrong — please try again'
+        )
       }
     } finally {
       setStreamingText('')

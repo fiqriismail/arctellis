@@ -261,6 +261,19 @@ describe('useChat', () => {
     expect(result.current.streamError).toBe('Something went wrong — please try again')
   })
 
+  it('shows the generic message on a network ApiError', async () => {
+    mockStreamMessage.mockImplementation(async function* () {
+      throw new ApiError('network', 'down')
+    })
+    const { result } = renderHook(() => useChat())
+
+    await act(async () => {
+      await result.current.sendMessage('test')
+    })
+
+    expect(result.current.streamError).toBe('Something went wrong — please try again')
+  })
+
   it('passes a getToken function as the fourth argument to streamMessage', async () => {
     mockStreamMessage.mockImplementation(() => makeTokenStream(['ok']))
     const { result } = renderHook(() => useChat())
@@ -270,5 +283,6 @@ describe('useChat', () => {
     })
 
     expect(typeof mockStreamMessage.mock.calls[0][3]).toBe('function')
+    await expect(mockStreamMessage.mock.calls[0][3]()).resolves.toBe('fake-token')
   })
 })
