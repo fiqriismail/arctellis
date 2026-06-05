@@ -1,9 +1,15 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useChat } from '@/features/chat/hooks/useChat'
 import { streamMessage } from '@/features/chat/api/streamMessage'
+import { ApiError } from '@/features/chat/api/apiError'
 
 jest.mock('@/features/chat/api/streamMessage')
 const mockStreamMessage = streamMessage as jest.Mock
+
+const mockGetToken = jest.fn().mockResolvedValue('fake-token')
+jest.mock('@/features/auth/hooks/useToken', () => ({
+  useToken: () => ({ getToken: mockGetToken }),
+}))
 
 async function* makeTokenStream(tokens: string[]): AsyncGenerator<string> {
   for (const token of tokens) {
@@ -226,5 +232,43 @@ describe('useChat', () => {
     await waitFor(() => expect(result.current.isStreaming).toBe(false))
     expect(result.current.messages).toHaveLength(0)
     expect(result.current.streamingText).toBe('')
+  })
+
+  it('shows the session-expired message on an auth ApiError', async () => {
+    mockStreamMessage.mockImplementation(async function* () {
+      throw new ApiError('auth', 'Unauthorized')
+    })
+    const { result } = renderHook(() => useChat())
+
+    await act(async () => {
+      await result.current.sendMessage('test')
+    })
+
+    expect(result.current.streamError).toBe('Session expired — please sign in again')
+    expect(result.current.isStreaming).toBe(false)
+  })
+
+  it('shows the generic message on a server ApiError', async () => {
+    mockStreamMessage.mockImplementation(async function* () {
+      throw new ApiError('server', 'boom')
+    })
+    const { result } = renderHook(() => useChat())
+
+    await act(async () => {
+      await result.current.sendMessage('test')
+    })
+
+    expect(result.current.streamError).toBe('Something went wrong — please try again')
+  })
+
+  it('passes a getToken function as the fourth argument to streamMessage', async () => {
+    mockStreamMessage.mockImplementation(() => makeTokenStream(['ok']))
+    const { result } = renderHook(() => useChat())
+
+    await act(async () => {
+      await result.current.sendMessage('test')
+    })
+
+    expect(typeof mockStreamMessage.mock.calls[0][3]).toBe('function')
   })
 })
