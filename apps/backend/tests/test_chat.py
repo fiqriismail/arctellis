@@ -127,10 +127,28 @@ async def test_chat_streams_tokens_in_sse_format():
             "/chat", json={"question": "What is it?", "session_id": "t2"}
         )
 
-    assert "data: The \n\n" in response.text
-    assert "data: answer \n\n" in response.text
-    assert "data: is 42.\n\n" in response.text
+    # Tokens are JSON-encoded so newlines inside a token survive SSE framing.
+    assert 'data: "The "\n\n' in response.text
+    assert 'data: "answer "\n\n' in response.text
+    assert 'data: "is 42."\n\n' in response.text
     assert "data: [DONE]\n\n" in response.text
+
+
+@pytest.mark.asyncio
+async def test_chat_preserves_newlines_in_token():
+    from app.main import app
+
+    # A markdown table token contains newlines; JSON encoding must keep them
+    # from breaking the SSE 'data:' frame.
+    app.state.agent = _make_mock_agent("| A |\n| - |\n")
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.post(
+            "/chat", json={"question": "table?", "session_id": "t-nl"}
+        )
+
+    assert 'data: "| A |\\n| - |\\n"\n\n' in response.text
 
 
 @pytest.mark.asyncio

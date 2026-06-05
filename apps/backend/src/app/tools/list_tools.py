@@ -19,8 +19,15 @@ def make_tools(service: SharePointService) -> list:
         columns = await service.get_schema()
         if not columns:
             return "No columns found in the list."
-        lines = [f"- {col.name} ({col.column_type})" for col in columns]
-        return "List columns:\n" + "\n".join(lines)
+        lines = [
+            f"- internal_name={col.name!r}  display_name={col.display_name!r}"
+            f"  type={col.column_type}"
+            for col in columns
+        ]
+        return (
+            "List columns (use internal_name when querying fields or building"
+            " filters):\n" + "\n".join(lines)
+        )
 
     @tool
     async def filter_rows(odata_filter: str = "") -> str:
@@ -47,7 +54,8 @@ def make_tools(service: SharePointService) -> list:
     async def sum_column(column_name: str, odata_filter: str = "") -> str:
         """Sum the values of a numeric column in the SharePoint list.
         column_name: exact column name as returned by get_schema.
-        odata_filter: optional OData filter expression.
+        odata_filter: optional OData filter expression. IMPORTANT: always
+          prefix column names with 'fields/' (e.g. "fields/Status eq 'Active'").
         Rows whose value cannot be parsed as a number are silently skipped.
         Returns the total as a number."""
         items = await service.get_items(odata_filter=odata_filter or None)
@@ -66,7 +74,8 @@ def make_tools(service: SharePointService) -> list:
     async def average_column(column_name: str, odata_filter: str = "") -> str:
         """Calculate the average of a numeric column in the SharePoint list.
         column_name: exact column name as returned by get_schema.
-        odata_filter: optional OData filter expression.
+        odata_filter: optional OData filter expression. IMPORTANT: always
+          prefix column names with 'fields/' (e.g. "fields/Status eq 'Active'").
         Rows whose value cannot be parsed as a number are silently skipped.
         Returns the average as a number."""
         items = await service.get_items(odata_filter=odata_filter or None)
@@ -95,7 +104,8 @@ def make_tools(service: SharePointService) -> list:
           - count: count all rows in each group.
           - sum: sum numeric values in aggregate_column per group.
           - average: average numeric values in aggregate_column per group.
-        odata_filter: optional OData filter applied before grouping.
+        odata_filter: optional OData filter applied before grouping. IMPORTANT:
+          always prefix column names with 'fields/' (e.g. "fields/Status eq 'Active'").
         Rows whose aggregate_column cannot be parsed as a number are skipped
         (for sum and average only).
         Returns one line per group: 'group_value: result'."""
