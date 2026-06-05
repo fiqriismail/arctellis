@@ -1,6 +1,11 @@
-import { Sparkles } from 'lucide-react'
+import { Plus, Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
-export function ChatHeader() {
+interface ChatHeaderProps {
+  onNewConversation?: () => void
+}
+
+export function ChatHeader({ onNewConversation }: ChatHeaderProps) {
   return (
     <header style={{
       height: 56, flexShrink: 0,
@@ -8,7 +13,7 @@ export function ChatHeader() {
       background: 'rgba(255,255,255,.82)',
       backdropFilter: 'blur(10px) saturate(1.1)',
       WebkitBackdropFilter: 'blur(10px) saturate(1.1)',
-      display: 'flex', alignItems: 'center',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '0 20px', position: 'sticky', top: 0, zIndex: 20,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
@@ -25,6 +30,12 @@ export function ChatHeader() {
           <span style={{ fontSize: 11.5, color: 'var(--muted-foreground)' }}>SharePoint · Group.one</span>
         </div>
       </div>
+      {onNewConversation && (
+        <Button variant="ghost" size="sm" onClick={onNewConversation}>
+          <Plus className="h-4 w-4" />
+          New conversation
+        </Button>
+      )}
     </header>
   )
 }
