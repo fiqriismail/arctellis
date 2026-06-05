@@ -16,12 +16,12 @@ const SUGGESTIONS = [
 ]
 
 export default function HomePage() {
-  const { messages, streamingText, isStreaming, streamError, sendMessage, stopStream } = useChat()
+  const { messages, streamingText, isStreaming, streamError, sendMessage, stopStream, resetSession } = useChat()
 
   if (messages.length > 0) {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--background)', overflow: 'hidden' }}>
-        <ChatHeader />
+        <ChatHeader onNewConversation={resetSession} />
         <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }} className="scroll">
           <ChatThread
             messages={messages}

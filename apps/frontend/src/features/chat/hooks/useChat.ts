@@ -56,6 +56,7 @@ export function useChat() {
   }, [])
 
   const resetSession = useCallback(() => {
+    abortRef.current?.abort()
     sessionIdRef.current = crypto.randomUUID()
     setMessages([])
     setStreamingText('')
