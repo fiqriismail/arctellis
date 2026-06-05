@@ -15,7 +15,7 @@ export function AuthGate({ children }: AuthGateProps) {
     try {
       const result = await instance.loginPopup({
         scopes: [process.env.NEXT_PUBLIC_ENTRA_API_SCOPE!],
-        redirectUri: `${window.location.origin}/auth-redirect`,
+        redirectUri: `${window.location.origin}/auth-redirect.html`,
       })
       if (result?.account) {
         instance.setActiveAccount(result.account)
