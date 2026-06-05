@@ -163,6 +163,26 @@ a {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Always visible — animation is an enhancement only */
+.anim-msg { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .anim-msg { animation: msgIn .34s cubic-bezier(.2,.7,.3,1) both; }
+}
+
+/* Thread scrollbar */
+.scroll::-webkit-scrollbar { width: 10px; }
+.scroll::-webkit-scrollbar-thumb {
+  background: #e4e4e7;
+  border-radius: 99px;
+  border: 3px solid #fff;
+}
+.scroll::-webkit-scrollbar-thumb:hover { background: #d4d4d8; }
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
