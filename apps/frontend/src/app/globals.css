@@ -173,6 +173,13 @@ a {
   30% { transform: translateY(-6px); opacity: 1; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  [data-testid="typing-indicator"] span {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 /* Always visible — animation is an enhancement only */
 .anim-msg { opacity: 1; }
 @media (prefers-reduced-motion: no-preference) {
