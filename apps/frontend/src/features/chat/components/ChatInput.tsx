@@ -1,15 +1,23 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { ArrowUp } from 'lucide-react'
+import { ArrowUp, Square } from 'lucide-react'
 
 interface ChatInputProps {
   onSubmit: (question: string) => void
+  onStop?: () => void
+  isStreaming?: boolean
   disabled?: boolean
   compact?: boolean
 }
 
-export function ChatInput({ onSubmit, disabled = false, compact = false }: ChatInputProps) {
+export function ChatInput({
+  onSubmit,
+  onStop,
+  isStreaming = false,
+  disabled = false,
+  compact = false,
+}: ChatInputProps) {
   const [value, setValue] = useState('')
   const [focused, setFocused] = useState(false)
   const ref = useRef<HTMLTextAreaElement>(null)
@@ -25,16 +33,21 @@ export function ChatInput({ onSubmit, disabled = false, compact = false }: ChatI
 
   const handleSubmit = () => {
     const trimmed = value.trim()
-    if (!trimmed || disabled) return
+    if (!trimmed || disabled || isStreaming) return
     onSubmit(trimmed)
     setValue('')
+  }
+
+  const handleStop = () => {
+    onStop?.()
   }
 
   const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() }
   }
 
-  const canSend = !!value.trim() && !disabled
+  const canSend = !!value.trim() && !disabled && !isStreaming
+  const buttonActive = isStreaming || canSend
 
   return (
     <div>
@@ -67,18 +80,22 @@ export function ChatInput({ onSubmit, disabled = false, compact = false }: ChatI
           }}
         />
         <button
-          onClick={handleSubmit}
-          disabled={!canSend}
-          aria-label="Send"
+          onClick={isStreaming ? handleStop : handleSubmit}
+          disabled={!buttonActive}
+          aria-label={isStreaming ? 'Stop' : 'Send'}
           style={{
             width: 34, height: 34, flexShrink: 0, borderRadius: 9,
-            border: 'none', cursor: canSend ? 'pointer' : 'default',
-            background: canSend ? 'var(--brand)' : '#e4e4e7', color: '#fff',
+            border: 'none', cursor: buttonActive ? 'pointer' : 'default',
+            background: buttonActive ? 'var(--brand)' : '#e4e4e7', color: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'background .15s', marginBottom: 1,
           }}
         >
-          <ArrowUp style={{ width: 17, height: 17 }} strokeWidth={2.4} />
+          {isStreaming ? (
+            <Square style={{ width: 14, height: 14 }} fill="currentColor" strokeWidth={0} />
+          ) : (
+            <ArrowUp style={{ width: 17, height: 17 }} strokeWidth={2.4} />
+          )}
         </button>
       </div>
 

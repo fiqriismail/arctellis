@@ -40,4 +40,30 @@ describe('ChatThread', () => {
     expect(scrollSpy).toHaveBeenCalled()
     scrollSpy.mockRestore()
   })
+
+  it('shows bouncing dots and partial text when isStreaming is true', () => {
+    render(
+      <ChatThread
+        messages={[{ role: 'user', text: 'Hi' }]}
+        isStreaming={true}
+        streamingText="Partial ans"
+      />
+    )
+    expect(screen.getByTestId('streaming-message')).toBeInTheDocument()
+    expect(screen.getByText('Partial ans')).toBeInTheDocument()
+    expect(screen.getByTestId('typing-indicator')).toBeInTheDocument()
+  })
+
+  it('shows inline error when isStreaming is false and streamError is set', () => {
+    render(
+      <ChatThread
+        messages={[{ role: 'assistant', text: 'Hello' }]}
+        isStreaming={false}
+        streamError="Something went wrong — please try again"
+      />
+    )
+    expect(screen.getByTestId('stream-error')).toBeInTheDocument()
+    expect(screen.getByText('Something went wrong — please try again')).toBeInTheDocument()
+    expect(screen.queryByTestId('typing-indicator')).not.toBeInTheDocument()
+  })
 })

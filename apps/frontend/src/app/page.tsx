@@ -6,7 +6,7 @@ import { Sparkles, AlertTriangle, AlignLeft, User, Clock } from 'lucide-react'
 import { ChatHeader } from '@/features/chat/components/ChatHeader'
 import { ChatInput } from '@/features/chat/components/ChatInput'
 import { ChatThread } from '@/features/chat/components/ChatThread'
-import { Message } from '@/features/chat/types'
+import { useChat } from '@/features/chat/hooks/useChat'
 
 const SUGGESTIONS = [
   { label: 'Show overdue tasks',        icon: AlertTriangle, tint: 'var(--status-red)' },
@@ -15,25 +15,20 @@ const SUGGESTIONS = [
   { label: 'High-priority in progress', icon: Clock,         tint: 'var(--status-amber)' },
 ]
 
-const STUB_RESPONSE = 'Connected to the backend in FE-08 — real answers will appear here.'
-
 export default function HomePage() {
-  const [messages, setMessages] = useState<Message[]>([])
-
-  const handleSubmit = (text: string) => {
-    setMessages(prev => [
-      ...prev,
-      { role: 'user', text },
-      { role: 'assistant', text: STUB_RESPONSE },
-    ])
-  }
+  const { messages, streamingText, isStreaming, streamError, sendMessage, stopStream } = useChat()
 
   if (messages.length > 0) {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--background)', overflow: 'hidden' }}>
         <ChatHeader />
         <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }} className="scroll">
-          <ChatThread messages={messages} />
+          <ChatThread
+            messages={messages}
+            streamingText={streamingText}
+            isStreaming={isStreaming}
+            streamError={streamError}
+          />
         </div>
         <div style={{
           flexShrink: 0,
@@ -43,7 +38,7 @@ export default function HomePage() {
           WebkitBackdropFilter: 'blur(8px)',
         }}>
           <div style={{ maxWidth: 780, margin: '0 auto', padding: '14px 24px 16px' }}>
-            <ChatInput onSubmit={handleSubmit} compact />
+            <ChatInput onSubmit={sendMessage} onStop={stopStream} isStreaming={isStreaming} compact />
           </div>
         </div>
       </div>
@@ -79,10 +74,10 @@ export default function HomePage() {
             </p>
           </div>
 
-          <ChatInput onSubmit={handleSubmit} />
+          <ChatInput onSubmit={sendMessage} onStop={stopStream} isStreaming={isStreaming} />
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 18 }}>
-            {SUGGESTIONS.map(s => <SuggestionCard key={s.label} {...s} onSubmit={handleSubmit} />)}
+            {SUGGESTIONS.map(s => <SuggestionCard key={s.label} {...s} onSubmit={sendMessage} />)}
           </div>
         </div>
       </div>
