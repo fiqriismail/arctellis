@@ -44,7 +44,7 @@ describe('AuthGate', () => {
     await user.click(screen.getByRole('button', { name: /sign in with microsoft/i }))
     expect(mockLoginPopup).toHaveBeenCalledWith({
       scopes: [process.env.NEXT_PUBLIC_ENTRA_API_SCOPE],
-      redirectUri: expect.stringContaining('/auth-redirect.html'),
+      redirectUri: expect.stringContaining('/auth-redirect'),
     })
   })
 

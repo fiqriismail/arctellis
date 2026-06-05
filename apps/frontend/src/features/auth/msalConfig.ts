@@ -6,5 +6,5 @@ export const msalInstance = new PublicClientApplication({
     authority: `https://login.microsoftonline.com/${process.env.NEXT_PUBLIC_ENTRA_TENANT_ID}`,
     redirectUri: typeof window !== 'undefined' ? window.location.origin : '/',
   },
-  cache: { cacheLocation: 'sessionStorage', storeAuthStateInCookie: false },
+  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false },
 })
