@@ -13,9 +13,12 @@ export function AuthGate({ children }: AuthGateProps) {
 
   const handleSignIn = async () => {
     try {
-      await instance.loginPopup({
+      const result = await instance.loginPopup({
         scopes: [process.env.NEXT_PUBLIC_ENTRA_API_SCOPE!],
       })
+      if (result?.account) {
+        instance.setActiveAccount(result.account)
+      }
     } catch (e) {
       // user_cancelled or popup_window_error — no action needed
       console.warn('loginPopup dismissed', e)
