@@ -7,14 +7,22 @@ import { MarkdownContent } from '@/features/chat/components/MarkdownContent'
 
 interface ChatThreadProps {
   messages: Message[]
+  streamingText?: string
+  isStreaming?: boolean
+  streamError?: string | null
 }
 
-export function ChatThread({ messages }: ChatThreadProps) {
+export function ChatThread({
+  messages,
+  streamingText = '',
+  isStreaming = false,
+  streamError = null,
+}: ChatThreadProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, isStreaming])
 
   return (
     <div style={{ maxWidth: 780, margin: '0 auto', padding: '28px 24px 16px' }}>
@@ -23,7 +31,63 @@ export function ChatThread({ messages }: ChatThreadProps) {
           ? <UserMessage key={i} text={msg.text} />
           : <AssistantMessage key={i} text={msg.text} />
       )}
+      {isStreaming && (
+        <div
+          data-testid="streaming-message"
+          className="anim-msg"
+          style={{ display: 'flex', gap: 13, marginBottom: 30 }}
+        >
+          <div style={{
+            width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+            background: 'var(--brand)', color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: 'var(--shadow-card-sm)',
+          }}>
+            <Sparkles style={{ width: 16, height: 16 }} strokeWidth={2.2} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0, paddingTop: 3 }}>
+            {streamingText && <MarkdownContent text={streamingText} />}
+            <TypingIndicator />
+          </div>
+        </div>
+      )}
+      {!isStreaming && streamError && (
+        <p
+          data-testid="stream-error"
+          style={{
+            fontSize: 13,
+            color: 'var(--status-red)',
+            textAlign: 'center',
+            padding: '8px 0 16px',
+          }}
+        >
+          {streamError}
+        </p>
+      )}
       <div ref={bottomRef} />
+    </div>
+  )
+}
+
+function TypingIndicator() {
+  return (
+    <div
+      data-testid="typing-indicator"
+      style={{ display: 'flex', gap: 5, padding: '6px 0 2px' }}
+    >
+      {[0, 1, 2].map(i => (
+        <span
+          key={i}
+          style={{
+            display: 'inline-block',
+            width: 7,
+            height: 7,
+            borderRadius: '50%',
+            background: 'var(--brand)',
+            animation: `typingBounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+          }}
+        />
+      ))}
     </div>
   )
 }
