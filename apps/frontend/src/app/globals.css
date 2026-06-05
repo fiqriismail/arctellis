@@ -84,6 +84,22 @@ a {
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
+  /* SharePoint brand */
+  --brand: #0f6cbd;
+  --brand-strong: #0a5ca8;
+  --brand-tint: #eff6fc;
+  /* extended border */
+  --border-strong: #d4d4d8;
+  /* extra muted surface */
+  --muted-2: #fafafa;
+  /* status colours */
+  --status-red: #b42318;
+  --status-green: #16794c;
+  --status-amber: #9a6a00;
+  /* design-system shadows */
+  --shadow-card-sm: 0 1px 2px 0 rgba(9,9,11,.05);
+  --shadow-card-md: 0 4px 12px -2px rgba(9,9,11,.08), 0 2px 4px -2px rgba(9,9,11,.04);
+  --shadow-card-lg: 0 12px 32px -8px rgba(9,9,11,.16), 0 4px 8px -4px rgba(9,9,11,.06);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -147,14 +163,43 @@ a {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Always visible — animation is an enhancement only */
+.anim-msg { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .anim-msg { animation: msgIn .34s cubic-bezier(.2,.7,.3,1) both; }
+}
+
+/* Thread scrollbar */
+.scroll::-webkit-scrollbar { width: 10px; }
+.scroll::-webkit-scrollbar-track { background: transparent; }
+.scroll::-webkit-scrollbar-thumb {
+  background: #e4e4e7;
+  border-radius: 99px;
+  border: 3px solid #fff;
+}
+.scroll::-webkit-scrollbar-thumb:hover { background: #d4d4d8; }
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: 'cv05' 1, 'ss01' 1;
   }
   html {
     @apply font-sans;
+  }
+  textarea::placeholder {
+    color: var(--muted-foreground);
+    opacity: 1;
+  }
+  ::selection {
+    background: rgba(15,108,189,.16);
   }
 }
