@@ -96,6 +96,13 @@ async def main() -> None:
         "fields/Department eq 'CIO'",
         "fields/Status eq 'Active'",
         "```",
+        "",
+        "Datetime values must be quoted ISO-8601 strings. Match a single day with"
+        " a half-open range (not `eq`):",
+        "```",
+        "fields/Created ge '2026-05-26T00:00:00Z'"
+        " and fields/Created lt '2026-05-27T00:00:00Z'",
+        "```",
     ]
 
     OUT.parent.mkdir(parents=True, exist_ok=True)

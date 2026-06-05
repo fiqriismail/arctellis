@@ -43,6 +43,11 @@ Data conventions:
   LookupValue and the email to Email.
 - When displaying person columns to the user, always show LookupValue (the
   display name). Never expose LookupId or raw email unless explicitly asked.
+- Date/time columns: OData datetime values MUST be quoted ISO-8601 strings.
+  To match a single calendar day, use a half-open range, not `eq`. Example for
+  items created on 2026-05-26:
+  fields/Created ge '2026-05-26T00:00:00Z' and fields/Created lt '2026-05-27T00:00:00Z'
+  Never use an unquoted datetime or `eq` on a date — both fail or return nothing.
 
 Formatting:
 - Whenever you present structured or comparative data (lists of items with
