@@ -25,16 +25,25 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Group One RTP Backend", version="0.1.0", lifespan=lifespan)
+def create_app() -> FastAPI:
+    settings = get_settings()
+    origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    application = FastAPI(
+        title="Group One RTP Backend", version="0.1.0", lifespan=lifespan
+    )
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    application.include_router(chat_router)
+    return application
 
-app.include_router(chat_router)
+
+app = create_app()
 
 
 @app.get("/health")

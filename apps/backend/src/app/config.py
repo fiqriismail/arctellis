@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     cache_ttl_seconds: int = 60
     list_row_threshold: int = 1000
 
+    # CORS — comma-separated list of allowed origins
+    cors_origins: str = "http://localhost:3000"
+
 
 @lru_cache
 def get_settings() -> Settings:
