@@ -24,7 +24,7 @@ const components: Components = {
     return <li style={{ marginBottom: 5, fontSize: 14.5 }}>{children}</li>
   },
   code({ className, children }) {
-    const isBlock = /language-(\w+)/.test(className || '') || String(children).includes('\n')
+    const isBlock = !!className
     if (isBlock) {
       return (
         <code style={{ fontFamily: 'ui-monospace, monospace', fontSize: 'inherit' }}>
@@ -40,7 +40,7 @@ const components: Components = {
         color: 'var(--brand-strong)',
         padding: '2px 6px',
         borderRadius: 4,
-        border: '1px solid #bfdbfe',
+        border: '1px solid var(--border)',
       }}>
         {children}
       </code>
