@@ -29,7 +29,9 @@ export function useChat() {
         accumulated += token
         setStreamingText(accumulated)
       }
-      setMessages(prev => [...prev, { role: 'assistant', text: accumulated }])
+      if (accumulated) {
+        setMessages(prev => [...prev, { role: 'assistant', text: accumulated }])
+      }
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
         if (accumulated) {
@@ -50,6 +52,7 @@ export function useChat() {
 
   const stopStream = useCallback(() => {
     abortRef.current?.abort()
+    abortRef.current = null
   }, [])
 
   return { messages, streamingText, isStreaming, streamError, sendMessage, stopStream }

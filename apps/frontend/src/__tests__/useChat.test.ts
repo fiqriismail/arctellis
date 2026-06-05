@@ -113,4 +113,19 @@ describe('useChat', () => {
 
     expect(result.current.streamError).toBeNull()
   })
+
+  it('does not add an assistant message when stream completes with no tokens', async () => {
+    mockStreamMessage.mockImplementation(async function* () {
+      // yields nothing
+    })
+    const { result } = renderHook(() => useChat())
+
+    await act(async () => {
+      await result.current.sendMessage('test')
+    })
+
+    expect(result.current.messages).toHaveLength(1) // user message only
+    expect(result.current.messages[0].role).toBe('user')
+    expect(result.current.isStreaming).toBe(false)
+  })
 })
