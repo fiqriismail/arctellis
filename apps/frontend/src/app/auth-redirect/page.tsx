@@ -5,7 +5,9 @@ import { msalInstance } from '@/features/auth/msalConfig'
 
 export default function AuthRedirect() {
   useEffect(() => {
-    msalInstance.handleRedirectPromise().catch(console.error)
+    msalInstance.initialize()
+      .then(() => msalInstance.handleRedirectPromise())
+      .catch(console.error)
   }, [])
   return null
 }
