@@ -31,8 +31,13 @@ export function ChatHeader({ onNewConversation }: ChatHeaderProps) {
         </div>
       </div>
       {onNewConversation && (
-        <Button variant="ghost" size="sm" onClick={onNewConversation}>
-          <Plus className="h-4 w-4" />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onNewConversation}
+          className="rounded-md text-muted-foreground hover:text-foreground gap-1.5"
+        >
+          <Plus className="h-3.5 w-3.5" />
           New conversation
         </Button>
       )}
