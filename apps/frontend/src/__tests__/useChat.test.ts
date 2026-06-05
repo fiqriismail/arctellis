@@ -204,4 +204,27 @@ describe('useChat', () => {
 
     expect(idAfter).not.toBe(idBefore)
   })
+
+  it('resetSession aborts an in-flight stream', async () => {
+    let resolveStream: () => void
+    mockStreamMessage.mockImplementation(async function* (_text: string, _sessionId: string, signal: AbortSignal) {
+      yield 'Partial '
+      await new Promise<never>((_, reject) => {
+        resolveStream = () => reject(new DOMException('Aborted', 'AbortError'))
+        signal.addEventListener('abort', () => resolveStream(), { once: true })
+      })
+    })
+
+    const { result } = renderHook(() => useChat())
+
+    act(() => { result.current.sendMessage('hi') })
+    await waitFor(() => expect(result.current.streamingText).toBe('Partial '))
+    expect(result.current.isStreaming).toBe(true)
+
+    act(() => { result.current.resetSession() })
+
+    await waitFor(() => expect(result.current.isStreaming).toBe(false))
+    expect(result.current.messages).toHaveLength(0)
+    expect(result.current.streamingText).toBe('')
+  })
 })
