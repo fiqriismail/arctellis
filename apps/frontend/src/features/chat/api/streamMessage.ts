@@ -54,7 +54,9 @@ export async function* streamMessage(
           // Strip 'data:' and a single SSE delimiter space, preserving the token's own spaces.
           const payload = line.slice(5).replace(/^ /, '')
           if (payload === '[DONE]') return
-          if (payload.startsWith('[ERROR]')) throw new ApiError('server', payload)
+          if (payload.startsWith('[ERROR]')) {
+            throw new ApiError('server', payload.slice('[ERROR]'.length).trim())
+          }
           yield payload
         }
       }

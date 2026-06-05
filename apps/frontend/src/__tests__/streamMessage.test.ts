@@ -56,6 +56,7 @@ describe('streamMessage', () => {
     expect(init.method).toBe('POST')
     expect(init.headers['Authorization']).toBe('Bearer fake-token')
     expect(init.headers['Content-Type']).toBe('application/json')
+    expect(init.headers['Accept']).toBe('text/event-stream')
     expect(JSON.parse(init.body)).toEqual({ question: 'my question', session_id: 'sess-1' })
   })
 
@@ -73,6 +74,13 @@ describe('streamMessage', () => {
     global.fetch = jest.fn().mockResolvedValue(
       mockResponse(['data: partial\n\n', 'data: [ERROR] boom\n\n'])
     )
+    await expect(
+      collect(streamMessage('q', 'sess', new AbortController().signal, getToken))
+    ).rejects.toMatchObject({ name: 'ApiError', kind: 'server' })
+  })
+
+  it('throws ApiError(server) when the response has no body', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, body: null } as unknown as Response)
     await expect(
       collect(streamMessage('q', 'sess', new AbortController().signal, getToken))
     ).rejects.toMatchObject({ name: 'ApiError', kind: 'server' })
