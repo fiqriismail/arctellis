@@ -21,4 +21,23 @@ describe('ChatThread', () => {
     expect(items[0]).toHaveTextContent('First')
     expect(items[1]).toHaveTextContent('Second')
   })
+
+  it('renders empty thread without error', () => {
+    render(<ChatThread messages={[]} />)
+    expect(screen.queryByTestId('message')).not.toBeInTheDocument()
+  })
+
+  it('calls scrollIntoView when messages change', () => {
+    const scrollSpy = jest.spyOn(window.HTMLElement.prototype, 'scrollIntoView')
+    const { rerender } = render(<ChatThread messages={[{ role: 'user', text: 'Hello' }]} />)
+    expect(scrollSpy).toHaveBeenCalled()
+
+    scrollSpy.mockClear()
+    rerender(<ChatThread messages={[
+      { role: 'user', text: 'Hello' },
+      { role: 'assistant', text: 'World' },
+    ]} />)
+    expect(scrollSpy).toHaveBeenCalled()
+    scrollSpy.mockRestore()
+  })
 })
