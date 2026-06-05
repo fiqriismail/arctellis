@@ -52,7 +52,6 @@ export function useChat() {
 
   const stopStream = useCallback(() => {
     abortRef.current?.abort()
-    abortRef.current = null
   }, [])
 
   return { messages, streamingText, isStreaming, streamError, sendMessage, stopStream }
