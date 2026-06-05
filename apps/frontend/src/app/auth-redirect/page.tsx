@@ -7,7 +7,9 @@ export default function AuthRedirect() {
   const { instance } = useMsal()
 
   useEffect(() => {
-    instance.handleRedirectPromise().catch(console.error)
+    instance.initialize()
+      .then(() => instance.handleRedirectPromise())
+      .catch(console.error)
   }, [instance])
 
   return null
