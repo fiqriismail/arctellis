@@ -21,30 +21,7 @@ const components: Components = {
     return <ol style={{ margin: '8px 0 12px', paddingLeft: 22 }}>{children}</ol>
   },
   li({ children }) {
-    return <li style={{ marginBottom: 5, fontSize: 14.5 }}>{children}</li>
-  },
-  code({ className, children }) {
-    const isBlock = !!className
-    if (isBlock) {
-      return (
-        <code style={{ fontFamily: 'ui-monospace, monospace', fontSize: 'inherit' }}>
-          {children}
-        </code>
-      )
-    }
-    return (
-      <code style={{
-        fontFamily: 'ui-monospace, monospace',
-        fontSize: 12.5,
-        background: 'var(--brand-tint)',
-        color: 'var(--brand-strong)',
-        padding: '2px 6px',
-        borderRadius: 4,
-        border: '1px solid var(--border)',
-      }}>
-        {children}
-      </code>
-    )
+    return <li style={{ marginBottom: 5, fontSize: 'inherit' }}>{children}</li>
   },
   pre({ children }) {
     return (
@@ -62,6 +39,31 @@ const components: Components = {
       }}>
         {children}
       </pre>
+    )
+  },
+  code({ className, children }) {
+    // className is set when inside a fenced code block (e.g. "language-js").
+    // When className is set, the code is already inside a styled <pre> — render plain.
+    // When className is absent, this is inline code — apply brand-tint style.
+    if (className) {
+      return (
+        <code style={{ fontFamily: 'ui-monospace, monospace', fontSize: 'inherit', color: 'inherit' }}>
+          {children}
+        </code>
+      )
+    }
+    return (
+      <code style={{
+        fontFamily: 'ui-monospace, monospace',
+        fontSize: 12.5,
+        background: 'var(--brand-tint)',
+        color: 'var(--brand-strong)',
+        padding: '2px 6px',
+        borderRadius: 4,
+        border: '1px solid var(--border)',
+      }}>
+        {children}
+      </code>
     )
   },
   h2({ children }) {
