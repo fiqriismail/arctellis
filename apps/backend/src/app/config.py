@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # SharePoint / Microsoft Graph
     sharepoint_site_url: str = ""
     sharepoint_list_id: str = ""
+    # IANA timezone the SharePoint site displays dates in. Graph stores/filters
+    # dates in UTC; user-typed calendar dates are interpreted in this zone.
+    site_timezone: str = "Europe/London"
 
     # Cache and retrieval
     cache_ttl_seconds: int = 60

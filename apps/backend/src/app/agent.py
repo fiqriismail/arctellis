@@ -43,11 +43,12 @@ Data conventions:
   LookupValue and the email to Email.
 - When displaying person columns to the user, always show LookupValue (the
   display name). Never expose LookupId or raw email unless explicitly asked.
-- Date/time columns: OData datetime values MUST be quoted ISO-8601 strings.
-  To match a single calendar day, use a half-open range, not `eq`. Example for
-  items created on 2026-05-26:
-  fields/Created ge '2026-05-26T00:00:00Z' and fields/Created lt '2026-05-27T00:00:00Z'
-  Never use an unquoted datetime or `eq` on a date — both fail or return nothing.
+- Date/time columns: for ANY question about a date or day (e.g. "items created
+  on 25 May 2026", "modified last week"), use the filter_by_date tool with the
+  column's internal name and YYYY-MM-DD dates. It interprets dates in the site's
+  local timezone and converts to the correct UTC range — do NOT hand-build a
+  datetime odata_filter, as Graph stores dates in UTC and naive filters miss
+  rows near midnight.
 
 Formatting:
 - Whenever you present structured or comparative data (lists of items with
@@ -72,7 +73,7 @@ def _load_schema_doc() -> str:
 
 def build_agent(service: SharePointService, settings: Settings) -> CompiledStateGraph:
     """Build a LangChain agent wired to the given SharePointService."""
-    tools = make_tools(service)
+    tools = make_tools(service, site_timezone=settings.site_timezone)
     llm = ChatOpenAI(
         model=settings.openai_model,
         api_key=settings.openai_api_key,
