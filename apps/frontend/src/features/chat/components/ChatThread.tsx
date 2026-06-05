@@ -3,6 +3,7 @@
 import { useRef, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
 import { Message } from '@/features/chat/types'
+import { MarkdownContent } from '@/features/chat/components/MarkdownContent'
 
 interface ChatThreadProps {
   messages: Message[]
@@ -67,14 +68,7 @@ function AssistantMessage({ text }: { text: string }) {
         <Sparkles style={{ width: 16, height: 16 }} strokeWidth={2.2} />
       </div>
       <div style={{ flex: 1, minWidth: 0, paddingTop: 3 }}>
-        <div style={{
-          fontSize: 14.5,
-          lineHeight: 1.62,
-          color: 'var(--foreground)',
-          whiteSpace: 'pre-wrap',
-        }}>
-          {text}
-        </div>
+        <MarkdownContent text={text} />
       </div>
     </div>
   )
