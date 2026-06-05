@@ -30,9 +30,9 @@ export default function HomePage() {
 
   if (messages.length > 0) {
     return (
-      <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--background)' }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: 'var(--background)', overflow: 'hidden' }}>
         <ChatHeader />
-        <div style={{ flex: 1, overflowY: 'auto' }} className="scroll">
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }} className="scroll">
           <ChatThread messages={messages} />
         </div>
         <div style={{
