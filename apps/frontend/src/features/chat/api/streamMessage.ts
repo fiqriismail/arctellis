@@ -1,26 +1,65 @@
-function delay(ms: number, signal: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (signal.aborted) {
-      reject(new DOMException('Aborted', 'AbortError'))
-      return
-    }
-    const id = setTimeout(resolve, ms)
-    signal.addEventListener(
-      'abort',
-      () => { clearTimeout(id); reject(new DOMException('Aborted', 'AbortError')) },
-      { once: true }
-    )
-  })
-}
+import { ApiError } from './apiError'
+import { getApiUrl } from '@/features/chat/config'
 
 export async function* streamMessage(
-  _text: string, // FE-08 will POST this to the backend SSE endpoint
-  _sessionId: string, // stub ignores; FE-08 will POST with it
-  signal: AbortSignal
+  text: string,
+  sessionId: string,
+  signal: AbortSignal,
+  getToken: () => Promise<string>
 ): AsyncGenerator<string> {
-  const tokens = 'This is a stub response — real answers arrive in FE-08.'.split(' ')
-  for (const token of tokens) {
-    await delay(80, signal)
-    yield token + ' ' // stub adds trailing space; real SSE tokens won't
+  const token = await getToken()
+
+  let response: Response
+  try {
+    response = await fetch(`${getApiUrl()}/chat`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+      },
+      body: JSON.stringify({ question: text, session_id: sessionId }),
+      signal,
+    })
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') throw err
+    throw new ApiError('network', 'Network request failed')
+  }
+
+  if (!response.ok) {
+    if (response.status === 401) throw new ApiError('auth', 'Unauthorized')
+    throw new ApiError('server', `Request failed with status ${response.status}`)
+  }
+  if (!response.body) {
+    throw new ApiError('server', 'Empty response body')
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+
+      let delimiter: number
+      while ((delimiter = buffer.indexOf('\n\n')) !== -1) {
+        const rawEvent = buffer.slice(0, delimiter)
+        buffer = buffer.slice(delimiter + 2)
+
+        for (const line of rawEvent.split('\n')) {
+          if (!line.startsWith('data:')) continue
+          // Strip 'data:' and a single SSE delimiter space, preserving the token's own spaces.
+          const payload = line.slice(5).replace(/^ /, '')
+          if (payload === '[DONE]') return
+          if (payload.startsWith('[ERROR]')) throw new ApiError('server', payload)
+          yield payload
+        }
+      }
+    }
+  } finally {
+    reader.cancel().catch(() => {})
   }
 }
