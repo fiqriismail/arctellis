@@ -9,7 +9,7 @@ describe('streamMessage', () => {
     const tokens: string[] = []
 
     const collecting = (async () => {
-      for await (const token of streamMessage('any question', controller.signal)) {
+      for await (const token of streamMessage('any question', 'test-session', controller.signal)) {
         tokens.push(token)
       }
     })()
@@ -28,7 +28,7 @@ describe('streamMessage', () => {
 
     const collecting = (async () => {
       try {
-        for await (const token of streamMessage('test', controller.signal)) {
+        for await (const token of streamMessage('test', 'test-session', controller.signal)) {
           tokens.push(token)
           if (tokens.length === 1) controller.abort()
         }
@@ -52,7 +52,7 @@ describe('streamMessage', () => {
     let caughtError: Error | null = null
 
     try {
-      for await (const token of streamMessage('test', controller.signal)) {
+      for await (const token of streamMessage('test', 'test-session', controller.signal)) {
         tokens.push(token)
       }
     } catch (err) {

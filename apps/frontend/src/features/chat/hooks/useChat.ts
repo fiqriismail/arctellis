@@ -10,6 +10,7 @@ export function useChat() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamError, setStreamError] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const sessionIdRef = useRef(crypto.randomUUID())
 
   const sendMessage = useCallback(async (text: string) => {
     if (abortRef.current) return
@@ -25,7 +26,7 @@ export function useChat() {
     let accumulated = ''
 
     try {
-      for await (const token of streamMessage(text, controller.signal)) {
+      for await (const token of streamMessage(text, sessionIdRef.current, controller.signal)) {
         accumulated += token
         setStreamingText(accumulated)
       }
@@ -54,5 +55,13 @@ export function useChat() {
     abortRef.current?.abort()
   }, [])
 
-  return { messages, streamingText, isStreaming, streamError, sendMessage, stopStream }
+  const resetSession = useCallback(() => {
+    sessionIdRef.current = crypto.randomUUID()
+    setMessages([])
+    setStreamingText('')
+    setStreamError(null)
+    setIsStreaming(false)
+  }, [])
+
+  return { messages, streamingText, isStreaming, streamError, sendMessage, stopStream, resetSession }
 }
