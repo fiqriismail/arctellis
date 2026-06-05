@@ -29,7 +29,7 @@ export function SignInCard({ onSignIn }: SignInCardProps) {
           height: 52,
           borderRadius: 14,
           background: 'var(--brand)',
-          color: '#fff',
+          color: 'var(--primary-foreground)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
