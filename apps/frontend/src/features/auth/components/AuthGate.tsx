@@ -19,8 +19,6 @@ export function AuthGate({ children }: AuthGateProps) {
       })
       if (result?.account) {
         instance.setActiveAccount(result.account)
-        // DEBUG: remove before merge
-        console.log('[FE-07 debug] access token:', result.accessToken)
       }
     } catch (e) {
       // user_cancelled or popup_window_error — no action needed
