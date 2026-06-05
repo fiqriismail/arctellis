@@ -50,7 +50,7 @@ describe('useChat', () => {
   })
 
   it('preserves partial text in messages and clears streaming when stopStream is called', async () => {
-    mockStreamMessage.mockImplementation(async function* (_: string, signal: AbortSignal) {
+    mockStreamMessage.mockImplementation(async function* (_text: string, _sessionId: string, signal: AbortSignal) {
       yield 'Partial '
       await new Promise<never>((_, reject) =>
         signal.addEventListener('abort', () =>
@@ -127,5 +127,81 @@ describe('useChat', () => {
     expect(result.current.messages).toHaveLength(1) // user message only
     expect(result.current.messages[0].role).toBe('user')
     expect(result.current.isStreaming).toBe(false)
+  })
+
+  it('passes a valid UUID as sessionId to streamMessage', async () => {
+    mockStreamMessage.mockImplementation(() => makeTokenStream(['ok']))
+    const { result } = renderHook(() => useChat())
+
+    await act(async () => {
+      await result.current.sendMessage('test')
+    })
+
+    const sessionId = mockStreamMessage.mock.calls[0][1]
+    expect(sessionId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+    )
+  })
+
+  it('passes the same sessionId on consecutive sendMessage calls', async () => {
+    mockStreamMessage.mockImplementation(() => makeTokenStream(['ok']))
+    const { result } = renderHook(() => useChat())
+
+    await act(async () => { await result.current.sendMessage('first') })
+    await act(async () => { await result.current.sendMessage('second') })
+
+    const firstId = mockStreamMessage.mock.calls[0][1]
+    const secondId = mockStreamMessage.mock.calls[1][1]
+    expect(firstId).toBe(secondId)
+  })
+
+  it('resetSession clears messages and all streaming state', async () => {
+    mockStreamMessage.mockImplementation(() => makeTokenStream(['Hello']))
+    const { result } = renderHook(() => useChat())
+
+    await act(async () => { await result.current.sendMessage('test') })
+    expect(result.current.messages).toHaveLength(2)
+
+    act(() => { result.current.resetSession() })
+
+    expect(result.current.messages).toHaveLength(0)
+    expect(result.current.streamingText).toBe('')
+    expect(result.current.streamError).toBeNull()
+    expect(result.current.isStreaming).toBe(false)
+  })
+
+  it('resetSession generates a new sessionId', async () => {
+    mockStreamMessage.mockImplementation(() => makeTokenStream(['ok']))
+    const { result } = renderHook(() => useChat())
+
+    await act(async () => { await result.current.sendMessage('before') })
+    const idBefore = mockStreamMessage.mock.calls[0][1]
+
+    act(() => { result.current.resetSession() })
+
+    await act(async () => { await result.current.sendMessage('after') })
+    const idAfter = mockStreamMessage.mock.calls[1][1]
+
+    expect(idAfter).not.toBe(idBefore)
+    expect(idAfter).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+    )
+  })
+
+  it('sendMessage after resetSession uses the new sessionId', async () => {
+    mockStreamMessage.mockImplementation(() => makeTokenStream(['ok']))
+    const { result } = renderHook(() => useChat())
+
+    await act(async () => { await result.current.sendMessage('before') })
+    const idBefore = mockStreamMessage.mock.calls[0][1]
+
+    act(() => { result.current.resetSession() })
+    jest.clearAllMocks()
+    mockStreamMessage.mockImplementation(() => makeTokenStream(['ok']))
+
+    await act(async () => { await result.current.sendMessage('after') })
+    const idAfter = mockStreamMessage.mock.calls[0][1]
+
+    expect(idAfter).not.toBe(idBefore)
   })
 })
