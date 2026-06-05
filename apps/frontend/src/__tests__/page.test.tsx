@@ -22,6 +22,8 @@ describe('HomePage', () => {
     await user.keyboard('{Enter}')
     expect(screen.queryByText('SharePoint List AI Assistant')).not.toBeInTheDocument()
     expect(screen.getByText('Test question')).toBeInTheDocument()
+    // drain async streaming so React act() queue is empty before test exits
+    await waitFor(() => expect(screen.getByText('Streamed response')).toBeInTheDocument())
   })
 
   it('shows assistant response after submit', async () => {
