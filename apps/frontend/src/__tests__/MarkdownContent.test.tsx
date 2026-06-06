@@ -110,3 +110,31 @@ describe('StatusBadge', () => {
     expect(badge.className).toMatch(/secondary/)
   })
 })
+
+describe('MarkdownContent table rendering', () => {
+  const TABLE_MD = '| Title | Status |\n|---|---|\n| Laptop | Active |\n| Chair | Draft |'
+
+  it('wraps table in a rounded border container', () => {
+    const { container } = render(<MarkdownContent text={TABLE_MD} />)
+    const wrapper = container.querySelector('div.rounded-lg')
+    expect(wrapper).toBeInTheDocument()
+    expect(wrapper?.querySelector('table')).toBeInTheDocument()
+  })
+
+  it('renders status cell as a badge, not bare td text', () => {
+    render(<MarkdownContent text={TABLE_MD} />)
+    const active = screen.getByText('Active')
+    expect(active.tagName).not.toBe('TD')
+  })
+
+  it('renders non-status cell as plain text', () => {
+    render(<MarkdownContent text={TABLE_MD} />)
+    expect(screen.getByText('Laptop')).toBeInTheDocument()
+  })
+
+  it('renders table header cells', () => {
+    render(<MarkdownContent text={TABLE_MD} />)
+    expect(screen.getByText('Title')).toBeInTheDocument()
+    expect(screen.getByText('Status')).toBeInTheDocument()
+  })
+})
