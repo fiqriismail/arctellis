@@ -212,9 +212,10 @@ class SharePointService:
         )
 
     async def get_item_count(self) -> int:
-        """Return the total number of items in the list using $count=true.
+        """Return the total number of items in the list.
 
-        Result is cached for the service's TTL.
+        Fetches item IDs only (no field expansion) since the Graph API does
+        not support $count on the list items endpoint. Result is cached.
         """
         cache_key = "count:"
         cached = self._cache.get(cache_key)
@@ -223,7 +224,7 @@ class SharePointService:
 
         builder = items_request_builder.ItemsRequestBuilder
         query_params = builder.ItemsRequestBuilderGetQueryParameters(
-            count=True, top=1
+            select=["id"], top=5000
         )
         request_configuration = RequestConfiguration(query_parameters=query_params)
         result = await (
@@ -231,7 +232,7 @@ class SharePointService:
             .lists.by_list_id(self._list_id)
             .items.get(request_configuration=request_configuration)
         )
-        count = (result.odata_count or 0) if result else 0
+        count = len(result.value) if result and result.value else 0
         self._cache.set(cache_key, count)
         return count
 
