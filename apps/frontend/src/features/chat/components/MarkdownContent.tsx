@@ -3,6 +3,15 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { StatusBadge } from './StatusBadge'
 
 const components: Components = {
   p({ children }) {
@@ -95,38 +104,34 @@ const components: Components = {
   },
   table({ children }) {
     return (
-      <table style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        fontSize: 13.5,
-        margin: '12px 0',
-      }}>
-        {children}
-      </table>
+      <div className="my-3 w-full overflow-x-auto rounded-lg border">
+        <Table>{children}</Table>
+      </div>
     )
+  },
+  thead({ children }) {
+    return <TableHeader>{children}</TableHeader>
+  },
+  tbody({ children }) {
+    return <TableBody>{children}</TableBody>
+  },
+  tr({ children }) {
+    return <TableRow>{children}</TableRow>
   },
   th({ children }) {
-    return (
-      <th style={{
-        background: 'var(--brand)',
-        color: '#fff',
-        fontWeight: 600,
-        textAlign: 'left',
-        padding: '8px 12px',
-      }}>
-        {children}
-      </th>
-    )
+    return <TableHead className="bg-muted font-semibold">{children}</TableHead>
   },
   td({ children }) {
+    const text =
+      typeof children === 'string'
+        ? children
+        : Array.isArray(children) && children.length === 1 && typeof children[0] === 'string'
+          ? children[0]
+          : null
     return (
-      <td style={{
-        padding: '7px 12px',
-        borderBottom: '1px solid var(--border)',
-        color: 'var(--foreground)',
-      }}>
-        {children}
-      </td>
+      <TableCell>
+        {text !== null ? <StatusBadge value={text} /> : children}
+      </TableCell>
     )
   },
   blockquote({ children }) {

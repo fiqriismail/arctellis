@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { MarkdownContent } from '@/features/chat/components/MarkdownContent'
+import { StatusBadge } from '@/features/chat/components/StatusBadge'
 
 describe('MarkdownContent', () => {
   it('renders a paragraph', () => {
@@ -60,5 +61,80 @@ describe('MarkdownContent', () => {
     expect(document.querySelector('table')).toBeInTheDocument()
     expect(screen.getByText('Name')).toBeInTheDocument()
     expect(screen.getByText('Alice')).toBeInTheDocument()
+  })
+})
+
+describe('StatusBadge', () => {
+  it('renders a badge for a known status value', () => {
+    render(<StatusBadge value="Active" />)
+    expect(screen.getByText('Active')).toBeInTheDocument()
+  })
+
+  it('renders plain text for an unknown value', () => {
+    const { container } = render(<StatusBadge value="Some random text" />)
+    expect(container.firstChild).toHaveTextContent('Some random text')
+    expect(container.firstChild?.nodeName).toBe('SPAN')
+  })
+
+  it('is case-insensitive — lowercase matches', () => {
+    render(<StatusBadge value="approved" />)
+    expect(screen.getByText('approved')).toBeInTheDocument()
+  })
+
+  it('is case-insensitive — uppercase matches', () => {
+    render(<StatusBadge value="REJECTED" />)
+    expect(screen.getByText('REJECTED')).toBeInTheDocument()
+  })
+
+  it('renders Rejected with destructive styling', () => {
+    const { container } = render(<StatusBadge value="Rejected" />)
+    const badge = container.firstChild as HTMLElement
+    expect(badge.className).toMatch(/destructive/)
+  })
+
+  it('renders Approved with success styling', () => {
+    const { container } = render(<StatusBadge value="Approved" />)
+    const badge = container.firstChild as HTMLElement
+    expect(badge.className).toMatch(/bg-green-100/)
+  })
+
+  it('renders Under SME Review with warning styling', () => {
+    const { container } = render(<StatusBadge value="Under SME Review" />)
+    const badge = container.firstChild as HTMLElement
+    expect(badge.className).toMatch(/bg-amber-100/)
+  })
+
+  it('renders Draft with secondary styling', () => {
+    const { container } = render(<StatusBadge value="Draft" />)
+    const badge = container.firstChild as HTMLElement
+    expect(badge.className).toMatch(/secondary/)
+  })
+})
+
+describe('MarkdownContent table rendering', () => {
+  const TABLE_MD = '| Title | Status |\n|---|---|\n| Laptop | Active |\n| Chair | Draft |'
+
+  it('wraps table in a rounded border container', () => {
+    const { container } = render(<MarkdownContent text={TABLE_MD} />)
+    const wrapper = container.querySelector('div.rounded-lg')
+    expect(wrapper).toBeInTheDocument()
+    expect(wrapper?.querySelector('table')).toBeInTheDocument()
+  })
+
+  it('renders status cell as a badge, not bare td text', () => {
+    render(<MarkdownContent text={TABLE_MD} />)
+    const active = screen.getByText('Active')
+    expect(active.tagName).not.toBe('TD')
+  })
+
+  it('renders non-status cell as plain text', () => {
+    render(<MarkdownContent text={TABLE_MD} />)
+    expect(screen.getByText('Laptop')).toBeInTheDocument()
+  })
+
+  it('renders table header cells', () => {
+    render(<MarkdownContent text={TABLE_MD} />)
+    expect(screen.getByText('Title')).toBeInTheDocument()
+    expect(screen.getByText('Status')).toBeInTheDocument()
   })
 })
