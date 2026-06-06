@@ -156,6 +156,32 @@ async def test_invoke_agent_prepends_history():
     assert sent[2]["content"] == "follow-up question"
 
 
+def test_build_agent_passes_row_threshold_from_settings():
+    from unittest.mock import patch
+
+    from app.agent import build_agent
+
+    mock_service = MagicMock()
+    mock_settings = MagicMock()
+    mock_settings.openai_model = "gpt-4o"
+    mock_settings.openai_api_key = "sk-test"
+    mock_settings.site_timezone = "Europe/London"
+    mock_settings.list_row_threshold = 500
+
+    with patch("app.agent.make_tools") as mock_make_tools, patch(
+        "app.agent.create_agent"
+    ) as mock_create:
+        mock_make_tools.return_value = []
+        mock_create.return_value = MagicMock()
+        build_agent(mock_service, mock_settings)
+
+        mock_make_tools.assert_called_once_with(
+            mock_service,
+            site_timezone="Europe/London",
+            row_threshold=500,
+        )
+
+
 @pytest.mark.asyncio
 async def test_invoke_agent_none_history_treated_as_empty():
     from langchain_core.messages import AIMessage
