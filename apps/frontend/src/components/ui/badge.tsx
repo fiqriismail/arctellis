@@ -20,9 +20,9 @@ const badgeVariants = cva(
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
         success:
-          "badge-success border-green-200 bg-green-100 text-green-800",
+          "border-green-200 bg-green-100 text-green-800",
         warning:
-          "badge-warning border-amber-200 bg-amber-100 text-amber-800",
+          "border-amber-200 bg-amber-100 text-amber-800",
       },
     },
     defaultVariants: {
@@ -52,5 +52,7 @@ function Badge({
     },
   })
 }
+
+export type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>['variant']>
 
 export { Badge, badgeVariants }

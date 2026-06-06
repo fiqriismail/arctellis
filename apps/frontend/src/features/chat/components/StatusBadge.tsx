@@ -1,6 +1,5 @@
 import { Badge } from '@/components/ui/badge'
-
-type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning'
+import type { BadgeVariant } from '@/components/ui/badge'
 
 const STATUS_MAP: Record<string, BadgeVariant> = {
   'draft':                'secondary',
@@ -25,5 +24,5 @@ export function StatusBadge({ value }: StatusBadgeProps) {
   if (!variant) {
     return <span>{value}</span>
   }
-  return <Badge variant={variant as any}>{value}</Badge>
+  return <Badge variant={variant}>{value}</Badge>
 }

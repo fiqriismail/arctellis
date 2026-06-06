@@ -73,7 +73,7 @@ describe('StatusBadge', () => {
   it('renders plain text for an unknown value', () => {
     const { container } = render(<StatusBadge value="Some random text" />)
     expect(container.firstChild).toHaveTextContent('Some random text')
-    expect(container.querySelector('[class*="badge"]')).toBeNull()
+    expect(container.firstChild?.nodeName).toBe('SPAN')
   })
 
   it('is case-insensitive — lowercase matches', () => {
@@ -95,13 +95,13 @@ describe('StatusBadge', () => {
   it('renders Approved with success styling', () => {
     const { container } = render(<StatusBadge value="Approved" />)
     const badge = container.firstChild as HTMLElement
-    expect(badge.className).toMatch(/success/)
+    expect(badge.className).toMatch(/bg-green-100/)
   })
 
   it('renders Under SME Review with warning styling', () => {
     const { container } = render(<StatusBadge value="Under SME Review" />)
     const badge = container.firstChild as HTMLElement
-    expect(badge.className).toMatch(/warning/)
+    expect(badge.className).toMatch(/bg-amber-100/)
   })
 
   it('renders Draft with secondary styling', () => {
