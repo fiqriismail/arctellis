@@ -196,6 +196,119 @@ async def test_chat_second_question_receives_history():
     assert "First question" in contents
 
 
+# ── BE-10: structured observability logging ────────────────────────────────────
+
+
+def _make_mock_agent_with_events(*extra_events):
+    """Mock agent that emits extra_events before the final on_chain_end."""
+    mock = MagicMock()
+
+    async def astream_events(input_data, **kwargs):
+        for ev in extra_events:
+            yield ev
+        yield {"event": "on_chain_end", "data": {}}
+
+    mock.astream_events = astream_events
+    return mock
+
+
+@pytest.mark.asyncio
+async def test_chat_logs_question_at_request_start(caplog):
+    import logging
+
+    from app.main import app
+
+    app.state.agent = _make_mock_agent()
+    with caplog.at_level(logging.INFO, logger="app.routers.chat"):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            await client.post(
+                "/chat",
+                json={"question": "How many items are active?", "session_id": "log-1"},
+            )
+
+    assert "How many items are active?" in caplog.text
+    assert "chat.question" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_chat_logs_tool_call_with_name_and_inputs(caplog):
+    import logging
+
+    from app.main import app
+
+    tool_event = {
+        "event": "on_tool_start",
+        "name": "filter_rows",
+        "data": {"input": {"odata_filter": "fields/Status eq 'Active'"}},
+    }
+    app.state.agent = _make_mock_agent_with_events(tool_event)
+    with caplog.at_level(logging.INFO, logger="app.routers.chat"):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            await client.post(
+                "/chat",
+                json={"question": "Active items?", "session_id": "log-2"},
+            )
+
+    assert "tool.call" in caplog.text
+    assert "filter_rows" in caplog.text
+    assert "fields/Status eq 'Active'" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_chat_logs_final_answer(caplog):
+    import logging
+
+    from app.main import app
+
+    app.state.agent = _make_mock_agent("There are ", "42 active items.")
+    with caplog.at_level(logging.INFO, logger="app.routers.chat"):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            await client.post(
+                "/chat",
+                json={"question": "How many?", "session_id": "log-3"},
+            )
+
+    assert "chat.answer" in caplog.text
+    assert "There are 42 active items." in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_chat_logs_token_usage(caplog):
+    import logging
+
+    from app.main import app
+
+    usage_output = MagicMock()
+    usage_output.usage_metadata = {
+        "input_tokens": 120,
+        "output_tokens": 55,
+        "total_tokens": 175,
+    }
+    usage_event = {
+        "event": "on_chat_model_end",
+        "data": {"output": usage_output},
+    }
+    app.state.agent = _make_mock_agent_with_events(usage_event)
+    with caplog.at_level(logging.INFO, logger="app.routers.chat"):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            await client.post(
+                "/chat",
+                json={"question": "Summary?", "session_id": "log-4"},
+            )
+
+    assert "token.usage" in caplog.text
+    assert "120" in caplog.text
+    assert "55" in caplog.text
+
+
 @pytest.mark.asyncio
 async def test_chat_agent_error_returns_error_event():
     from app.main import app
