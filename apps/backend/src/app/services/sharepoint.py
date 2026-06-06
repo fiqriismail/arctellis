@@ -211,6 +211,30 @@ class SharePointService:
             flags=re.IGNORECASE,
         )
 
+    async def get_item_count(self) -> int:
+        """Return the total number of items in the list using $count=true.
+
+        Result is cached for the service's TTL.
+        """
+        cache_key = "count:"
+        cached = self._cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        builder = items_request_builder.ItemsRequestBuilder
+        query_params = builder.ItemsRequestBuilderGetQueryParameters(
+            count=True, top=1
+        )
+        request_configuration = RequestConfiguration(query_parameters=query_params)
+        result = await (
+            self._client.sites.by_site_id(self._site_id)
+            .lists.by_list_id(self._list_id)
+            .items.get(request_configuration=request_configuration)
+        )
+        count = (result.odata_count or 0) if result else 0
+        self._cache.set(cache_key, count)
+        return count
+
     async def get_items(self, odata_filter: str | None = None) -> list[ListItem]:
         if odata_filter:
             odata_filter = self._normalize_filter(odata_filter)

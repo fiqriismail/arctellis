@@ -31,7 +31,11 @@ def _local_day_range_utc(
     return _to_utc(start_local), _to_utc(end_local)
 
 
-def make_tools(service: SharePointService, site_timezone: str = "UTC") -> list:
+def make_tools(
+    service: SharePointService,
+    site_timezone: str = "UTC",
+    row_threshold: int = 0,
+) -> list:
     """Return LangChain @tool callables wired to the given SharePointService.
 
     site_timezone is the IANA zone in which user-typed calendar dates are
@@ -62,6 +66,14 @@ def make_tools(service: SharePointService, site_timezone: str = "UTC") -> list:
         OData expression (e.g. \"fields/Status eq 'Active'\").
         Leave odata_filter empty to retrieve all rows.
         Returns the row data as JSON."""
+        if not odata_filter and row_threshold > 0:
+            count = await service.get_item_count()
+            if count > row_threshold:
+                return (
+                    f"List is too large ({count} rows exceeds the {row_threshold}-row "
+                    "threshold). A filter is required — provide an odata_filter to "
+                    "narrow the results."
+                )
         items = await service.get_items(odata_filter=odata_filter or None)
         if not items:
             return "No rows found."

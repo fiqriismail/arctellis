@@ -547,3 +547,69 @@ async def test_group_and_aggregate_empty_list():
     )
 
     assert "No rows" in result
+
+
+# --- row threshold enforcement in filter_rows ---
+
+
+@pytest.mark.asyncio
+async def test_filter_rows_blocks_unfiltered_call_when_count_exceeds_threshold():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_item_count = AsyncMock(return_value=1500)
+    mock_service.get_items = AsyncMock(return_value=[])
+
+    tools = make_tools(mock_service, row_threshold=1000)
+    filter_rows_tool = next(t for t in tools if t.name == "filter_rows")
+    result = await filter_rows_tool.ainvoke({"odata_filter": ""})
+
+    assert "too large" in result.lower() or "filter required" in result.lower()
+    mock_service.get_items.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_filter_rows_allows_filtered_call_when_count_exceeds_threshold():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_item_count = AsyncMock(return_value=1500)
+    mock_service.get_items = AsyncMock(return_value=[])
+
+    tools = make_tools(mock_service, row_threshold=1000)
+    filter_rows_tool = next(t for t in tools if t.name == "filter_rows")
+    await filter_rows_tool.ainvoke({"odata_filter": "fields/Status eq 'Active'"})
+
+    mock_service.get_item_count.assert_not_awaited()
+    mock_service.get_items.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_filter_rows_allows_unfiltered_call_when_count_within_threshold():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_item_count = AsyncMock(return_value=500)
+    mock_service.get_items = AsyncMock(return_value=[])
+
+    tools = make_tools(mock_service, row_threshold=1000)
+    filter_rows_tool = next(t for t in tools if t.name == "filter_rows")
+    await filter_rows_tool.ainvoke({"odata_filter": ""})
+
+    mock_service.get_item_count.assert_awaited_once()
+    mock_service.get_items.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_filter_rows_with_zero_threshold_skips_count_check():
+    from app.tools.list_tools import make_tools
+
+    mock_service = MagicMock()
+    mock_service.get_items = AsyncMock(return_value=[])
+
+    tools = make_tools(mock_service, row_threshold=0)
+    filter_rows_tool = next(t for t in tools if t.name == "filter_rows")
+    await filter_rows_tool.ainvoke({"odata_filter": ""})
+
+    mock_service.get_item_count.assert_not_called()
+    mock_service.get_items.assert_called_once()

@@ -73,7 +73,11 @@ def _load_schema_doc() -> str:
 
 def build_agent(service: SharePointService, settings: Settings) -> CompiledStateGraph:
     """Build a LangChain agent wired to the given SharePointService."""
-    tools = make_tools(service, site_timezone=settings.site_timezone)
+    tools = make_tools(
+        service,
+        site_timezone=settings.site_timezone,
+        row_threshold=settings.list_row_threshold,
+    )
     llm = ChatOpenAI(
         model=settings.openai_model,
         api_key=settings.openai_api_key,
