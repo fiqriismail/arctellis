@@ -156,6 +156,24 @@ async def test_invoke_agent_prepends_history():
     assert sent[2]["content"] == "follow-up question"
 
 
+# --- BE-09: clarification & out-of-scope prompt coverage ---
+
+
+def test_system_prompt_prohibits_inventing_figures():
+    from app.agent import _BASE_PROMPT
+
+    assert "figures" in _BASE_PROMPT or "invent" in _BASE_PROMPT
+
+
+def test_system_prompt_instructs_one_clarifying_question_at_a_time():
+    from app.agent import _BASE_PROMPT
+
+    assert "one clarifying question" in _BASE_PROMPT
+
+
+# ---
+
+
 def test_build_agent_passes_row_threshold_from_settings():
     from unittest.mock import patch
 
