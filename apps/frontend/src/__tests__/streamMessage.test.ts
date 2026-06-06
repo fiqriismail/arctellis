@@ -38,7 +38,7 @@ afterEach(() => { jest.restoreAllMocks() })
 describe('streamMessage', () => {
   it('yields tokens in order and stops on [DONE]', async () => {
     global.fetch = jest.fn().mockResolvedValue(
-      mockResponse(['data: Hello\n\n', 'data: world\n\n', 'data: [DONE]\n\n', 'data: ignored\n\n'])
+      mockResponse(['data: "Hello"\n\n', 'data: "world"\n\n', 'data: [DONE]\n\n', 'data: "ignored"\n\n'])
     )
     const tokens = await collect(
       streamMessage('q', 'sess', new AbortController().signal, getToken)
@@ -62,7 +62,7 @@ describe('streamMessage', () => {
 
   it('preserves a token that has its own leading space', async () => {
     global.fetch = jest.fn().mockResolvedValue(
-      mockResponse(['data:  world\n\n', 'data: [DONE]\n\n'])
+      mockResponse(['data: " world"\n\n', 'data: [DONE]\n\n'])
     )
     const tokens = await collect(
       streamMessage('q', 'sess', new AbortController().signal, getToken)
@@ -72,7 +72,7 @@ describe('streamMessage', () => {
 
   it('throws ApiError(server) on the [ERROR] sentinel', async () => {
     global.fetch = jest.fn().mockResolvedValue(
-      mockResponse(['data: partial\n\n', 'data: [ERROR] boom\n\n'])
+      mockResponse(['data: "partial"\n\n', 'data: [ERROR] boom\n\n'])
     )
     await expect(
       collect(streamMessage('q', 'sess', new AbortController().signal, getToken))
@@ -122,7 +122,7 @@ describe('streamMessage', () => {
 
   it('defensively ignores non-data lines within an event', async () => {
     global.fetch = jest.fn().mockResolvedValue(
-      mockResponse(['event: message\ndata: Hi\n\n', 'data: [DONE]\n\n'])
+      mockResponse(['event: message\ndata: "Hi"\n\n', 'data: [DONE]\n\n'])
     )
     const tokens = await collect(
       streamMessage('q', 'sess', new AbortController().signal, getToken)
