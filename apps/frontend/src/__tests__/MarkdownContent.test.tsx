@@ -154,11 +154,13 @@ describe('MarkdownContent chart toggle', () => {
     expect(screen.getByRole('button', { name: /table/i })).toBeInTheDocument()
   })
 
-  it('is table-first but offers a toggle for a multi-numeric table', () => {
+  it('shows no chart toggle for a table with more than two columns', () => {
     const { container } = render(<MarkdownContent text={MULTI_MD} />)
     expect(container.querySelector('table')).toBeInTheDocument()
     expect(container.querySelector('[data-slot="chart"]')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /chart/i })).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /chart/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('shows no chart toggle for a non-chartable table', () => {

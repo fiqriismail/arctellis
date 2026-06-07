@@ -106,8 +106,11 @@ const components: Components = {
     const parsed = parseMarkdownTable(headers, rows)
     if (!parsed.columns.length) return null
 
+    // Only offer the chart view for simple two-column aggregations
+    // (one label + one numeric). Wider tables keep it to the table to avoid
+    // ambiguous/confusing charts.
     const dataTable = <DataTable table={parsed} />
-    return parsed.chartable ? (
+    return parsed.isAggregation ? (
       <TableChartToggle table={parsed}>{dataTable}</TableChartToggle>
     ) : (
       dataTable
