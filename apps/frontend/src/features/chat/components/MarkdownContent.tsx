@@ -12,6 +12,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { StatusBadge } from './StatusBadge'
+import { TableChartToggle } from './TableChartToggle'
+import { extractTableFromNode } from '../lib/extractTableFromNode'
+import { parseMarkdownTable } from '../lib/parseMarkdownTable'
 
 const components: Components = {
   p({ children }) {
@@ -102,8 +105,8 @@ const components: Components = {
       </h3>
     )
   },
-  table({ children }) {
-    return (
+  table({ children, node }) {
+    const tableEl = (
       <div className={[
         'my-3 w-full overflow-hidden rounded-lg border',
         '[&>div]:overflow-x-auto',
@@ -116,6 +119,15 @@ const components: Components = {
         <Table>{children}</Table>
       </div>
     )
+
+    if (!node) return tableEl
+
+    // Offer a chart view when the table has label + numeric columns.
+    const { headers, rows } = extractTableFromNode(node)
+    const parsed = parseMarkdownTable(headers, rows)
+    if (!parsed.chartable) return tableEl
+
+    return <TableChartToggle table={parsed}>{tableEl}</TableChartToggle>
   },
   thead({ children }) {
     return <TableHeader>{children}</TableHeader>

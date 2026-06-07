@@ -46,8 +46,17 @@ convention. Recharts is the only new runtime dependency.
 3. A table is **chartable** when it has ≥1 non-numeric (label) column **and** ≥1
    numeric (value) column. If not chartable, render the table exactly as today —
    no toggle shown.
-4. When chartable, render the `TableChartToggle`: default view is the original
-   styled table; switching to **Chart** shows `ChartView`.
+4. When chartable, render the `TableChartToggle`. **Default view depends on
+   shape:**
+   - **Aggregation tables** (exactly one label column + exactly one numeric
+     column) — the result of "by status / group by / summary" questions —
+     default to the **pie chart**, since that's the intent of those queries.
+   - Any other chartable table defaults to the **table** view.
+   In both cases the user can switch freely between table / bar / pie / donut.
+
+Header and row text are extracted from the react-markdown `node` (hast Element)
+passed to the `table` renderer, then handed to `parseMarkdownTable`. This keeps
+extraction independent of the cell-rendering components.
 
 ### Chart configuration (defaults, with light overrides)
 
