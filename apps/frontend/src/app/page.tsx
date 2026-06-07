@@ -10,10 +10,10 @@ import { useChat } from '@/features/chat/hooks/useChat'
 import { AuthGate } from '@/features/auth/components/AuthGate'
 
 const SUGGESTIONS = [
-  { label: 'Requests under SME Review',       icon: AlertTriangle, tint: 'var(--status-red)' },
-  { label: 'Estimated amounts by status',     icon: PieChart,      tint: 'var(--brand)' },
-  { label: 'Top requests by estimated amount', icon: BadgeEuro,    tint: 'var(--status-green)' },
-  { label: 'Total spend by department',       icon: Building2,     tint: 'var(--status-amber)' },
+  { label: 'Show requests "Under SME Review"', icon: AlertTriangle, tint: 'var(--status-red)' },
+  { label: 'Estimated amounts by status', icon: PieChart, tint: 'var(--brand)' },
+  { label: 'Top requests by estimated amount', icon: BadgeEuro, tint: 'var(--status-green)' },
+  { label: 'Total spend by department', icon: Building2, tint: 'var(--status-amber)' },
 ]
 
 export default function HomePage() {
