@@ -42,8 +42,8 @@ describe('HomePage', () => {
   it('clicking a suggestion card submits it as a user message and shows response', async () => {
     const user = userEvent.setup()
     render(<HomePage />)
-    await user.click(screen.getByText('Requests awaiting approval'))
-    expect(screen.getByText('Requests awaiting approval')).toBeInTheDocument()
+    await user.click(screen.getByText('Requests under SME Review'))
+    expect(screen.getByText('Requests under SME Review')).toBeInTheDocument()
     await waitFor(() => expect(screen.getByText('Streamed response')).toBeInTheDocument())
   })
 
