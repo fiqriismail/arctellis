@@ -868,11 +868,11 @@ async def test_create_sharepoint_service_passes_cache_ttl():
 
 
 @pytest.mark.asyncio
-async def test_get_item_count_returns_odata_count():
+async def test_get_item_count_returns_count_of_value_items():
     from app.services.sharepoint import SharePointService
 
     mock_response = MagicMock()
-    mock_response.odata_count = 5000
+    mock_response.value = [MagicMock() for _ in range(42)]
 
     get_mock = AsyncMock(return_value=mock_response)
     mock_client = MagicMock()
@@ -883,7 +883,7 @@ async def test_get_item_count_returns_odata_count():
     service = SharePointService(client=mock_client, site_id="s", list_id="l")
     count = await service.get_item_count()
 
-    assert count == 5000
+    assert count == 42
 
 
 @pytest.mark.asyncio
@@ -891,7 +891,7 @@ async def test_get_item_count_cached_on_second_call():
     from app.services.sharepoint import SharePointService
 
     mock_response = MagicMock()
-    mock_response.odata_count = 200
+    mock_response.value = [MagicMock() for _ in range(10)]
 
     get_mock = AsyncMock(return_value=mock_response)
     mock_client = MagicMock()
