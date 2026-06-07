@@ -25,7 +25,7 @@ export function ChatThread({
   }, [messages, isStreaming])
 
   return (
-    <div style={{ maxWidth: 780, margin: '0 auto', padding: '28px 24px 16px' }}>
+    <div className="mx-auto w-full max-w-[860px] px-4 pt-7 pb-4 md:px-6 lg:max-w-[1280px] xl:max-w-[1536px]">
       {messages.map((msg, i) =>
         msg.role === 'user'
           ? <UserMessage key={i} text={msg.text} />

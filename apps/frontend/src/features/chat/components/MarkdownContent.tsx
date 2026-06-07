@@ -3,15 +3,10 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { StatusBadge } from './StatusBadge'
+import { DataTable } from './DataTable'
+import { TableChartToggle } from './TableChartToggle'
+import { extractTableFromNode } from '../lib/extractTableFromNode'
+import { parseMarkdownTable } from '../lib/parseMarkdownTable'
 
 const components: Components = {
   p({ children }) {
@@ -102,48 +97,23 @@ const components: Components = {
       </h3>
     )
   },
-  table({ children }) {
-    return (
-      <div className={[
-        'my-3 w-full overflow-hidden rounded-lg border',
-        '[&>div]:overflow-x-auto',
-        '[&>div::-webkit-scrollbar]:h-1.5',
-        '[&>div::-webkit-scrollbar-track]:bg-transparent',
-        '[&>div::-webkit-scrollbar-thumb]:rounded-full',
-        '[&>div::-webkit-scrollbar-thumb]:bg-border',
-        'hover:[&>div::-webkit-scrollbar-thumb]:bg-muted-foreground/40',
-      ].join(' ')}>
-        <Table>{children}</Table>
-      </div>
-    )
-  },
-  thead({ children }) {
-    return <TableHeader>{children}</TableHeader>
-  },
-  tbody({ children }) {
-    return <TableBody>{children}</TableBody>
-  },
-  tr({ children }) {
-    return <TableRow>{children}</TableRow>
-  },
-  th({ children }) {
-    return (
-      <TableHead className="border-r border-border last:border-r-0 bg-muted text-[13px] font-semibold">
-        {children}
-      </TableHead>
-    )
-  },
-  td({ children }) {
-    const text =
-      typeof children === 'string'
-        ? children
-        : Array.isArray(children) && children.length === 1 && typeof children[0] === 'string'
-          ? children[0]
-          : null
-    return (
-      <TableCell className="border-r border-border last:border-r-0 text-[13px]">
-        {text !== null ? <StatusBadge value={text} /> : children}
-      </TableCell>
+  table({ node }) {
+    if (!node) return null
+
+    // Render a sortable, formatted data table from the parsed cells; offer a
+    // chart view when the table has label + numeric columns.
+    const { headers, rows } = extractTableFromNode(node)
+    const parsed = parseMarkdownTable(headers, rows)
+    if (!parsed.columns.length) return null
+
+    // Only offer the chart view for simple two-column aggregations
+    // (one label + one numeric). Wider tables keep it to the table to avoid
+    // ambiguous/confusing charts.
+    const dataTable = <DataTable table={parsed} />
+    return parsed.isAggregation ? (
+      <TableChartToggle table={parsed}>{dataTable}</TableChartToggle>
+    ) : (
+      dataTable
     )
   },
   blockquote({ children }) {

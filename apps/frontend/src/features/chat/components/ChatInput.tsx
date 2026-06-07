@@ -71,7 +71,7 @@ export function ChatInput({
           disabled={disabled}
           onChange={e => setValue(e.target.value)}
           onKeyDown={onKey}
-          placeholder="Ask a question about your SharePoint list…"
+          placeholder="Ask a question about your purchase requests — e.g. estimated amounts by status…"
           style={{
             flex: 1, border: 'none', outline: 'none', resize: 'none',
             background: 'transparent', fontFamily: 'inherit',

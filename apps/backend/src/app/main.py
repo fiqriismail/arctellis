@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -8,6 +9,13 @@ from app.config import get_settings
 from app.routers.chat import router as chat_router
 from app.services.graph_auth import GraphAuthService
 from app.services.sharepoint import create_sharepoint_service
+
+# Attach a stdout handler to the root logger so the app's structured logs
+# (BE-10) are emitted; without basicConfig they would be dropped.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
 
 
 @asynccontextmanager

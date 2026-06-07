@@ -56,7 +56,8 @@ describe('MarkdownContent', () => {
   })
 
   it('renders a GFM table', () => {
-    const md = '| Name | Age |\n|---|---|\n| Alice | 30 |'
+    // Non-chartable (all text) so it stays a table rather than defaulting to a chart.
+    const md = '| Name | Role |\n|---|---|\n| Alice | Admin |'
     render(<MarkdownContent text={md} />)
     expect(document.querySelector('table')).toBeInTheDocument()
     expect(screen.getByText('Name')).toBeInTheDocument()
@@ -136,5 +137,37 @@ describe('MarkdownContent table rendering', () => {
     render(<MarkdownContent text={TABLE_MD} />)
     expect(screen.getByText('Title')).toBeInTheDocument()
     expect(screen.getByText('Status')).toBeInTheDocument()
+  })
+})
+
+describe('MarkdownContent chart toggle', () => {
+  const AGG_MD =
+    '| Status | Total |\n|---|---|\n| Approved | 5000 |\n| Rejected | 1200 |'
+  const MULTI_MD =
+    '| Status | Count | Total |\n|---|---|---|\n| Approved | 3 | 5000 |\n| Rejected | 2 | 1200 |'
+  const PLAIN_MD =
+    '| Title | Status |\n|---|---|\n| Laptop | Active |\n| Chair | Draft |'
+
+  it('shows a chart by default for an aggregation table', () => {
+    const { container } = render(<MarkdownContent text={AGG_MD} />)
+    expect(container.querySelector('[data-slot="chart"]')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /table/i })).toBeInTheDocument()
+  })
+
+  it('shows no chart toggle for a table with more than two columns', () => {
+    const { container } = render(<MarkdownContent text={MULTI_MD} />)
+    expect(container.querySelector('table')).toBeInTheDocument()
+    expect(container.querySelector('[data-slot="chart"]')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /chart/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows no chart toggle for a non-chartable table', () => {
+    const { container } = render(<MarkdownContent text={PLAIN_MD} />)
+    expect(container.querySelector('[data-slot="chart"]')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: /chart/i }),
+    ).not.toBeInTheDocument()
   })
 })

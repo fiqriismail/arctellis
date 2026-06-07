@@ -1,4 +1,5 @@
-import { Plus, Sparkles } from 'lucide-react'
+import Image from 'next/image'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface ChatHeaderProps {
@@ -16,19 +17,18 @@ export function ChatHeader({ onNewConversation }: ChatHeaderProps) {
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '0 20px', position: 'sticky', top: 0, zIndex: 20,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-        <div style={{
-          width: 30, height: 30, borderRadius: 8,
-          background: 'var(--brand)', color: '#fff',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: 'var(--shadow-card-sm)',
-        }}>
-          <Sparkles style={{ width: 17, height: 17 }} strokeWidth={2.2} />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-          <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-.01em' }}>List AI Assistant</span>
-          <span style={{ fontSize: 11.5, color: 'var(--muted-foreground)' }}>SharePoint · Group.one</span>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <Image
+          src="/group_one.svg"
+          alt="group.one"
+          width={142}
+          height={26}
+          priority
+        />
+        <span aria-hidden style={{ width: 1, height: 20, background: 'var(--border)' }} />
+        <span style={{ fontSize: 14.5, fontWeight: 600, letterSpacing: '-.01em' }}>
+          RTP Intelligent Hub
+        </span>
       </div>
       {onNewConversation && (
         <Button

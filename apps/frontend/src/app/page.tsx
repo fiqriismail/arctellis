@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, AlertTriangle, AlignLeft, User, Clock } from 'lucide-react'
+import { Sparkles, AlertTriangle, PieChart, BadgeEuro, Building2 } from 'lucide-react'
 
 import { ChatHeader } from '@/features/chat/components/ChatHeader'
 import { ChatInput } from '@/features/chat/components/ChatInput'
@@ -10,10 +10,10 @@ import { useChat } from '@/features/chat/hooks/useChat'
 import { AuthGate } from '@/features/auth/components/AuthGate'
 
 const SUGGESTIONS = [
-  { label: 'Show overdue tasks',        icon: AlertTriangle, tint: 'var(--status-red)' },
-  { label: 'Summarize the list',        icon: AlignLeft,     tint: 'var(--brand)' },
-  { label: 'Who has the most tasks?',   icon: User,          tint: 'var(--status-green)' },
-  { label: 'High-priority in progress', icon: Clock,         tint: 'var(--status-amber)' },
+  { label: 'Show requests "Under SME Review"', icon: AlertTriangle, tint: 'var(--status-red)' },
+  { label: 'Estimated amounts by status', icon: PieChart, tint: 'var(--brand)' },
+  { label: 'Top requests by estimated amount', icon: BadgeEuro, tint: 'var(--status-green)' },
+  { label: 'Total spend by department', icon: Building2, tint: 'var(--status-amber)' },
 ]
 
 export default function HomePage() {
@@ -39,7 +39,7 @@ export default function HomePage() {
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
           }}>
-            <div style={{ maxWidth: 780, margin: '0 auto', padding: '14px 24px 16px' }}>
+            <div className="mx-auto w-full max-w-[860px] px-4 pt-3.5 pb-4 md:px-6 lg:max-w-[1280px] xl:max-w-[1536px]">
               <ChatInput onSubmit={sendMessage} onStop={stopStream} isStreaming={isStreaming} compact />
             </div>
           </div>
@@ -64,11 +64,11 @@ export default function HomePage() {
                   <Sparkles style={{ width: 26, height: 26 }} strokeWidth={2.1} />
                 </div>
                 <h1 style={{ fontSize: 30, fontWeight: 680, letterSpacing: '-.025em', margin: '0 0 8px' }}>
-                  SharePoint List AI Assistant
+                  RTP Intelligent Hub
                 </h1>
                 <p style={{ fontSize: 15.5, color: 'var(--muted-foreground)', margin: 0, lineHeight: 1.5 }}>
-                  Ask anything about{' '}
-                  <span style={{ fontWeight: 550, color: 'var(--foreground)' }}>Project Tasks</span>
+                  Ask anything about your{' '}
+                  <span style={{ fontWeight: 550, color: 'var(--foreground)' }}>purchase requests</span>
                   {' '}in plain English — no formulas, no filters.
                 </p>
               </div>
