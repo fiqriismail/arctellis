@@ -104,7 +104,15 @@ const components: Components = {
   },
   table({ children }) {
     return (
-      <div className="my-3 w-full overflow-x-auto rounded-lg border">
+      <div className={[
+        'my-3 w-full overflow-hidden rounded-lg border',
+        '[&>div]:overflow-x-auto',
+        '[&>div::-webkit-scrollbar]:h-1.5',
+        '[&>div::-webkit-scrollbar-track]:bg-transparent',
+        '[&>div::-webkit-scrollbar-thumb]:rounded-full',
+        '[&>div::-webkit-scrollbar-thumb]:bg-border',
+        'hover:[&>div::-webkit-scrollbar-thumb]:bg-muted-foreground/40',
+      ].join(' ')}>
         <Table>{children}</Table>
       </div>
     )
@@ -119,7 +127,11 @@ const components: Components = {
     return <TableRow>{children}</TableRow>
   },
   th({ children }) {
-    return <TableHead className="bg-muted font-semibold">{children}</TableHead>
+    return (
+      <TableHead className="border-r border-border last:border-r-0 bg-muted text-[13px] font-semibold">
+        {children}
+      </TableHead>
+    )
   },
   td({ children }) {
     const text =
@@ -129,7 +141,7 @@ const components: Components = {
           ? children[0]
           : null
     return (
-      <TableCell>
+      <TableCell className="border-r border-border last:border-r-0 text-[13px]">
         {text !== null ? <StatusBadge value={text} /> : children}
       </TableCell>
     )
