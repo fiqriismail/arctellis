@@ -12,20 +12,19 @@ import {
 } from 'recharts'
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import { buildChartData, type ChartType } from '../lib/chartData'
+import {
+  buildChartConfig,
+  buildChartData,
+  CHART_PALETTE,
+  type ChartType,
+} from '../lib/chartData'
 import type { ParsedTable } from '../lib/parseMarkdownTable'
-
-const PALETTE = [
-  'var(--chart-1)',
-  'var(--chart-2)',
-  'var(--chart-3)',
-  'var(--chart-4)',
-  'var(--chart-5)',
-]
 
 interface ChartViewProps {
   table: ParsedTable
@@ -59,16 +58,25 @@ export function ChartView({ table, chartType, valueIndex }: ChartViewProps) {
     )
   }
 
+  // Pie / donut: one colour + legend entry per category.
+  const sliceConfig = buildChartConfig(data)
   const innerRadius = chartType === 'donut' ? 60 : 0
   return (
-    <ChartContainer config={config} className="max-h-[280px] w-full">
+    <ChartContainer
+      config={sliceConfig as ChartConfig}
+      className="mx-auto max-h-[300px]"
+    >
       <PieChart>
         <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
         <Pie data={data} dataKey="value" nameKey="name" innerRadius={innerRadius}>
           {data.map((d, i) => (
-            <Cell key={d.name} fill={PALETTE[i % PALETTE.length]} />
+            <Cell key={d.name} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
           ))}
         </Pie>
+        <ChartLegend
+          content={<ChartLegendContent nameKey="name" />}
+          className="flex-wrap"
+        />
       </PieChart>
     </ChartContainer>
   )

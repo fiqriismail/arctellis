@@ -12,6 +12,29 @@ export interface ChartDatum {
   value: number
 }
 
+/** Categorical palette, wired to the theme's chart CSS variables. */
+export const CHART_PALETTE = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+]
+
+/** Map each category to a label + a distinct (cycling) colour for charts. */
+export function buildChartConfig(
+  data: ChartDatum[],
+): Record<string, { label: string; color: string }> {
+  const config: Record<string, { label: string; color: string }> = {}
+  data.forEach((d, i) => {
+    config[d.name] = {
+      label: d.name,
+      color: CHART_PALETTE[i % CHART_PALETTE.length],
+    }
+  })
+  return config
+}
+
 interface BuildOptions {
   valueIndex: number
   chartType: ChartType
