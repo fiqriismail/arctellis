@@ -47,8 +47,8 @@ describe('parseMarkdownTable', () => {
       ],
     )
     expect(result.columns).toEqual([
-      { name: 'Status', numeric: false },
-      { name: 'Amount', numeric: true },
+      { name: 'Status', numeric: false, kind: 'text' },
+      { name: 'Amount', numeric: true, kind: 'currency' },
     ])
     expect(result.numericIndexes).toEqual([1])
     expect(result.labelIndex).toBe(0)
@@ -111,5 +111,42 @@ describe('parseMarkdownTable', () => {
   it('handles an empty rows list', () => {
     const result = parseMarkdownTable(['Status', 'Amount'], [])
     expect(result.chartable).toBe(false)
+  })
+})
+
+describe('parseMarkdownTable column kinds', () => {
+  it('classifies a money-named numeric column as currency', () => {
+    const r = parseMarkdownTable(
+      ['Status', 'Estimated Amount (€)'],
+      [['Approved', '6343.32'], ['Closed', '1514.88']],
+    )
+    expect(r.columns[1].kind).toBe('currency')
+    expect(r.columns[1].numeric).toBe(true)
+  })
+
+  it('classifies a non-money numeric column as number', () => {
+    const r = parseMarkdownTable(
+      ['Status', 'Count'],
+      [['Approved', '12'], ['Closed', '3']],
+    )
+    expect(r.columns[1].kind).toBe('number')
+    expect(r.columns[1].numeric).toBe(true)
+  })
+
+  it('classifies an ISO date column as date (and not numeric)', () => {
+    const r = parseMarkdownTable(
+      ['Created', 'Count'],
+      [['2026-05-25', '1'], ['2026-01-03', '2']],
+    )
+    expect(r.columns[0].kind).toBe('date')
+    expect(r.columns[0].numeric).toBe(false)
+  })
+
+  it('classifies a plain text column as text', () => {
+    const r = parseMarkdownTable(
+      ['Title', 'Count'],
+      [['Laptop', '1'], ['Chair', '2']],
+    )
+    expect(r.columns[0].kind).toBe('text')
   })
 })

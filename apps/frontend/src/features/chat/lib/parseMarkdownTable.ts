@@ -2,10 +2,20 @@
  * Pure helpers for turning a Markdown table's header + rows into a structured,
  * chartable shape. No React — unit-tested in isolation.
  */
+import {
+  isMoneyHeader,
+  parseDate,
+  parseNumeric,
+  type ColumnKind,
+} from './formatCell'
+
+export { parseNumeric }
+export type { ColumnKind }
 
 export interface ParsedColumn {
   name: string
   numeric: boolean
+  kind: ColumnKind
 }
 
 export interface ParsedTable {
@@ -21,42 +31,39 @@ export interface ParsedTable {
   isAggregation: boolean
 }
 
-const CURRENCY_PREFIX = /^[£$€¥]\s*/
-
-/**
- * Parse a cell into a number, tolerating thousands separators and a leading
- * currency symbol. Returns null when the value is blank or not numeric.
- */
-export function parseNumeric(value: string): number | null {
-  const trimmed = value.trim()
-  if (trimmed === '') return null
-  const cleaned = trimmed.replace(CURRENCY_PREFIX, '').replace(/,/g, '')
-  if (cleaned === '') return null
-  const n = Number(cleaned)
-  return Number.isFinite(n) ? n : null
-}
-
-/** A column is numeric when the majority of its non-empty cells parse as numbers. */
-function isColumnNumeric(rows: string[][], colIndex: number): boolean {
+/** Majority of non-empty cells in a column satisfy the predicate. */
+function columnMostly(
+  rows: string[][],
+  colIndex: number,
+  predicate: (cell: string) => boolean,
+): boolean {
   let nonEmpty = 0
-  let numeric = 0
+  let hits = 0
   for (const row of rows) {
     const cell = (row[colIndex] ?? '').trim()
     if (cell === '') continue
     nonEmpty++
-    if (parseNumeric(cell) !== null) numeric++
+    if (predicate(cell)) hits++
   }
-  return nonEmpty > 0 && numeric * 2 > nonEmpty
+  return nonEmpty > 0 && hits * 2 > nonEmpty
+}
+
+function columnKind(name: string, rows: string[][], colIndex: number): ColumnKind {
+  if (columnMostly(rows, colIndex, (c) => parseDate(c) !== null)) return 'date'
+  if (columnMostly(rows, colIndex, (c) => parseNumeric(c) !== null)) {
+    return isMoneyHeader(name) ? 'currency' : 'number'
+  }
+  return 'text'
 }
 
 export function parseMarkdownTable(
   headers: string[],
   rows: string[][],
 ): ParsedTable {
-  const columns: ParsedColumn[] = headers.map((name, i) => ({
-    name,
-    numeric: isColumnNumeric(rows, i),
-  }))
+  const columns: ParsedColumn[] = headers.map((name, i) => {
+    const kind = columnKind(name, rows, i)
+    return { name, kind, numeric: kind === 'currency' || kind === 'number' }
+  })
 
   const numericIndexes = columns
     .map((c, i) => (c.numeric ? i : -1))
