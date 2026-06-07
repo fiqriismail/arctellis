@@ -127,25 +127,46 @@ You need to make a POST request to Graph. The easiest way is to use [Graph Explo
 
 ---
 
-## 4. OpenAI API Key
+## 4. Azure OpenAI
 
-The app uses the OpenAI API directly (not Azure OpenAI). No Azure resource is needed for this.
+The agent's LLM runs on **Azure OpenAI** inside your tenant (not public OpenAI). In production the backend authenticates with the Container App's **managed identity** (no key); a key is only used for local development.
 
-### 4.1 Get your API key
+### 4.1 Create the Azure OpenAI resource
 
-1. Go to [platform.openai.com](https://platform.openai.com) and sign in.
-2. Click your profile → **API keys** → **+ Create new secret key**.
-3. Give it a name (e.g. `group-one-rtp`), click **Create secret key**.
-4. **Copy the key immediately** — it is only shown once.
+1. Search for **Azure OpenAI** and select it.
+2. Click **+ Create**.
+3. Fill in:
+   - **Subscription** — select yours
+   - **Resource group** — `rg-group-one-rtp`
+   - **Region** — a region that offers your chosen model (e.g. Sweden Central, East US)
+   - **Name** — `aoai-group-one-rtp`
+   - **Pricing tier** — Standard S0
+4. Click **Review + create** → **Create**.
 
-### 4.2 Choose a model
+### 4.2 Deploy a model
 
-The default model is `gpt-4o`. Ensure your account has access to it under **Settings → Limits**. Any model with tool/function calling support works.
+1. Open the resource and click **Go to Azure AI Foundry portal** (or **Model deployments**).
+2. Select **Deployments** → **+ Deploy model** → **Deploy base model**.
+3. Choose a chat model with tool/function-calling support (e.g. **gpt-4o**).
+4. Set a **Deployment name** (e.g. `gpt-4o`) and deploy. **Note this name** — it is `AZURE_OPENAI_DEPLOYMENT` and may differ from the underlying model id.
+
+### 4.3 Copy the endpoint and key
+
+1. On the resource, select **Keys and Endpoint**.
+2. Copy the **Endpoint** and **KEY 1**.
+
+> The endpoint is the **base host only** — e.g. `https://aoai-group-one-rtp.openai.azure.com` (classic) or `https://<resource>.cognitiveservices.azure.com` (Azure AI Foundry). Drop any `/openai/...` path or `?api-version=...` query the portal/playground may show.
+
+### 4.4 Pin an API version
+
+Use a known-good GA version rather than tracking latest: `2024-10-21`.
 
 > **.env mapping after §4**
 > ```
-> OPENAI_API_KEY=sk-...
-> OPENAI_MODEL=gpt-4o
+> AZURE_OPENAI_ENDPOINT=https://<resource>.openai.azure.com
+> AZURE_OPENAI_DEPLOYMENT=<deployment name from §4.2>
+> AZURE_OPENAI_API_VERSION=2024-10-21
+> AZURE_OPENAI_API_KEY=<KEY 1>   # local dev only — leave empty in Azure (managed identity)
 > ```
 
 ---
@@ -185,9 +206,12 @@ In production, all secrets come from Key Vault via the container's managed ident
 | `AZURE-TENANT-ID` | your tenant ID (from §2.1) |
 | `AZURE-CLIENT-ID` | your client ID (from §2.1) |
 | `AZURE-CLIENT-SECRET` | your client secret (from §2.2) |
-| `OPENAI-API-KEY` | your OpenAI API key (from §4.1) |
+| `AZURE-OPENAI-ENDPOINT` | your Azure OpenAI endpoint (from §4.3) |
+| `AZURE-OPENAI-DEPLOYMENT` | your model deployment name (from §4.2) |
 | `SHAREPOINT-SITE-URL` | your SharePoint site URL |
 | `SHAREPOINT-LIST-ID` | your list GUID (see tip below) |
+
+> **No Azure OpenAI key in production.** The backend reaches Azure OpenAI with the Container App's managed identity (see §7.6), so `AZURE-OPENAI-API-KEY` is **not** stored here. Only set `AZURE_OPENAI_API_KEY` locally for development.
 
 > **Finding your List ID:** Go to the SharePoint site → open the list → **Settings** (gear icon) → **List settings**. The URL contains `List=%7B<guid>%7D` — URL-decode the braces (`%7B` = `{`, `%7D` = `}`) to get the GUID.
 
@@ -266,6 +290,17 @@ The backend container image is stored here before being deployed to Container Ap
 3. Select role **AcrPull** → **Next**.
 4. **Assign access to** — **Managed identity** → select `ca-group-one-rtp-backend` → **Review + assign**.
 
+### 7.6 Grant the identity access to Azure OpenAI
+
+The backend calls Azure OpenAI with its managed identity, so the identity needs a data-plane role on the Azure OpenAI resource.
+
+1. Go to the **Azure OpenAI** resource (`aoai-group-one-rtp`).
+2. In the left menu select **Access control (IAM)** → **+ Add** → **Add role assignment**.
+3. Select role **Cognitive Services OpenAI User** → **Next**.
+4. **Assign access to** — **Managed identity** → select `ca-group-one-rtp-backend` → **Review + assign**.
+
+> This is what lets the app omit `AZURE_OPENAI_API_KEY` in production — it requests an Entra token for `https://cognitiveservices.azure.com/.default` instead.
+
 ---
 
 ## 8. Entra ID — End-User Sign-In
@@ -334,7 +369,7 @@ End users sign in with Entra ID before they can use the chat. This uses the **sa
 | Resource Group | `rg-group-one-rtp` | §1 |
 | Entra App Registration | `group-one-rtp-backend` | §2 |
 | Graph permission | `Sites.Selected` or `Sites.Read.All` | §3 |
-| OpenAI API key | — (platform.openai.com) | §4 |
+| Azure OpenAI | `aoai-group-one-rtp` | §4 |
 | Azure Key Vault | `kv-group-one-rtp` | §5 |
 | Container Registry | `acrGroupOneRtp` | §6 |
 | Container Apps Environment | `cae-group-one-rtp` | §7 |
@@ -348,8 +383,10 @@ End users sign in with Entra ID before they can use the chat. This uses the **sa
 | `AZURE_TENANT_ID` | §2.1 — Directory (tenant) ID |
 | `AZURE_CLIENT_ID` | §2.1 — Application (client) ID |
 | `AZURE_CLIENT_SECRET` | §2.2 — secret Value |
-| `OPENAI_API_KEY` | §4.1 — platform.openai.com API key |
-| `OPENAI_MODEL` | `gpt-4o` (default) |
+| `AZURE_OPENAI_ENDPOINT` | §4.3 — resource Endpoint (base host) |
+| `AZURE_OPENAI_DEPLOYMENT` | §4.2 — model deployment name |
+| `AZURE_OPENAI_API_VERSION` | `2024-10-21` (default) |
+| `AZURE_OPENAI_API_KEY` | §4.3 — KEY 1 (local dev only; omit in Azure) |
 | `SHAREPOINT_SITE_URL` | your SharePoint site URL |
 | `SHAREPOINT_LIST_ID` | §5.3 tip — list GUID from list settings URL |
 | `CACHE_TTL_SECONDS` | default `60` |
