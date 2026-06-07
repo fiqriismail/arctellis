@@ -39,7 +39,7 @@ export default function HomePage() {
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
           }}>
-            <div style={{ maxWidth: 780, margin: '0 auto', padding: '14px 24px 16px' }}>
+            <div className="mx-auto w-full max-w-[860px] px-4 pt-3.5 pb-4 md:px-6 lg:max-w-[1280px] xl:max-w-[1536px]">
               <ChatInput onSubmit={sendMessage} onStop={stopStream} isStreaming={isStreaming} compact />
             </div>
           </div>
