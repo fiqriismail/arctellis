@@ -15,9 +15,17 @@ class Settings(BaseSettings):
     azure_client_id: str
     azure_client_secret: str
 
-    # OpenAI
-    openai_api_key: str = ""
-    openai_model: str = "gpt-4o"
+    # Azure OpenAI
+    # Resource endpoint, e.g. "https://my-resource.openai.azure.com".
+    azure_openai_endpoint: str = ""
+    # Deployment name configured in the Azure OpenAI resource (may differ from
+    # the underlying model id, e.g. a deployment "gpt-4o-prod" serving gpt-4o).
+    azure_openai_deployment: str = ""
+    # Pin a known-good GA API version rather than tracking latest.
+    azure_openai_api_version: str = "2024-10-21"
+    # Static key for local development only. In Azure, leave empty and
+    # authenticate via the container's managed identity (Entra ID).
+    azure_openai_api_key: str = ""
 
     # SharePoint / Microsoft Graph
     sharepoint_site_url: str = ""

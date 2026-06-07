@@ -3,8 +3,9 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 from langchain.agents import create_agent
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 from langgraph.graph.state import CompiledStateGraph
 
 from app.config import Settings
@@ -73,6 +74,29 @@ def _load_schema_doc() -> str:
     return ""
 
 
+# Entra ID scope for Azure OpenAI (Cognitive Services) data-plane access.
+_AOAI_SCOPE = "https://cognitiveservices.azure.com/.default"
+
+
+def _build_llm(settings: Settings) -> AzureChatOpenAI:
+    """Construct the Azure OpenAI chat model.
+
+    Authenticates with the container's managed identity by default (no secret in
+    config). A static API key is used only when ``azure_openai_api_key`` is set,
+    which is intended for local development.
+    """
+    common = {
+        "azure_endpoint": settings.azure_openai_endpoint,
+        "azure_deployment": settings.azure_openai_deployment,
+        "api_version": settings.azure_openai_api_version,
+    }
+    if settings.azure_openai_api_key:
+        return AzureChatOpenAI(api_key=settings.azure_openai_api_key, **common)
+
+    token_provider = get_bearer_token_provider(DefaultAzureCredential(), _AOAI_SCOPE)
+    return AzureChatOpenAI(azure_ad_token_provider=token_provider, **common)
+
+
 def build_agent(service: SharePointService, settings: Settings) -> CompiledStateGraph:
     """Build a LangChain agent wired to the given SharePointService."""
     tools = make_tools(
@@ -80,10 +104,7 @@ def build_agent(service: SharePointService, settings: Settings) -> CompiledState
         site_timezone=settings.site_timezone,
         row_threshold=settings.list_row_threshold,
     )
-    llm = ChatOpenAI(
-        model=settings.openai_model,
-        api_key=settings.openai_api_key,
-    )
+    llm = _build_llm(settings)
     system_prompt = _BASE_PROMPT + _load_schema_doc()
     return create_agent(
         model=llm,
