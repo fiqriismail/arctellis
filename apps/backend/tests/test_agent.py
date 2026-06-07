@@ -32,15 +32,65 @@ def test_system_prompt_handles_unrelated_questions():
 # --- build_agent ---
 
 
-def test_build_agent_passes_correct_model_string():
-    from langchain_openai import ChatOpenAI
+def _azure_settings(**overrides):
+    """A MagicMock Settings with Azure OpenAI fields set (api-key path)."""
+    s = MagicMock()
+    s.azure_openai_endpoint = "https://aoai.openai.azure.com"
+    s.azure_openai_deployment = "gpt-4o-prod"
+    s.azure_openai_api_version = "2024-10-21"
+    s.azure_openai_api_key = "local-key"
+    for k, v in overrides.items():
+        setattr(s, k, v)
+    return s
+
+
+def test_build_llm_uses_api_key_when_provided():
+    from langchain_openai import AzureChatOpenAI
+
+    from app.agent import _build_llm
+
+    llm = _build_llm(_azure_settings())
+
+    assert isinstance(llm, AzureChatOpenAI)
+    assert llm.deployment_name == "gpt-4o-prod"
+    assert llm.azure_endpoint == "https://aoai.openai.azure.com"
+    assert llm.openai_api_version == "2024-10-21"
+    assert llm.openai_api_key.get_secret_value() == "local-key"
+    # No managed-identity token provider when a key is supplied.
+    assert llm.azure_ad_token_provider is None
+
+
+def test_build_llm_uses_managed_identity_when_no_key():
+    from app.agent import _build_llm
+
+    def fake_provider():
+        return "token"
+
+    settings = _azure_settings(azure_openai_api_key="")
+    with (
+        patch("app.agent.DefaultAzureCredential") as mock_cred,
+        patch(
+            "app.agent.get_bearer_token_provider", return_value=fake_provider
+        ) as mock_provider,
+    ):
+        llm = _build_llm(settings)
+
+    # A credential is built and wired to a bearer-token provider for the
+    # Cognitive Services scope — no static key is used.
+    mock_cred.assert_called_once()
+    assert (
+        mock_provider.call_args[0][1] == "https://cognitiveservices.azure.com/.default"
+    )
+    assert llm.azure_ad_token_provider is fake_provider
+
+
+def test_build_agent_uses_azure_openai_llm():
+    from langchain_openai import AzureChatOpenAI
 
     from app.agent import build_agent
 
     mock_service = MagicMock()
-    mock_settings = MagicMock()
-    mock_settings.openai_model = "gpt-4o"
-    mock_settings.openai_api_key = "sk-test"
+    mock_settings = _azure_settings()
 
     with patch("app.agent.create_agent") as mock_create:
         mock_create.return_value = MagicMock()
@@ -49,19 +99,15 @@ def test_build_agent_passes_correct_model_string():
         assert mock_create.called
         kwargs = mock_create.call_args.kwargs
         llm = kwargs["model"]
-        assert isinstance(llm, ChatOpenAI)
-        assert llm.model_name == "gpt-4o"
-        assert llm.openai_api_key.get_secret_value() == "sk-test"
+        assert isinstance(llm, AzureChatOpenAI)
+        assert llm.deployment_name == "gpt-4o-prod"
 
 
 def test_build_agent_registers_all_tools():
     from app.agent import build_agent
 
     mock_service = MagicMock()
-    mock_settings = MagicMock()
-    mock_settings.openai_model = "gpt-4o"
-    mock_settings.openai_api_key = "sk-test"
-    mock_settings.site_timezone = "Europe/London"
+    mock_settings = _azure_settings(site_timezone="Europe/London")
 
     with patch("app.agent.create_agent") as mock_create:
         mock_create.return_value = MagicMock()
@@ -84,9 +130,7 @@ def test_build_agent_passes_system_prompt():
     from app.agent import _BASE_PROMPT, build_agent
 
     mock_service = MagicMock()
-    mock_settings = MagicMock()
-    mock_settings.openai_model = "gpt-4o"
-    mock_settings.openai_api_key = "sk-test"
+    mock_settings = _azure_settings()
 
     with patch("app.agent.create_agent") as mock_create:
         mock_create.return_value = MagicMock()
@@ -180,11 +224,9 @@ def test_build_agent_passes_row_threshold_from_settings():
     from app.agent import build_agent
 
     mock_service = MagicMock()
-    mock_settings = MagicMock()
-    mock_settings.openai_model = "gpt-4o"
-    mock_settings.openai_api_key = "sk-test"
-    mock_settings.site_timezone = "Europe/London"
-    mock_settings.list_row_threshold = 500
+    mock_settings = _azure_settings(
+        site_timezone="Europe/London", list_row_threshold=500
+    )
 
     with patch("app.agent.make_tools") as mock_make_tools, patch(
         "app.agent.create_agent"

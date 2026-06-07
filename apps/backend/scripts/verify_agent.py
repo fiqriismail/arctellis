@@ -4,7 +4,7 @@ Verification script for BE-05 — LangChain Agent.
 Run from apps/backend/:
     uv run python scripts/verify_agent.py
 
-Requires a populated .env (OPENAI_API_KEY, OPENAI_MODEL, Azure + SharePoint creds).
+Requires a populated .env (Azure OpenAI, Entra ID + SharePoint creds).
 """
 
 import asyncio
@@ -22,7 +22,7 @@ from app.services.sharepoint import create_sharepoint_service
 async def verify() -> None:
     settings = Settings()
     print("=== BE-05 LangChain Agent Verification ===\n")
-    print(f"Model: openai:{settings.openai_model}\n")
+    print(f"Model: azure_openai:{settings.azure_openai_deployment}\n")
 
     auth = GraphAuthService(
         tenant_id=settings.azure_tenant_id,
