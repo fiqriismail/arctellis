@@ -64,7 +64,7 @@ export default function HomePage() {
                   <Sparkles style={{ width: 26, height: 26 }} strokeWidth={2.1} />
                 </div>
                 <h1 style={{ fontSize: 30, fontWeight: 680, letterSpacing: '-.025em', margin: '0 0 8px' }}>
-                  SharePoint List AI Assistant
+                  RTP Intelligent Hub
                 </h1>
                 <p style={{ fontSize: 15.5, color: 'var(--muted-foreground)', margin: 0, lineHeight: 1.5 }}>
                   Ask anything about{' '}

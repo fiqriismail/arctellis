@@ -16,7 +16,7 @@ jest.mock('@azure/msal-react', () => ({
 describe('HomePage', () => {
   it('shows empty state by default', () => {
     render(<HomePage />)
-    expect(screen.getByText('SharePoint List AI Assistant')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'RTP Intelligent Hub' })).toBeInTheDocument()
   })
 
   it('hides empty state and shows user message after submit', async () => {
@@ -25,7 +25,7 @@ describe('HomePage', () => {
     const textarea = screen.getByPlaceholderText(/ask a question/i)
     await user.type(textarea, 'Test question')
     await user.keyboard('{Enter}')
-    expect(screen.queryByText('SharePoint List AI Assistant')).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'RTP Intelligent Hub' })).not.toBeInTheDocument()
     expect(screen.getByText('Test question')).toBeInTheDocument()
     // drain async streaming so React act() queue is empty before test exits
     await waitFor(() => expect(screen.getByText('Streamed response')).toBeInTheDocument())
@@ -62,7 +62,7 @@ describe('HomePage', () => {
 
     // Click it — thread clears, landing heading returns
     await user.click(newConvButton)
-    expect(screen.getByText('SharePoint List AI Assistant')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'RTP Intelligent Hub' })).toBeInTheDocument()
     expect(screen.queryByText('Hello')).not.toBeInTheDocument()
   })
 })
