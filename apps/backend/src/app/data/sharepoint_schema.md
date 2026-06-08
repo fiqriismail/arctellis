@@ -76,7 +76,7 @@ Always prefix with `fields/` in OData expressions (e.g. `fields/InternalName eq 
 | Type | `DocIcon` | text | Plain text — ⚠ not in sample item |
 | Version | `_UIVersionString` | text | Plain text |
 | 🏢 Department | `Department` | choice | Choice — one of the configured options |
-| 💶 Estimated Amount (€) | `EstimatedAmount` | text | Plain text |
+| 💶 Estimated Amount (€) | `EstimatedAmount` | currency | Currency in Euro |
 | 📝 Title | `Title` | text | Plain text |
 | 📝 Title | `LinkTitleNoMenu` | text | Plain text |
 | 📝 Title | `LinkTitle` | text | Plain text |
