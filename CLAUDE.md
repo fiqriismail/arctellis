@@ -33,20 +33,20 @@ Always use these exact versions. Do not introduce alternative libraries without 
 - **TDD:** write the failing test first, confirm red, implement, confirm green, then commit.
 - **Commits:** conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `style:`). Include the story ID in the message where applicable, e.g. `feat(backend): add count_rows tool (BE-04)`.
 
-## Memory — Obsidian vault
+## Memory — Local brain directory
 
-Project memory, stories, and decisions live in the **"Group One RTP"** Obsidian vault. Use the `obsidian` CLI to read and write notes.
+Project memory, stories, and decisions live in the local `brain/` directory. Read and write these notes directly as local markdown files.
 
-- **Stories** are in `Stories/Backend/` and `Stories/Frontend/`. Each story note has a `tag` frontmatter field holding its status: `todo` · `in-progress` · `review` · `done`.
-- **Story Boards** (`Story Board - Backend.md`, `Story Board - Frontend.md`) index all stories with their current status. Keep these in sync whenever a story tag changes.
-- **PRD and Architecture** docs are in `docs/` in this repo (the canonical source). The vault may link to them but the repo files are authoritative.
+- **Stories** are in `brain/Stories/Backend/` and `brain/Stories/Frontend/`. Each story note has a `tag` frontmatter field holding its status: `todo` · `in-progress` · `review` · `done`.
+- **Story Boards** (`brain/Story Board - Backend.md`, `brain/Story Board - Frontend.md`) index all stories with their current status. Keep these in sync whenever a story tag changes.
+- **PRD and Architecture** docs are in `docs/` in this repo (the canonical source). The brain directory may link to them but the repo files are authoritative.
 
 ## After each story is completed
 
-1. Mark the story `tag` to `done` in its vault note and update the Story Board.
-2. Add a **daily note** in Obsidian recording what was completed:
-   ```
-   obsidian vault="Group One RTP" daily:append content="- Completed [STORY-ID] [Story title]"
+1. Mark the story `tag` to `done` in its note within `brain/` and update the Story Board.
+2. Add a **daily note** in the local `brain/` directory (e.g., `brain/Daily Notes/<YYYY-MM-DD>.md`) recording what was completed. Append this content:
+   ```markdown
+   - Completed [STORY-ID] [Story title]
    ```
    Include the story ID, a one-line summary of what was built, and any notable decisions or deviations from the plan.
 
