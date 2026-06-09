@@ -28,102 +28,13 @@ All resources live in one resource group.
 
 ---
 
-## 2. Entra ID App Registration
+## 2 & 3. Entra ID App Registrations & Graph Permissions
 
-The backend uses a **client-credentials** identity to read SharePoint on the app's own behalf. This is distinct from end-user sign-in (covered in §7).
+The Entra ID setup (for both the backend service and the frontend client) has been extracted to a separate guide.
 
-### 2.1 Create the registration
+👉 **Please complete the setup in [Azure Entra ID App Registrations](./azure-entra-id-setup.md) before continuing.**
 
-1. Search for **Microsoft Entra ID** and select it.
-2. In the left menu select **App registrations** → **+ New registration**.
-3. Fill in:
-   - **Name** — `group-one-rtp-backend`
-   - **Supported account types** — *Accounts in this organizational directory only (Single tenant)*
-   - **Redirect URI** — leave blank for now
-4. Click **Register**.
-
-You are taken to the app's Overview page. Copy two values:
-
-| Value | Where | `.env` key |
-|---|---|---|
-| **Application (client) ID** | Overview page | `AZURE_CLIENT_ID` |
-| **Directory (tenant) ID** | Overview page | `AZURE_TENANT_ID` |
-
-### 2.2 Create a client secret
-
-1. In the left menu select **Certificates & secrets**.
-2. Click **+ New client secret**.
-3. Fill in:
-   - **Description** — `backend-secret`
-   - **Expires** — 12 months (or your org policy)
-4. Click **Add**.
-5. **Copy the Value immediately** — it is only shown once.
-
-| Value | `.env` key |
-|---|---|
-| Secret **Value** | `AZURE_CLIENT_SECRET` |
-
-> **.env mapping after §2**
-> ```
-> AZURE_TENANT_ID=<Directory (tenant) ID>
-> AZURE_CLIENT_ID=<Application (client) ID>
-> AZURE_CLIENT_SECRET=<secret value>
-> ```
-
----
-
-## 3. Microsoft Graph Permissions
-
-The app needs read access to SharePoint via Microsoft Graph.
-
-### 3.1 Add the permission
-
-1. Still on the app registration, select **API permissions** in the left menu.
-2. Click **+ Add a permission** → **Microsoft Graph** → **Application permissions**.
-3. Search for and tick one of:
-   - **`Sites.Selected`** — recommended (scoped to one site only)
-   - **`Sites.Read.All`** — simpler for initial dev if the target site is not yet finalised
-4. Click **Add permissions**.
-
-### 3.2 Grant admin consent
-
-1. Back on the API permissions page, click **Grant admin consent for \<your org\>**.
-2. Click **Yes** to confirm.
-3. The Status column should show a green tick ✓ next to the permission.
-
-> If you chose `Sites.Selected` in step 3.1, the permission alone is not enough — you also need to grant the app access to the specific SharePoint site. This cannot be done in the Portal and requires a Graph API call. See the note at the end of §3.
-
-### 3.3 Sites.Selected — grant access to the specific site (Graph API call)
-
-Skip this if you used `Sites.Read.All`.
-
-You need to make a POST request to Graph. The easiest way is to use [Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer):
-
-1. Go to **Graph Explorer** and sign in with a **Global Admin** account.
-2. First, look up your site ID:
-   - Method: **GET**
-   - URL: `https://graph.microsoft.com/v1.0/sites/<tenant>.sharepoint.com:/sites/<site-name>`
-   - Click **Run query**. Copy the `id` field from the response — this is your **site ID**.
-3. Grant the app read access to that site:
-   - Method: **POST**
-   - URL: `https://graph.microsoft.com/v1.0/sites/<site-id>/permissions`
-   - Request body:
-     ```json
-     {
-       "roles": ["read"],
-       "grantedToIdentities": [
-         {
-           "application": {
-             "id": "<AZURE_CLIENT_ID>",
-             "displayName": "group-one-rtp-backend"
-           }
-         }
-       ]
-     }
-     ```
-   - Click **Run query**. The response should contain `"roles": ["read"]`.
-
-> Switch from `Sites.Read.All` to `Sites.Selected` before going to production.
+Once you have completed that guide and copied the required `.env` values, return here to continue with Section 4.
 
 ---
 
@@ -345,25 +256,7 @@ Link the Key Vault secrets to the Container App's environment variables.
 
 ## 8. Entra ID — End-User Sign-In
 
-End users sign in with Entra ID before they can use the chat. This uses the **same app registration** from §2 but needs a redirect URI added.
-
-### 8.1 Add redirect URIs
-
-1. Go to **Microsoft Entra ID** → **App registrations** → select `group-one-rtp-backend`.
-2. In the left menu select **Authentication** → **+ Add a platform** → **Web**.
-3. Add the following redirect URIs:
-   - `http://localhost:3000/api/auth/callback` (local dev)
-   - `https://<your-static-web-app>.azurestaticapps.net/api/auth/callback` (production — fill in after §9)
-4. Under **Implicit grant and hybrid flows** tick **ID tokens**.
-5. Click **Save**.
-
-### 8.2 Frontend .env values
-
-> **.env.local mapping (frontend)**
-> ```
-> NEXT_PUBLIC_ENTRA_TENANT_ID=<AZURE_TENANT_ID from §2.1>
-> NEXT_PUBLIC_ENTRA_CLIENT_ID=<AZURE_CLIENT_ID from §2.1>
-> ```
+The frontend client application registration and redirect URIs are now covered in the [Azure Entra ID App Registrations](./azure-entra-id-setup.md) guide.
 
 ---
 
