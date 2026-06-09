@@ -5,7 +5,7 @@ import { SignInCard } from '@/features/auth/components/SignInCard'
 describe('SignInCard', () => {
   it('renders the app title', () => {
     render(<SignInCard onSignIn={() => {}} />)
-    expect(screen.getByText('List AI Assistant')).toBeInTheDocument()
+    expect(screen.getByText('RTP Intelligent Hub')).toBeInTheDocument()
   })
 
   it('renders a Sign in with Microsoft button', () => {
