@@ -221,6 +221,8 @@ In production, all secrets come from Key Vault via the container's managed ident
 
 The backend container image is stored here before being deployed to Container Apps.
 
+### 6.1 Create the registry
+
 1. Search for **Container registries** and select it.
 2. Click **+ Create**.
 3. Fill in:
@@ -230,6 +232,28 @@ The backend container image is stored here before being deployed to Container Ap
    - **Location** — same as resource group
    - **Pricing plan** — Basic
 4. Click **Review + create** → **Create**.
+
+### 6.2 Push the backend image
+
+You need to build the Docker image for Linux (since Azure Container Apps runs Linux containers) and push it to your registry.
+
+1. Set the environment variables in your terminal for the registry name and image tag (use lowercase for the registry name):
+   ```bash
+   export ACR="acrgrouponertp"
+   export IMAGE_TAG="backend:latest"
+   ```
+2. Log in to the registry via the Azure CLI:
+   ```bash
+   az acr login --name $ACR
+   ```
+3. Build the Docker image. **Important:** If you are on an Apple Silicon Mac (M1/M2/M3), you must build it for the `linux/amd64` platform. Run this from the root of the repository:
+   ```bash
+   docker build --platform linux/amd64 -t $ACR.azurecr.io/$IMAGE_TAG -f apps/backend/Dockerfile .
+   ```
+4. Push the image to the registry:
+   ```bash
+   docker push $ACR.azurecr.io/$IMAGE_TAG
+   ```
 
 ---
 
@@ -260,7 +284,7 @@ The backend container image is stored here before being deployed to Container Ap
    - Uncheck **Use quickstart image**
    - **Image source** — Azure Container Registry
    - **Registry** — `acrGroupOneRtp`
-   - **Image** — leave as placeholder for now; a real image is pushed in Phase 5
+   - **Image** — select `backend` and tag `latest` (pushed in §6.2)
    - **CPU and memory** — 0.5 CPU / 1 Gi (sufficient for dev)
 5. **Ingress** tab:
    - Enable ingress: **On**
@@ -300,6 +324,22 @@ The backend calls Azure OpenAI with its managed identity, so the identity needs 
 4. **Assign access to** — **Managed identity** → select `ca-group-one-rtp-backend` → **Review + assign**.
 
 > This is what lets the app omit `AZURE_OPENAI_API_KEY` in production — it requests an Entra token for `https://cognitiveservices.azure.com/.default` instead.
+
+### 7.7 Configure Environment Variables
+
+Link the Key Vault secrets to the Container App's environment variables.
+
+1. First, import the secrets:
+   - Go to the **Container App** (`ca-group-one-rtp-backend`).
+   - In the left menu select **Secrets**.
+   - Click **+ Add** and select **Key Vault reference**.
+   - Fill in the details to point to your `kv-group-one-rtp` Key Vault and select the corresponding secret (e.g., `AZURE-TENANT-ID`). Repeat this for all secrets listed in §5.3.
+2. Next, map them to environment variables:
+   - In the left menu, select **Containers**.
+   - Click **Edit and deploy** → select the container image → click **Edit**.
+   - Under the **Environment variables** section, add the required `.env` keys (e.g., `AZURE_TENANT_ID`).
+   - For the **Source**, select **Secret reference** and map it to the secret you imported in step 1.
+   - Click **Save**, then **Create** to deploy the new revision.
 
 ---
 
