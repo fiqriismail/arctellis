@@ -34,7 +34,7 @@ export function SignInCard({ onSignIn }: SignInCardProps) {
           />
         </div>
         <h1 style={{ fontSize: 22, fontWeight: 680, letterSpacing: '-.02em', margin: '0 0 8px' }}>
-          RTP Intelligent Hub
+          RTP Intelligence Hub
         </h1>
         <p style={{ fontSize: 14, color: 'var(--muted-foreground)', margin: '0 0 28px', lineHeight: 1.5 }}>
           Sign in with your organisation account to continue.

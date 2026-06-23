@@ -81,7 +81,7 @@ Always prefix with `fields/` in OData expressions (e.g. `fields/InternalName eq 
 | 📝 Title | `LinkTitleNoMenu` | text | Plain text |
 | 📝 Title | `LinkTitle` | text | Plain text |
 | 🔖 Status | `Status` | choice | Choice — one of the configured options |
-| 🗂️ Category | `_x0001f5c2__xfe0f_Category` | lookup | Lookup — fields dict contains {LookupValue} — ⚠ not in sample item |
+| 🗂️ Category | `Category` | lookup | Lookup — fields dict contains {LookupValue} — ⚠ not in sample item |
 
 ## Person column structure
 

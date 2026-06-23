@@ -27,7 +27,7 @@ export function ChatHeader({ onNewConversation }: ChatHeaderProps) {
         />
         <span aria-hidden style={{ width: 1, height: 20, background: 'var(--border)' }} />
         <span style={{ fontSize: 14.5, fontWeight: 600, letterSpacing: '-.01em' }}>
-          RTP Intelligent Hub
+          RTP Intelligence Hub
         </span>
       </div>
       {onNewConversation && (
