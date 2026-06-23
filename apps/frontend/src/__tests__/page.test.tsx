@@ -39,16 +39,6 @@ describe('HomePage', () => {
     await waitFor(() => expect(screen.getByText('Streamed response')).toBeInTheDocument())
   })
 
-  it('clicking a suggestion card submits it as a user message and shows response', async () => {
-    const user = userEvent.setup()
-    render(<HomePage />)
-    await user.click(screen.getByText('Show requests "Under SME Review"'))
-    expect(
-      screen.getByText('Show requests "Under SME Review"'),
-    ).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByText('Streamed response')).toBeInTheDocument())
-  })
-
   it('shows new conversation button after a message is sent and clicking it returns to empty state', async () => {
     const user = userEvent.setup()
     render(<HomePage />)

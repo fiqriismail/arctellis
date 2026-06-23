@@ -1,20 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { Sparkles, AlertTriangle, PieChart, BadgeEuro, Building2 } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 
 import { ChatHeader } from '@/features/chat/components/ChatHeader'
 import { ChatInput } from '@/features/chat/components/ChatInput'
 import { ChatThread } from '@/features/chat/components/ChatThread'
 import { useChat } from '@/features/chat/hooks/useChat'
 import { AuthGate } from '@/features/auth/components/AuthGate'
-
-const SUGGESTIONS = [
-  { label: 'Show requests "Under SME Review"', icon: AlertTriangle, tint: 'var(--status-red)' },
-  { label: 'Estimated amounts by status', icon: PieChart, tint: 'var(--brand)' },
-  { label: 'Top requests by estimated amount', icon: BadgeEuro, tint: 'var(--status-green)' },
-  { label: 'Total spend by department', icon: Building2, tint: 'var(--status-amber)' },
-]
 
 export default function HomePage() {
   const { messages, streamingText, isStreaming, streamError, sendMessage, stopStream, resetSession } = useChat()
@@ -74,52 +66,10 @@ export default function HomePage() {
               </div>
 
               <ChatInput onSubmit={sendMessage} onStop={stopStream} isStreaming={isStreaming} />
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 18 }}>
-                {SUGGESTIONS.map(s => <SuggestionCard key={s.label} {...s} onSubmit={sendMessage} />)}
-              </div>
             </div>
           </div>
         </div>
       )}
     </AuthGate>
-  )
-}
-
-function SuggestionCard({
-  label, icon: Icon, tint, onSubmit,
-}: {
-  label: string
-  icon: React.ElementType
-  tint: string
-  onSubmit: (text: string) => void
-}) {
-  const [hovered, setHovered] = useState(false)
-  return (
-    <button
-      onClick={() => onSubmit(label)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 11,
-        padding: '13px 15px', textAlign: 'left',
-        background: 'var(--card)',
-        border: `1px solid ${hovered ? 'var(--border-strong)' : 'var(--border)'}`,
-        borderRadius: 11, cursor: 'pointer', fontFamily: 'inherit',
-        boxShadow: hovered ? 'var(--shadow-card-md)' : 'var(--shadow-card-sm)',
-        transform: hovered ? 'translateY(-1px)' : 'none',
-        transition: 'all .16s',
-      }}
-    >
-      <span style={{
-        width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'var(--muted-2)', border: '1px solid var(--border)',
-        color: tint,
-      }}>
-        <Icon style={{ width: 15, height: 15 }} />
-      </span>
-      <span style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--foreground)' }}>{label}</span>
-    </button>
   )
 }
