@@ -741,11 +741,125 @@ def test_merge_person_fields_unknown_id_yields_nulls():
 def test_merge_person_fields_ignores_non_person_lookups():
     from app.services.sharepoint import SharePointService
 
-    # Category is a lookup column, NOT a person column — leave it untouched.
+    # Category is resolved separately by _merge_lookup_fields, not here.
     out = SharePointService._merge_person_fields(
         {"CategoryLookupId": "99"}, {"SMEEmail"}, {}
     )
     assert out["CategoryLookupId"] == "99"
+
+
+def test_merge_lookup_fields_resolves_single_lookup():
+    from app.services.sharepoint import SharePointService
+
+    fields = {"Title": "Req", "CategoryLookupId": "109"}
+    lookup_configs = {
+        "Category": ("a451dd1a-0644-4cb2-a559-fe06394d3064", "Title"),
+    }
+    lookup_maps = {
+        "a451dd1a-0644-4cb2-a559-fe06394d3064": {
+            "109": {"LookupValue": "IT Software & Services – Engineering"},
+        },
+    }
+
+    out = SharePointService._merge_lookup_fields(
+        fields, lookup_configs, lookup_maps
+    )
+
+    assert out["Category"] == {"LookupValue": "IT Software & Services – Engineering"}
+    assert "CategoryLookupId" not in out
+    assert out["Title"] == "Req"
+
+
+def test_merge_lookup_fields_unknown_id_yields_null():
+    from app.services.sharepoint import SharePointService
+
+    out = SharePointService._merge_lookup_fields(
+        {"CategoryLookupId": "999"},
+        {"Category": ("list-1", "Title")},
+        {},
+    )
+    assert out["Category"] == {"LookupValue": None}
+
+
+@pytest.mark.asyncio
+async def test_resolve_lookup_ids_queries_target_list_and_caches():
+    from app.services.sharepoint import SharePointService
+
+    mock_fields = MagicMock()
+    mock_fields.additional_data = {
+        "Title": "Products – Third Party",
+        "CategoryDisplayName": "Products – Third Party",
+    }
+    mock_item = MagicMock()
+    mock_item.fields = mock_fields
+
+    get_mock = AsyncMock(return_value=mock_item)
+    mock_client = MagicMock()
+    mock_list = mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value
+    mock_list.items.by_list_item_id.return_value.get = get_mock
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l")
+    list_id = "a451dd1a-0644-4cb2-a559-fe06394d3064"
+
+    first = await service._resolve_lookup_ids(list_id, {"119"})
+    assert first["119"] == {"LookupValue": "Products – Third Party"}
+
+    second = await service._resolve_lookup_ids(list_id, {"119"})
+    assert second["119"] == {"LookupValue": "Products – Third Party"}
+    assert get_mock.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_get_items_resolves_lookup_columns():
+    from app.services.sharepoint import SharePointService
+
+    category_col = MagicMock()
+    category_col.name = "Category"
+    category_col.display_name = "Category"
+    category_col.hidden = False
+    category_col.number = None
+    category_col.date_time = None
+    category_col.boolean = None
+    category_col.choice = None
+    category_col.person_or_group = None
+    category_col.lookup = MagicMock()
+    category_col.lookup.list_id = "a451dd1a-0644-4cb2-a559-fe06394d3064"
+    category_col.lookup.column_name = "Title"
+
+    schema_resp = MagicMock()
+    schema_resp.value = [category_col]
+
+    mf = MagicMock()
+    mf.additional_data = {"Title": "Req", "CategoryLookupId": "109"}
+    mi = MagicMock()
+    mi.id = "1"
+    mi.fields = mf
+    items_resp = MagicMock()
+    items_resp.value = [mi]
+    items_resp.odata_next_link = None
+
+    cat_fields = MagicMock()
+    cat_fields.additional_data = {
+        "Title": "IT Software & Services – Engineering",
+        "CategoryDisplayName": "IT Software & Services – Engineering",
+    }
+    cat_item = MagicMock()
+    cat_item.fields = cat_fields
+
+    mock_client = MagicMock()
+    mock_list = mock_client.sites.by_site_id.return_value.lists.by_list_id.return_value
+    mock_list.items.get = AsyncMock(return_value=items_resp)
+    mock_list.columns.get = AsyncMock(return_value=schema_resp)
+    mock_list.items.by_list_item_id.return_value.get = AsyncMock(return_value=cat_item)
+
+    service = SharePointService(client=mock_client, site_id="s", list_id="l")
+    items = await service.get_items()
+
+    assert items[0].fields["Category"] == {
+        "LookupValue": "IT Software & Services – Engineering",
+    }
+    assert "CategoryLookupId" not in items[0].fields
+    assert items[0].fields["Title"] == "Req"
 
 
 @pytest.mark.asyncio

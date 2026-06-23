@@ -46,6 +46,12 @@ Data conventions:
   LookupValue and the email to Email.
 - When displaying person columns to the user, always show LookupValue (the
   display name). Never expose LookupId or raw email unless explicitly asked.
+- Lookup columns (type 'lookup', e.g. Category) are returned as objects with:
+    - "LookupValue": the display name from the linked taxonomy/list item
+  Category points at the category taxonomy list — use LookupValue when
+  filtering in memory or presenting results. OData filters on lookup columns
+  use the hidden id field (e.g. fields/CategoryLookupId eq 109), not the
+  display name.
 - Date/time columns: for ANY question about a date or day (e.g. "items created
   on 25 May 2026", "modified last week"), use the filter_by_date tool with the
   column's internal name and YYYY-MM-DD dates. It interprets dates in the site's

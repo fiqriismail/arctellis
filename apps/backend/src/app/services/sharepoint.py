@@ -43,6 +43,8 @@ class ColumnDefinition:
     # column_type: "text" | "number" | "dateTime" | "choice" | "boolean"
     # | "lookup" | "person" | "other"
     column_type: str
+    lookup_list_id: str | None = None
+    lookup_column_name: str | None = None
 
 
 @dataclass
@@ -66,6 +68,8 @@ class SharePointService:
         # Resolved User Information List entries: {lookup_id: {LookupValue, Email}}.
         # Users change rarely, so resolutions are cached for the process lifetime.
         self._user_cache: dict[str, dict] = {}
+        # Resolved list lookup entries: {list_id: {item_id: {LookupValue}}}.
+        self._lookup_cache: dict[str, dict[str, dict]] = {}
 
     @staticmethod
     def _infer_column_type(col: Any) -> str:
@@ -123,11 +127,18 @@ class SharePointService:
         for col in result.value:
             if col.hidden or not col.name:
                 continue
+            lookup_list_id = None
+            lookup_column_name = None
+            if col.lookup is not None:
+                lookup_list_id = col.lookup.list_id
+                lookup_column_name = col.lookup.column_name
             columns.append(
                 ColumnDefinition(
                     name=col.name,
                     display_name=col.display_name or col.name,
                     column_type=self._infer_column_type(col),
+                    lookup_list_id=lookup_list_id,
+                    lookup_column_name=lookup_column_name,
                 )
             )
         self._cache.set("schema", columns)
@@ -137,6 +148,25 @@ class SharePointService:
         """Internal names of columns whose type is 'person', from the schema."""
         columns = await self.get_schema()
         return {c.name for c in columns if c.column_type == "person"}
+
+    async def _lookup_field_configs(self) -> dict[str, tuple[str, str]]:
+        """Internal names of resolvable lookup columns -> (list_id, column_name).
+
+        Only includes lookups backed by a real SharePoint list GUID (e.g. Category
+        taxonomy). Skips system lookups such as FolderChildCount and AppPrincipals.
+        """
+        columns = await self.get_schema()
+        configs: dict[str, tuple[str, str]] = {}
+        for col in columns:
+            if col.column_type != "lookup" or not col.lookup_list_id:
+                continue
+            if "-" not in col.lookup_list_id:
+                continue
+            configs[col.name] = (
+                col.lookup_list_id,
+                col.lookup_column_name or "Title",
+            )
+        return configs
 
     async def _resolve_user_ids(self, ids: set[str]) -> dict[str, dict]:
         """Resolve User Information List item ids to {LookupValue, Email}.
@@ -166,6 +196,44 @@ class SharePointService:
             resolved[uid] = info
         return resolved
 
+    async def _resolve_lookup_ids(
+        self,
+        list_id: str,
+        ids: set[str],
+        column_name: str = "Title",
+    ) -> dict[str, dict]:
+        """Resolve lookup item ids in a target list to {LookupValue}."""
+        if list_id not in self._lookup_cache:
+            self._lookup_cache[list_id] = {}
+        cache = self._lookup_cache[list_id]
+        resolved: dict[str, dict] = {}
+        for lid in ids:
+            if lid in cache:
+                resolved[lid] = cache[lid]
+                continue
+            try:
+                item = await (
+                    self._client.sites.by_site_id(self._site_id)
+                    .lists.by_list_id(list_id)
+                    .items.by_list_item_id(lid)
+                    .get()
+                )
+                ad = item.fields.additional_data if item and item.fields else {}
+                title = (
+                    ad.get("CategoryDisplayName")
+                    or ad.get(column_name)
+                    or ad.get("Title")
+                )
+                info = {"LookupValue": title}
+            except Exception:
+                logger.warning(
+                    "Could not resolve lookup id %s in list %s", lid, list_id
+                )
+                info = {"LookupValue": None}
+            cache[lid] = info
+            resolved[lid] = info
+        return resolved
+
     @staticmethod
     def _merge_person_fields(
         fields: dict[str, Any],
@@ -190,6 +258,32 @@ class SharePointService:
                 out[name] = [user_map.get(str(i), unresolved) for i in raw]
             else:
                 out[name] = user_map.get(str(raw), unresolved)
+        return out
+
+    @staticmethod
+    def _merge_lookup_fields(
+        fields: dict[str, Any],
+        lookup_configs: dict[str, tuple[str, str]],
+        lookup_maps: dict[str, dict[str, dict]],
+    ) -> dict[str, Any]:
+        """Replace '{Lookup}LookupId' keys with resolved {LookupValue}.
+
+        Pure function: given raw fields, lookup column configs, and per-list id
+        maps, return fields with each lookup column populated under its internal
+        name and the raw LookupId key removed.
+        """
+        unresolved = {"LookupValue": None}
+        out = dict(fields)
+        for name, (list_id, _) in lookup_configs.items():
+            key = f"{name}LookupId"
+            if key not in out:
+                continue
+            raw = out.pop(key)
+            id_map = lookup_maps.get(list_id, {})
+            if isinstance(raw, list):
+                out[name] = [id_map.get(str(i), unresolved) for i in raw]
+            else:
+                out[name] = id_map.get(str(raw), unresolved)
         return out
 
     @staticmethod
@@ -286,19 +380,43 @@ class SharePointService:
         )
         if has_lookup:
             person_names = await self._person_field_names()
-            needed: set[str] = set()
+            lookup_configs = await self._lookup_field_configs()
+            needed_users: set[str] = set()
+            needed_lookups: dict[str, set[str]] = {}
             for _, raw in raw_items:
                 for name in person_names:
                     val = raw.get(f"{name}LookupId")
                     if isinstance(val, list):
-                        needed.update(str(v) for v in val)
+                        needed_users.update(str(v) for v in val)
                     elif val is not None:
-                        needed.add(str(val))
-            user_map = await self._resolve_user_ids(needed) if needed else {}
+                        needed_users.add(str(val))
+                for name, (list_id, _) in lookup_configs.items():
+                    val = raw.get(f"{name}LookupId")
+                    if isinstance(val, list):
+                        needed_lookups.setdefault(list_id, set()).update(
+                            str(v) for v in val
+                        )
+                    elif val is not None:
+                        needed_lookups.setdefault(list_id, set()).add(str(val))
+            user_map = await self._resolve_user_ids(needed_users) if needed_users else {}
+            lookup_maps: dict[str, dict[str, dict]] = {}
+            for list_id, ids in needed_lookups.items():
+                column_name = next(
+                    col
+                    for _, (lid, col) in lookup_configs.items()
+                    if lid == list_id
+                )
+                lookup_maps[list_id] = await self._resolve_lookup_ids(
+                    list_id, ids, column_name
+                )
             items = [
                 ListItem(
                     id=i,
-                    fields=self._merge_person_fields(raw, person_names, user_map),
+                    fields=self._merge_lookup_fields(
+                        self._merge_person_fields(raw, person_names, user_map),
+                        lookup_configs,
+                        lookup_maps,
+                    ),
                 )
                 for i, raw in raw_items
             ]
