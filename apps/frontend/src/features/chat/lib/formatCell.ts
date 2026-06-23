@@ -5,9 +5,26 @@
  * explicit symbol) with two decimals; dates render as dd-mm-yyyy.
  */
 
-export type ColumnKind = 'currency' | 'number' | 'date' | 'text'
+export type ColumnKind = 'currency' | 'integer' | 'number' | 'date' | 'text'
 
 const CURRENCY_PREFIX = /^[£$€¥]\s*/
+
+/** Headers that indicate a count / row-count aggregation (never currency). */
+const COUNT_HEADER_PATTERNS = [
+  /\bcount\b/i,
+  /\brow_count\b/i,
+  /\brow count\b/i,
+  /\bnumber of\b/i,
+  /\bnum(?:ber)? of\b/i,
+  /\b# of\b/i,
+  /\brecords?\b/i,
+  /\bitems?\b/i,
+  /\brequests?\b/i,
+]
+
+export function isCountHeader(name: string): boolean {
+  return COUNT_HEADER_PATTERNS.some((p) => p.test(name))
+}
 
 /**
  * Parse a cell into a number, tolerating thousands separators and a leading
@@ -26,11 +43,8 @@ const MONEY_KEYWORDS = [
   'amount',
   'cost',
   'price',
-  'total',
   'budget',
   'estimate',
-  'value',
-  'sum',
   'spend',
   'paid',
   'revenue',
@@ -41,7 +55,12 @@ const MONEY_KEYWORDS = [
 ]
 
 export function isMoneyHeader(name: string): boolean {
+  if (isCountHeader(name)) return false
+
   const n = name.toLowerCase()
+  if (/\(€\)|\(eur\)/i.test(name)) return true
+  if (/\btotal\s+(amount|cost|spend|budget|estimated)/i.test(n)) return true
+  if (/\b(sum|subtotal)\s+of\b/i.test(n)) return true
   return MONEY_KEYWORDS.some((k) => n.includes(k))
 }
 
@@ -63,6 +82,12 @@ const CURRENCY_TO_SYMBOL: Record<string, string> = {
 export function detectCurrency(raw: string): string | null {
   const m = raw.trim().match(/^([£$€¥])/)
   return m ? SYMBOL_TO_CURRENCY[m[1]] : null
+}
+
+export function formatInteger(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
 export function formatCurrency(value: number, currency = 'EUR'): string {
@@ -98,6 +123,12 @@ export function formatCellValue(raw: string, kind: ColumnKind): string {
     const n = parseNumeric(raw)
     if (n === null) return raw
     return formatCurrency(n, detectCurrency(raw) ?? 'EUR')
+  }
+
+  if (kind === 'integer') {
+    const n = parseNumeric(raw)
+    if (n === null) return raw
+    return formatInteger(n)
   }
 
   if (kind === 'date') {

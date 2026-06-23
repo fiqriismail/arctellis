@@ -22,7 +22,7 @@ import type { ParsedTable } from '../lib/parseMarkdownTable'
 type SortDir = 'asc' | 'desc'
 
 function compareCells(a: string, b: string, kind: ColumnKind): number {
-  if (kind === 'currency' || kind === 'number') {
+  if (kind === 'currency' || kind === 'number' || kind === 'integer') {
     return (parseNumeric(a) ?? -Infinity) - (parseNumeric(b) ?? -Infinity)
   }
   if (kind === 'date') {

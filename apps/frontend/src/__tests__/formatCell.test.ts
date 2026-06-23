@@ -1,11 +1,33 @@
 import {
+  isCountHeader,
   isMoneyHeader,
   detectCurrency,
   formatCurrency,
+  formatInteger,
   parseDate,
   formatDate,
   formatCellValue,
 } from '@/features/chat/lib/formatCell'
+
+describe('isCountHeader', () => {
+  it.each([
+    'Count',
+    'row_count',
+    'Row Count',
+    'Number of requests',
+    '# of items',
+    'Record Count',
+  ])('treats %s as a count column', (h) => {
+    expect(isCountHeader(h)).toBe(true)
+  })
+
+  it.each(['Estimated Amount (€)', 'Total Cost', 'Sum of Estimated Amount'])(
+    'does not treat %s as a count column',
+    (h) => {
+      expect(isCountHeader(h)).toBe(false)
+    },
+  )
+})
 
 describe('isMoneyHeader', () => {
   it.each([
@@ -25,6 +47,13 @@ describe('isMoneyHeader', () => {
       expect(isMoneyHeader(h)).toBe(false)
     },
   )
+
+  it.each(['Total', 'Sum'])(
+    'does not treat bare %s as a money column (count aggregations use this header)',
+    (h) => {
+      expect(isMoneyHeader(h)).toBe(false)
+    },
+  )
 })
 
 describe('detectCurrency', () => {
@@ -36,6 +65,13 @@ describe('detectCurrency', () => {
 
   it('returns null for a bare number', () => {
     expect(detectCurrency('6343.32')).toBeNull()
+  })
+})
+
+describe('formatInteger', () => {
+  it('formats whole numbers without decimals or currency', () => {
+    expect(formatInteger(4)).toBe('4')
+    expect(formatInteger(1234)).toBe('1,234')
   })
 })
 
@@ -94,6 +130,12 @@ describe('formatCellValue', () => {
   it('leaves number and text cells unchanged', () => {
     expect(formatCellValue('12', 'number')).toBe('12')
     expect(formatCellValue('Laptop', 'text')).toBe('Laptop')
+  })
+
+  it('formats integer cells without currency or decimals', () => {
+    expect(formatCellValue('4', 'integer')).toBe('4')
+    expect(formatCellValue('4.00', 'integer')).toBe('4')
+    expect(formatCellValue('1234', 'integer')).toBe('1,234')
   })
 
   it('returns the raw value when a currency cell is not numeric', () => {

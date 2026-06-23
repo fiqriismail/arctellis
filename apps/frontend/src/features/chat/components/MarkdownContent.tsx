@@ -103,6 +103,8 @@ const components: Components = {
     // Render a sortable, formatted data table from the parsed cells; offer a
     // chart view when the table has label + numeric columns.
     const { headers, rows } = extractTableFromNode(node)
+    // TODO(backend): When tool responses include column/aggregate type metadata,
+    // pass it into parseMarkdownTable here instead of inferring kinds from headers.
     const parsed = parseMarkdownTable(headers, rows)
     if (!parsed.columns.length) return null
 

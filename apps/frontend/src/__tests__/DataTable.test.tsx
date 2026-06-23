@@ -31,6 +31,20 @@ describe('DataTable', () => {
     expect(screen.getByText('€252.48')).toBeInTheDocument()
   })
 
+  it('formats count aggregation cells as plain integers', () => {
+    const countTable = parseMarkdownTable(
+      ['Status', 'Count'],
+      [
+        ['Approved', '4'],
+        ['Closed', '12'],
+      ],
+    )
+    render(<DataTable table={countTable} />)
+    expect(screen.getByText('4')).toBeInTheDocument()
+    expect(screen.getByText('12')).toBeInTheDocument()
+    expect(screen.queryByText('€4.00')).not.toBeInTheDocument()
+  })
+
   it('formats date cells as dd-mm-yyyy', () => {
     render(<DataTable table={table} />)
     expect(screen.getByText('25-05-2026')).toBeInTheDocument()

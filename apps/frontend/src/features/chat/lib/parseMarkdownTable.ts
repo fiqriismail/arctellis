@@ -3,6 +3,7 @@
  * chartable shape. No React — unit-tested in isolation.
  */
 import {
+  isCountHeader,
   isMoneyHeader,
   parseDate,
   parseNumeric,
@@ -16,6 +17,10 @@ export interface ParsedColumn {
   name: string
   numeric: boolean
   kind: ColumnKind
+  // TODO(backend): Ideal source for `kind` is type metadata on tool results
+  // (e.g. aggregate_func: 'count' | 'sum' | 'average' from group_and_aggregate,
+  // or column_type from get_schema / filter_rows). Wire that through the API
+  // response and into parseMarkdownTable instead of inferring from headers.
 }
 
 export interface ParsedTable {
@@ -51,7 +56,9 @@ function columnMostly(
 function columnKind(name: string, rows: string[][], colIndex: number): ColumnKind {
   if (columnMostly(rows, colIndex, (c) => parseDate(c) !== null)) return 'date'
   if (columnMostly(rows, colIndex, (c) => parseNumeric(c) !== null)) {
-    return isMoneyHeader(name) ? 'currency' : 'number'
+    if (isCountHeader(name)) return 'integer'
+    if (isMoneyHeader(name)) return 'currency'
+    return 'number'
   }
   return 'text'
 }
@@ -62,7 +69,7 @@ export function parseMarkdownTable(
 ): ParsedTable {
   const columns: ParsedColumn[] = headers.map((name, i) => {
     const kind = columnKind(name, rows, i)
-    return { name, kind, numeric: kind === 'currency' || kind === 'number' }
+    return { name, kind, numeric: kind === 'currency' || kind === 'number' || kind === 'integer' }
   })
 
   const numericIndexes = columns

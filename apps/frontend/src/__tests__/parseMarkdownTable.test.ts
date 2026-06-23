@@ -129,8 +129,24 @@ describe('parseMarkdownTable column kinds', () => {
       ['Status', 'Count'],
       [['Approved', '12'], ['Closed', '3']],
     )
-    expect(r.columns[1].kind).toBe('number')
+    expect(r.columns[1].kind).toBe('integer')
     expect(r.columns[1].numeric).toBe(true)
+  })
+
+  it('classifies row_count as integer even when values look like currency', () => {
+    const r = parseMarkdownTable(
+      ['Status', 'row_count'],
+      [['Approved', '4.00'], ['Closed', '12']],
+    )
+    expect(r.columns[1].kind).toBe('integer')
+  })
+
+  it('does not classify Sum header as currency for count-style tables', () => {
+    const r = parseMarkdownTable(
+      ['Status', 'Sum'],
+      [['Approved', '4'], ['Closed', '12']],
+    )
+    expect(r.columns[1].kind).toBe('number')
   })
 
   it('classifies an ISO date column as date (and not numeric)', () => {
