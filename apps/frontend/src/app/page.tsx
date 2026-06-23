@@ -1,8 +1,7 @@
 'use client'
 
-import { Sparkles } from 'lucide-react'
-
 import { ChatHeader } from '@/features/chat/components/ChatHeader'
+import { AppIcon } from '@/components/AppIcon'
 import { ChatInput } from '@/features/chat/components/ChatInput'
 import { ChatThread } from '@/features/chat/components/ChatThread'
 import { useChat } from '@/features/chat/hooks/useChat'
@@ -47,13 +46,10 @@ export default function HomePage() {
             <div style={{ width: '100%', maxWidth: 680 }}>
               <div style={{ textAlign: 'center', marginBottom: 26 }}>
                 <div style={{
-                  width: 52, height: 52, borderRadius: 14,
-                  background: 'var(--brand)', color: 'var(--primary-foreground)',
                   margin: '0 auto 18px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: 'var(--shadow-card-md)',
                 }}>
-                  <Sparkles style={{ width: 26, height: 26 }} strokeWidth={2.1} />
+                  <AppIcon size={52} priority />
                 </div>
                 <h1 style={{ fontSize: 30, fontWeight: 680, letterSpacing: '-.025em', margin: '0 0 8px' }}>
                   RTP Intelligence Hub

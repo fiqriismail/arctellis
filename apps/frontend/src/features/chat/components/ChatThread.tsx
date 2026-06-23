@@ -1,8 +1,8 @@
 'use client'
 
 import { useRef, useEffect } from 'react'
-import { Sparkles } from 'lucide-react'
 import { Message } from '@/features/chat/types'
+import { AppIcon } from '@/components/AppIcon'
 import { MarkdownContent } from '@/features/chat/components/MarkdownContent'
 
 interface ChatThreadProps {
@@ -39,11 +39,11 @@ export function ChatThread({
         >
           <div style={{
             width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-            background: 'var(--brand)', color: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden',
             boxShadow: 'var(--shadow-card-sm)',
           }}>
-            <Sparkles style={{ width: 16, height: 16 }} strokeWidth={2.2} />
+            <AppIcon size={30} />
           </div>
           <div style={{ flex: 1, minWidth: 0, paddingTop: 3 }}>
             {streamingText && <MarkdownContent text={streamingText} />}
@@ -125,11 +125,11 @@ function AssistantMessage({ text }: { text: string }) {
     >
       <div style={{
         width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-        background: 'var(--brand)', color: '#fff',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden',
         boxShadow: 'var(--shadow-card-sm)',
       }}>
-        <Sparkles style={{ width: 16, height: 16 }} strokeWidth={2.2} />
+        <AppIcon size={30} />
       </div>
       <div style={{ flex: 1, minWidth: 0, paddingTop: 3 }}>
         <MarkdownContent text={text} />

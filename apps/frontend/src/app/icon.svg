@@ -1,0 +1,10 @@
+<svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RTP Intelligence Hub">
+  <title>RTP Intelligence Hub</title>
+  
+  <path d="M50 12 L82.91 31 L82.91 69 L50 88 L17.09 69 L17.09 31 Z" fill="#F6B01C" stroke="#F6B01C" stroke-width="11" stroke-linejoin="round"></path>
+  
+  <g fill="#1B1B1F">
+    <path transform="translate(47,52) scale(2.3) translate(-12,-12)" d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"></path>
+    <path transform="translate(72.5,31) scale(0.62) translate(-12,-12)" d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"></path>
+  </g>
+</svg>
