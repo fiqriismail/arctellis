@@ -95,9 +95,8 @@ a {
   --brand-tint: #eff6fc;
   /* RTP hub brand */
   --brand-gold: #f6b01c;
+  --brand-gold-glow: rgba(246, 176, 28, 0.22);
   --brand-amber: #c9820a;
-  --brand-amber-focus: #e2960c;
-  --brand-amber-glow: rgba(226, 150, 12, 0.18);
   --ink: #1b1b1f;
   /* extended border */
   --border-strong: #d4d4d8;
@@ -194,13 +193,25 @@ a {
 }
 
 .input-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px 10px 10px 16px;
+  background: var(--card);
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card-md);
   outline: none;
   transition: box-shadow 0.2s, border-color 0.2s;
 }
 
+.input-bar--compact {
+  border-radius: 14px;
+}
+
 .input-bar:focus-within {
-  border-color: var(--brand-amber-focus);
-  box-shadow: 0 0 0 4px var(--brand-amber-glow);
+  border-color: var(--brand-gold);
+  box-shadow: 0 0 0 4px var(--brand-gold-glow);
   outline: none;
 }
 

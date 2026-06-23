@@ -50,17 +50,7 @@ export function ChatInput({
 
   return (
     <div>
-      <div
-        className="input-bar"
-        style={{
-          display: 'flex', alignItems: 'flex-end', gap: 10,
-          padding: '10px 10px 10px 16px',
-          background: 'var(--card)',
-          border: '1px solid var(--border-strong)',
-          borderRadius: compact ? 14 : 16,
-          boxShadow: 'var(--shadow-card-md)',
-        }}
-      >
+      <div className={`input-bar${compact ? ' input-bar--compact' : ''}`}>
         <textarea
           ref={ref}
           value={value}
