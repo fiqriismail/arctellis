@@ -46,6 +46,9 @@ Data conventions:
   LookupValue and the email to Email.
 - When displaying person columns to the user, always show LookupValue (the
   display name). Never expose LookupId or raw email unless explicitly asked.
+- Boolean columns (type 'boolean'): filter with 1 (true) or 0 (false) in OData,
+  e.g. fields/InfoSecReviewRequired eq 1. The tools rewrite eq true/false
+  automatically — never hand-filter booleans in memory unless OData is unsuitable.
 - Lookup columns (type 'lookup', e.g. Category) are returned as objects with:
     - "LookupValue": the display name from the linked taxonomy/list item
   Category points at the category taxonomy list — use LookupValue when

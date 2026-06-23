@@ -691,6 +691,38 @@ def test_normalize_filter_preserves_quoted_datetime_range():
     assert SharePointService._normalize_filter(f) == f
 
 
+def test_normalize_filter_rewrites_boolean_true_to_one():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._normalize_filter(
+        "fields/InfoSecReviewRequired eq true"
+    ) == "fields/InfoSecReviewRequired eq 1"
+
+
+def test_normalize_filter_rewrites_boolean_false_to_zero():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._normalize_filter(
+        "InfoSecReviewRequired eq false"
+    ) == "fields/InfoSecReviewRequired eq 0"
+
+
+def test_normalize_filter_rewrites_quoted_boolean_literals():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._normalize_filter(
+        "fields/SourcingCompleted eq 'true'"
+    ) == "fields/SourcingCompleted eq 1"
+
+
+def test_normalize_filter_preserves_non_boolean_string_literals():
+    from app.services.sharepoint import SharePointService
+
+    assert SharePointService._normalize_filter(
+        "fields/Status eq 'Active'"
+    ) == "fields/Status eq 'Active'"
+
+
 # --- person column resolution (LookupId -> display name + email) ---
 
 

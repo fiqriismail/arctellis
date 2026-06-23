@@ -287,6 +287,34 @@ class SharePointService:
         return out
 
     @staticmethod
+    def _normalize_boolean_literals(f: str) -> str:
+        """Rewrite true/false OData literals to 1/0 for SharePoint boolean fields.
+
+        Microsoft Graph list filters treat ``eq true`` as false (and vice versa).
+        Boolean columns must be compared with 1/0.
+        """
+        replacements = {
+            "true": "1",
+            "false": "0",
+            "'true'": "1",
+            "'false'": "0",
+        }
+
+        def _replace(match: re.Match) -> str:
+            column, op, literal = match.group(1), match.group(2), match.group(3)
+            mapped = replacements.get(literal.lower())
+            if mapped is None:
+                return match.group(0)
+            return f"{column} {op} {mapped}"
+
+        return re.sub(
+            r"(fields/[A-Za-z_]\w*)\s+(eq|ne)\s+('true'|'false'|true|false)(?!\w)",
+            _replace,
+            f,
+            flags=re.IGNORECASE,
+        )
+
+    @staticmethod
     def _normalize_filter(f: str) -> str:
         """Prepend 'fields/' to bare column names in OData filter expressions.
 
@@ -298,12 +326,13 @@ class SharePointService:
             prop, op = match.group(1), match.group(2)
             return f"fields/{prop} {op}"
 
-        return re.sub(
+        f = re.sub(
             r"(?<!/)\b([A-Za-z_]\w*)\s+(eq|ne|lt|le|gt|ge|startswith|endswith|contains)\b",
             _prefix,
             f,
             flags=re.IGNORECASE,
         )
+        return SharePointService._normalize_boolean_literals(f)
 
     async def get_item_count(self) -> int:
         """Return the total number of items in the list.
