@@ -19,7 +19,6 @@ export function ChatInput({
   compact = false,
 }: ChatInputProps) {
   const [value, setValue] = useState('')
-  const [focused, setFocused] = useState(false)
   const ref = useRef<HTMLTextAreaElement>(null)
 
   const autosize = useCallback(() => {
@@ -52,17 +51,15 @@ export function ChatInput({
   return (
     <div>
       <div
+        className="input-bar"
         style={{
           display: 'flex', alignItems: 'flex-end', gap: 10,
           padding: '10px 10px 10px 16px',
           background: 'var(--card)',
-          border: `1px solid ${focused ? 'var(--brand)' : 'var(--border-strong)'}`,
+          border: '1px solid var(--border-strong)',
           borderRadius: compact ? 14 : 16,
-          boxShadow: focused ? '0 0 0 3px rgba(15,108,189,.12)' : 'var(--shadow-card-md)',
-          transition: 'box-shadow .2s, border-color .2s',
+          boxShadow: 'var(--shadow-card-md)',
         }}
-        onFocusCapture={() => setFocused(true)}
-        onBlurCapture={() => setFocused(false)}
       >
         <textarea
           ref={ref}
