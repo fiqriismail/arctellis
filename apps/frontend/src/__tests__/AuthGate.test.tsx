@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AuthGate } from '@/features/auth/components/AuthGate'
 import { useIsAuthenticated, useMsal } from '@azure/msal-react'
+import { useGroupAccess } from '@/features/auth/hooks/useGroupAccess'
 
 const mockLoginPopup = jest.fn()
 const mockSetActiveAccount = jest.fn()
@@ -11,14 +12,19 @@ jest.mock('@azure/msal-react', () => ({
   useMsal: jest.fn(),
 }))
 
+jest.mock('@/features/auth/hooks/useGroupAccess')
+
 const mockUseIsAuthenticated = useIsAuthenticated as jest.Mock
 const mockUseMsal = useMsal as jest.Mock
+const mockUseGroupAccess = useGroupAccess as jest.Mock
 
 beforeEach(() => {
   jest.clearAllMocks()
   mockUseMsal.mockReturnValue({
-    instance: { loginPopup: mockLoginPopup, setActiveAccount: mockSetActiveAccount },
+    instance: { loginPopup: mockLoginPopup, setActiveAccount: mockSetActiveAccount, logoutPopup: jest.fn() },
+    accounts: [],
   })
+  mockUseGroupAccess.mockReturnValue({ status: 'authorized' })
 })
 
 describe('AuthGate', () => {
@@ -56,5 +62,40 @@ describe('AuthGate', () => {
     render(<AuthGate><div>Protected content</div></AuthGate>)
     await user.click(screen.getByRole('button', { name: /sign in with microsoft/i }))
     expect(mockSetActiveAccount).toHaveBeenCalledWith(mockAccount)
+  })
+
+  it('renders a loading spinner while access check is in flight', () => {
+    mockUseIsAuthenticated.mockReturnValue(true)
+    mockUseGroupAccess.mockReturnValue({ status: 'loading' })
+    mockUseMsal.mockReturnValue({
+      instance: { loginPopup: mockLoginPopup, setActiveAccount: mockSetActiveAccount, logoutPopup: jest.fn() },
+      accounts: [{ name: 'Alice', username: 'alice@example.com' }],
+    })
+    render(<AuthGate><div>Chat</div></AuthGate>)
+    expect(screen.getByText(/checking access/i)).toBeInTheDocument()
+    expect(screen.queryByText('Chat')).not.toBeInTheDocument()
+  })
+
+  it('renders children when access is authorized', () => {
+    mockUseIsAuthenticated.mockReturnValue(true)
+    mockUseGroupAccess.mockReturnValue({ status: 'authorized' })
+    mockUseMsal.mockReturnValue({
+      instance: { loginPopup: mockLoginPopup, setActiveAccount: mockSetActiveAccount, logoutPopup: jest.fn() },
+      accounts: [{ name: 'Alice', username: 'alice@example.com' }],
+    })
+    render(<AuthGate><div>Chat</div></AuthGate>)
+    expect(screen.getByText('Chat')).toBeInTheDocument()
+  })
+
+  it('renders UnauthorizedCard when access is denied', () => {
+    mockUseIsAuthenticated.mockReturnValue(true)
+    mockUseGroupAccess.mockReturnValue({ status: 'unauthorized' })
+    mockUseMsal.mockReturnValue({
+      instance: { loginPopup: mockLoginPopup, setActiveAccount: mockSetActiveAccount, logoutPopup: jest.fn() },
+      accounts: [{ name: 'Alice', username: 'alice@example.com' }],
+    })
+    render(<AuthGate><div>Chat</div></AuthGate>)
+    expect(screen.getByText(/you don't have access/i)).toBeInTheDocument()
+    expect(screen.queryByText('Chat')).not.toBeInTheDocument()
   })
 })

@@ -10,7 +10,11 @@ jest.mock('@/features/chat/api/streamMessage', () => ({
 
 jest.mock('@azure/msal-react', () => ({
   useIsAuthenticated: jest.fn().mockReturnValue(true),
-  useMsal: jest.fn().mockReturnValue({ instance: { loginPopup: jest.fn() }, accounts: [] }),
+  useMsal: jest.fn().mockReturnValue({ instance: { loginPopup: jest.fn(), logoutPopup: jest.fn() }, accounts: [] }),
+}))
+
+jest.mock('@/features/auth/hooks/useGroupAccess', () => ({
+  useGroupAccess: jest.fn().mockReturnValue({ status: 'authorized' }),
 }))
 
 describe('HomePage', () => {
