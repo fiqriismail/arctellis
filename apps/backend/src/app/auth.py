@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 
 import jwt
-from fastapi import Depends, HTTPException, Request, Security
+from fastapi import HTTPException, Request, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.config import get_settings
@@ -74,7 +74,9 @@ async def require_group_member(
     Raises HTTP 503 if the Graph membership check fails.
     """
     claims = await require_auth(credentials)
-    oid = claims.get("oid", "")
+    oid = claims.get("oid")
+    if not oid:
+        raise HTTPException(status_code=401, detail="Unauthorized")
     settings = get_settings()
     group_id = settings.allowed_group_id
 
