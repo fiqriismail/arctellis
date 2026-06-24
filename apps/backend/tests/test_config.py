@@ -8,6 +8,7 @@ _REQUIRED = {
     "azure_tenant_id": "t",
     "azure_client_id": "c",
     "azure_client_secret": "s",
+    "allowed_group_id": "group-123",
 }
 
 
@@ -97,9 +98,43 @@ def test_get_settings_returns_settings_instance():
     from app.config import Settings, get_settings
 
     get_settings.cache_clear()
-    os.environ.setdefault("AZURE_TENANT_ID", "t")
-    os.environ.setdefault("AZURE_CLIENT_ID", "c")
-    os.environ.setdefault("AZURE_CLIENT_SECRET", "s")
-    result = get_settings()
-    assert isinstance(result, Settings)
-    get_settings.cache_clear()
+    os.environ["AZURE_TENANT_ID"] = "t"
+    os.environ["AZURE_CLIENT_ID"] = "c"
+    os.environ["AZURE_CLIENT_SECRET"] = "s"
+    os.environ["ALLOWED_GROUP_ID"] = "group-123"
+    try:
+        result = get_settings()
+        assert isinstance(result, Settings)
+    finally:
+        get_settings.cache_clear()
+        os.environ.pop("AZURE_TENANT_ID", None)
+        os.environ.pop("AZURE_CLIENT_ID", None)
+        os.environ.pop("AZURE_CLIENT_SECRET", None)
+        os.environ.pop("ALLOWED_GROUP_ID", None)
+
+
+def test_allowed_group_id_is_required():
+    """Settings must reject an env without ALLOWED_GROUP_ID."""
+    from app.config import Settings
+
+    with pytest.raises(ValidationError):
+        Settings(
+            _env_file=None,
+            azure_tenant_id="t",
+            azure_client_id="c",
+            azure_client_secret="s",
+            # allowed_group_id intentionally omitted
+        )
+
+
+def test_allowed_group_id_is_read_from_env():
+    from app.config import Settings
+
+    s = Settings(
+        _env_file=None,
+        azure_tenant_id="t",
+        azure_client_id="c",
+        azure_client_secret="s",
+        allowed_group_id="group-abc",
+    )
+    assert s.allowed_group_id == "group-abc"

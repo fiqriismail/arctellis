@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     # CORS — comma-separated list of allowed origins
     cors_origins: str = "http://localhost:3000"
 
+    # Access control — Entra Object ID of the M365 group allowed to use the app
+    allowed_group_id: str
+
 
 @lru_cache
 def get_settings() -> Settings:
