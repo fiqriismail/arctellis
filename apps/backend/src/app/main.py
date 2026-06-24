@@ -1,10 +1,11 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.agent import build_agent
+from app.auth import require_group_member
 from app.config import get_settings
 from app.routers.chat import router as chat_router
 from app.services.graph_auth import GraphAuthService
@@ -30,6 +31,7 @@ async def lifespan(app: FastAPI):
         )
         service = await create_sharepoint_service(auth_service=auth, settings=settings)
         app.state.agent = build_agent(service, settings)
+        app.state.auth_service = auth
     yield
 
 
@@ -57,3 +59,8 @@ app = create_app()
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/access")
+async def access_check(claims: dict = Depends(require_group_member)) -> dict[str, str]:
+    return {"access": "granted"}

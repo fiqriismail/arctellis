@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -92,3 +92,53 @@ async def test_chat_with_invalid_token_returns_401():
             )
 
     assert response.status_code == 401
+
+
+# ── require_group_member unit tests ──────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_require_group_member_passes_when_role_present():
+    from app.auth import require_group_member
+
+    creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="good.token")
+    claims = {"sub": "user-123", "roles": ["App.Access"]}
+
+    with patch("app.auth.require_auth", new=AsyncMock(return_value=claims)), \
+         patch("app.auth.get_settings") as mock_settings:
+        mock_settings.return_value.allowed_role = "App.Access"
+        result = await require_group_member(credentials=creds)
+
+    assert result == claims
+
+
+@pytest.mark.asyncio
+async def test_require_group_member_raises_403_when_role_absent():
+    from app.auth import require_group_member
+
+    creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="good.token")
+    claims = {"sub": "user-123", "roles": []}
+
+    with patch("app.auth.require_auth", new=AsyncMock(return_value=claims)), \
+         patch("app.auth.get_settings") as mock_settings:
+        mock_settings.return_value.allowed_role = "App.Access"
+        with pytest.raises(HTTPException) as exc_info:
+            await require_group_member(credentials=creds)
+
+    assert exc_info.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_require_group_member_raises_403_when_no_roles_claim():
+    from app.auth import require_group_member
+
+    creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="good.token")
+    claims = {"sub": "user-123"}
+
+    with patch("app.auth.require_auth", new=AsyncMock(return_value=claims)), \
+         patch("app.auth.get_settings") as mock_settings:
+        mock_settings.return_value.allowed_role = "App.Access"
+        with pytest.raises(HTTPException) as exc_info:
+            await require_group_member(credentials=creds)
+
+    assert exc_info.value.status_code == 403

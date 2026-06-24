@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     # CORS — comma-separated list of allowed origins
     cors_origins: str = "http://localhost:3000"
 
+    # Access control — app role value assigned to the allowed group in Entra
+    allowed_role: str = "App.Access"
+
 
 @lru_cache
 def get_settings() -> Settings:

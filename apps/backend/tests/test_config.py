@@ -97,9 +97,24 @@ def test_get_settings_returns_settings_instance():
     from app.config import Settings, get_settings
 
     get_settings.cache_clear()
-    os.environ.setdefault("AZURE_TENANT_ID", "t")
-    os.environ.setdefault("AZURE_CLIENT_ID", "c")
-    os.environ.setdefault("AZURE_CLIENT_SECRET", "s")
-    result = get_settings()
-    assert isinstance(result, Settings)
-    get_settings.cache_clear()
+    os.environ["AZURE_TENANT_ID"] = "t"
+    os.environ["AZURE_CLIENT_ID"] = "c"
+    os.environ["AZURE_CLIENT_SECRET"] = "s"
+    try:
+        result = get_settings()
+        assert isinstance(result, Settings)
+    finally:
+        get_settings.cache_clear()
+        os.environ.pop("AZURE_TENANT_ID", None)
+        os.environ.pop("AZURE_CLIENT_ID", None)
+        os.environ.pop("AZURE_CLIENT_SECRET", None)
+
+
+def test_allowed_role_defaults_to_app_access():
+    s = _clean_settings()
+    assert s.allowed_role == "App.Access"
+
+
+def test_allowed_role_can_be_overridden():
+    s = _clean_settings(allowed_role="Custom.Role")
+    assert s.allowed_role == "Custom.Role"

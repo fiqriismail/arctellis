@@ -53,3 +53,22 @@ async def require_auth(
     except Exception:
         logger.exception("Token validation failed")
         raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+async def require_group_member(
+    credentials: HTTPAuthorizationCredentials | None = Security(_bearer),
+) -> dict:
+    """FastAPI dependency — validates token AND checks for the required app role.
+
+    Entra injects a `roles` claim listing app roles assigned to the user (directly
+    or via group). No Graph API call is needed.
+
+    Returns decoded JWT claims on success.
+    Raises HTTP 401 for invalid/missing token.
+    Raises HTTP 403 if the required app role is absent from the token.
+    """
+    claims = await require_auth(credentials)
+    settings = get_settings()
+    if settings.allowed_role not in claims.get("roles", []):
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return claims

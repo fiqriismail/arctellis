@@ -63,6 +63,28 @@ The app needs read access to SharePoint via Microsoft Graph.
 >    }
 >    ```
 
+### 1.3.1 Additional permission for M365 Group Membership Check
+
+If you plan to restrict the assistant to a specific Microsoft 365 Group, add the following **Application** permission (not Delegated):
+
+1. Still on the API permissions page, click **+ Add a permission** → **Microsoft Graph** → **Application permissions**.
+2. Search for and tick:
+   - **`GroupMember.Read.All`** — allows the backend to verify group membership via Microsoft Graph
+3. Click **Add permissions**.
+4. Back on the API permissions page, click **Grant admin consent for \<your org\>**.
+5. Click **Yes** to confirm. The Status column should show a green tick ✓.
+
+| Permission | Type | Purpose |
+|---|---|---|
+| `GroupMember.Read.All` | Application | Allows the backend to call `POST /v1.0/users/{oid}/checkMemberObjects` to verify group membership |
+
+Also add to your backend `.env` (or Key Vault secret in production):
+```
+ALLOWED_GROUP_ID=<entra-object-id-of-m365-group>
+```
+
+Replace `<entra-object-id-of-m365-group>` with the Object ID of the M365 Group. Find this in Microsoft Entra ID → Groups → select your group → Object ID.
+
 ### 1.4 Expose the backend API
 
 First, configure the backend app registration to accept tokens from the client:
