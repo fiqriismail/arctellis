@@ -3,21 +3,14 @@ from __future__ import annotations
 import logging
 
 import jwt
-from fastapi import HTTPException, Request, Security
+from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.config import get_settings
-from app.group_auth import _cache, check_group_membership
-from app.services.graph_auth import GraphAuthService
 
 logger = logging.getLogger(__name__)
 
 _bearer = HTTPBearer(auto_error=False)
-
-
-def _get_auth_service(request: Request) -> GraphAuthService:
-    """Return the GraphAuthService stored on app state by the lifespan."""
-    return request.app.state.auth_service
 
 
 def validate_entra_token(token: str, tenant_id: str, client_id: str) -> dict:
@@ -64,36 +57,18 @@ async def require_auth(
 
 async def require_group_member(
     credentials: HTTPAuthorizationCredentials | None = Security(_bearer),
-    request: Request = None,  # type: ignore[assignment]  # FastAPI injects Request; None guards unit-test calls without a real request
 ) -> dict:
-    """FastAPI dependency — validates token AND checks M365 group membership.
+    """FastAPI dependency — validates token AND checks for the required app role.
+
+    Entra injects a `roles` claim listing app roles assigned to the user (directly
+    or via group). No Graph API call is needed.
 
     Returns decoded JWT claims on success.
     Raises HTTP 401 for invalid/missing token.
-    Raises HTTP 403 if the user is not in the configured group.
-    Raises HTTP 503 if the Graph membership check fails.
+    Raises HTTP 403 if the required app role is absent from the token.
     """
     claims = await require_auth(credentials)
-    oid = claims.get("oid")
-    if not oid:
-        raise HTTPException(status_code=401, detail="Unauthorized")
     settings = get_settings()
-    group_id = settings.allowed_group_id
-
-    cached = _cache.get(oid)
-    if cached is True:
-        return claims
-    if cached is False:
-        raise HTTPException(status_code=403, detail="Forbidden")
-
-    auth_service = _get_auth_service(request)
-    try:
-        is_member = await check_group_membership(oid, group_id, auth_service)
-    except Exception:
-        logger.exception("Group membership check failed for oid=%s", oid)
-        raise HTTPException(status_code=503, detail="Service Unavailable")
-
-    _cache.set(oid, is_member)
-    if not is_member:
+    if settings.allowed_role not in claims.get("roles", []):
         raise HTTPException(status_code=403, detail="Forbidden")
     return claims

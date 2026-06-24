@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -98,48 +98,30 @@ async def test_chat_with_invalid_token_returns_401():
 
 
 @pytest.mark.asyncio
-async def test_require_group_member_passes_for_group_member():
-    from fastapi.security import HTTPAuthorizationCredentials
-    from unittest.mock import AsyncMock, patch, MagicMock
-
+async def test_require_group_member_passes_when_role_present():
     from app.auth import require_group_member
-    from app.group_auth import GroupMembershipCache
-    from app.services.graph_auth import GraphAuthService
 
     creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="good.token")
-    claims = {"sub": "user-123", "oid": "oid-abc"}
+    claims = {"sub": "user-123", "roles": ["App.Access"]}
 
     with patch("app.auth.require_auth", new=AsyncMock(return_value=claims)), \
-         patch("app.auth.check_group_membership", new=AsyncMock(return_value=True)), \
-         patch("app.auth._get_auth_service", return_value=MagicMock(spec=GraphAuthService)), \
-         patch("app.auth._cache", GroupMembershipCache()), \
          patch("app.auth.get_settings") as mock_settings:
-        mock_settings.return_value.allowed_group_id = "group-xyz"
+        mock_settings.return_value.allowed_role = "App.Access"
         result = await require_group_member(credentials=creds)
 
     assert result == claims
 
 
 @pytest.mark.asyncio
-async def test_require_group_member_raises_403_for_non_member():
-    from fastapi import HTTPException
-    from fastapi.security import HTTPAuthorizationCredentials
-    from unittest.mock import AsyncMock, patch, MagicMock
-
+async def test_require_group_member_raises_403_when_role_absent():
     from app.auth import require_group_member
-    from app.group_auth import GroupMembershipCache
-    from app.services.graph_auth import GraphAuthService
 
     creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="good.token")
-    claims = {"sub": "user-123", "oid": "oid-abc"}
-    fresh_cache = GroupMembershipCache()
+    claims = {"sub": "user-123", "roles": []}
 
     with patch("app.auth.require_auth", new=AsyncMock(return_value=claims)), \
-         patch("app.auth.check_group_membership", new=AsyncMock(return_value=False)), \
-         patch("app.auth._get_auth_service", return_value=MagicMock(spec=GraphAuthService)), \
-         patch("app.auth._cache", fresh_cache), \
          patch("app.auth.get_settings") as mock_settings:
-        mock_settings.return_value.allowed_group_id = "group-xyz"
+        mock_settings.return_value.allowed_role = "App.Access"
         with pytest.raises(HTTPException) as exc_info:
             await require_group_member(credentials=creds)
 
@@ -147,26 +129,16 @@ async def test_require_group_member_raises_403_for_non_member():
 
 
 @pytest.mark.asyncio
-async def test_require_group_member_raises_503_on_graph_failure():
-    from fastapi import HTTPException
-    from fastapi.security import HTTPAuthorizationCredentials
-    from unittest.mock import AsyncMock, patch, MagicMock
-
+async def test_require_group_member_raises_403_when_no_roles_claim():
     from app.auth import require_group_member
-    from app.group_auth import GroupMembershipCache
-    from app.services.graph_auth import GraphAuthService
 
     creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="good.token")
-    claims = {"sub": "user-123", "oid": "oid-abc"}
-    fresh_cache = GroupMembershipCache()
+    claims = {"sub": "user-123"}
 
     with patch("app.auth.require_auth", new=AsyncMock(return_value=claims)), \
-         patch("app.auth.check_group_membership", new=AsyncMock(side_effect=Exception("Graph down"))), \
-         patch("app.auth._get_auth_service", return_value=MagicMock(spec=GraphAuthService)), \
-         patch("app.auth._cache", fresh_cache), \
          patch("app.auth.get_settings") as mock_settings:
-        mock_settings.return_value.allowed_group_id = "group-xyz"
+        mock_settings.return_value.allowed_role = "App.Access"
         with pytest.raises(HTTPException) as exc_info:
             await require_group_member(credentials=creds)
 
-    assert exc_info.value.status_code == 503
+    assert exc_info.value.status_code == 403
