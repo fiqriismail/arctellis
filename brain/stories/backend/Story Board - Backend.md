@@ -31,7 +31,7 @@ FastAPI + LangChain + Microsoft Graph backend. Stories derived from the [[PRD-Sh
 | BE-11 | [[BE-11 Accuracy Test Suite]]                      | 4 — Hardening  | `done` |
 | BE-12 | [[BE-12 Key Vault Secrets and Deployment]]         | 5 — Deploy     | `todo` |
 | BE-13 | [[BE-13 Migrate LLM Provider to Azure OpenAI]]     | 5 — Deploy     | `done` |
-| BE-14 | [[BE-14 M365 Group Membership Check]]              | 6 — Access Control | `todo` |
+| BE-14 | [[BE-14 M365 Group Membership Check]]              | 6 — Access Control | `done` |
 
 ## Phase grouping
 
