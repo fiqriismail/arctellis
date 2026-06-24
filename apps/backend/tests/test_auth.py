@@ -92,3 +92,79 @@ async def test_chat_with_invalid_token_returns_401():
             )
 
     assert response.status_code == 401
+
+
+# ── require_group_member unit tests ──────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_require_group_member_passes_for_group_member():
+    from fastapi.security import HTTPAuthorizationCredentials
+    from unittest.mock import AsyncMock, patch, MagicMock
+
+    from app.auth import require_group_member
+    from app.services.graph_auth import GraphAuthService
+
+    creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="good.token")
+    claims = {"sub": "user-123", "oid": "oid-abc"}
+
+    with patch("app.auth.require_auth", return_value=claims), \
+         patch("app.auth.check_group_membership", new=AsyncMock(return_value=True)), \
+         patch("app.auth._get_auth_service", return_value=MagicMock(spec=GraphAuthService)), \
+         patch("app.auth.get_settings") as mock_settings:
+        mock_settings.return_value.allowed_group_id = "group-xyz"
+        result = await require_group_member(credentials=creds)
+
+    assert result == claims
+
+
+@pytest.mark.asyncio
+async def test_require_group_member_raises_403_for_non_member():
+    from fastapi import HTTPException
+    from fastapi.security import HTTPAuthorizationCredentials
+    from unittest.mock import AsyncMock, patch, MagicMock
+
+    from app.auth import require_group_member
+    from app.group_auth import GroupMembershipCache
+    from app.services.graph_auth import GraphAuthService
+
+    creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="good.token")
+    claims = {"sub": "user-123", "oid": "oid-abc"}
+    fresh_cache = GroupMembershipCache()
+
+    with patch("app.auth.require_auth", return_value=claims), \
+         patch("app.auth.check_group_membership", new=AsyncMock(return_value=False)), \
+         patch("app.auth._get_auth_service", return_value=MagicMock(spec=GraphAuthService)), \
+         patch("app.auth._cache", fresh_cache), \
+         patch("app.auth.get_settings") as mock_settings:
+        mock_settings.return_value.allowed_group_id = "group-xyz"
+        with pytest.raises(HTTPException) as exc_info:
+            await require_group_member(credentials=creds)
+
+    assert exc_info.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_require_group_member_raises_503_on_graph_failure():
+    from fastapi import HTTPException
+    from fastapi.security import HTTPAuthorizationCredentials
+    from unittest.mock import AsyncMock, patch, MagicMock
+
+    from app.auth import require_group_member
+    from app.group_auth import GroupMembershipCache
+    from app.services.graph_auth import GraphAuthService
+
+    creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="good.token")
+    claims = {"sub": "user-123", "oid": "oid-abc"}
+    fresh_cache = GroupMembershipCache()
+
+    with patch("app.auth.require_auth", return_value=claims), \
+         patch("app.auth.check_group_membership", new=AsyncMock(side_effect=Exception("Graph down"))), \
+         patch("app.auth._get_auth_service", return_value=MagicMock(spec=GraphAuthService)), \
+         patch("app.auth._cache", fresh_cache), \
+         patch("app.auth.get_settings") as mock_settings:
+        mock_settings.return_value.allowed_group_id = "group-xyz"
+        with pytest.raises(HTTPException) as exc_info:
+            await require_group_member(credentials=creds)
+
+    assert exc_info.value.status_code == 503

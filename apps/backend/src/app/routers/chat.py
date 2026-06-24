@@ -8,10 +8,10 @@ from fastapi.responses import StreamingResponse
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel
 
-from app.auth import require_auth
+from app.auth import require_group_member
 from app.session import append_to_history, get_history
 
-router = APIRouter(dependencies=[Depends(require_auth)])
+router = APIRouter(dependencies=[Depends(require_group_member)])
 logger = logging.getLogger(__name__)
 
 

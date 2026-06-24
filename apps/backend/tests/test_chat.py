@@ -91,12 +91,15 @@ def reset_sessions():
 
 @pytest.fixture(autouse=True)
 def override_auth():
-    from app.auth import require_auth
+    from app.auth import require_auth, require_group_member
     from app.main import app
 
-    app.dependency_overrides[require_auth] = lambda: {"sub": "test-user"}
+    # Override both — chat router now uses require_group_member
+    app.dependency_overrides[require_auth] = lambda: {"sub": "test-user", "oid": "oid-test"}
+    app.dependency_overrides[require_group_member] = lambda: {"sub": "test-user", "oid": "oid-test"}
     yield
     app.dependency_overrides.pop(require_auth, None)
+    app.dependency_overrides.pop(require_group_member, None)
 
 
 @pytest.mark.asyncio
