@@ -30,7 +30,7 @@ Next.js + shadcn/ui chat client. Stories derived from the [[PRD-SharePoint-List-
 | FE-11 | [[FE-11 Styled Table Rendering with Status Badges]]         | 3 — Chat UI | `done` |
 | FE-12 | [[FE-12 Chart View for Assistant Tables]]                   | 3 — Chat UI | `done` |
 | FE-13 | [[FE-13 Sortable Tables with Currency and Date Formatting]] | 3 — Chat UI | `done` |
-| FE-14 | [[FE-14 M365 Group Access Gate]]                           | 6 — Access Control | `todo` |
+| FE-14 | [[FE-14 M365 Group Access Gate]]                           | 6 — Access Control | `done` |
 
 ## Phase grouping
 
