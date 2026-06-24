@@ -6,11 +6,12 @@ import { useToken } from './useToken'
 
 type GroupAccessStatus = 'loading' | 'authorized' | 'unauthorized'
 
-export function useGroupAccess(): { status: GroupAccessStatus } {
+export function useGroupAccess(enabled: boolean): { status: GroupAccessStatus } {
   const { getToken } = useToken()
   const [status, setStatus] = useState<GroupAccessStatus>('loading')
 
   useEffect(() => {
+    if (!enabled) return
     let cancelled = false
 
     async function check() {
@@ -18,7 +19,6 @@ export function useGroupAccess(): { status: GroupAccessStatus } {
         const result = await checkAccess(getToken)
         if (!cancelled) setStatus(result ? 'authorized' : 'unauthorized')
       } catch {
-        // Retry once on transient error
         try {
           const result = await checkAccess(getToken)
           if (!cancelled) setStatus(result ? 'authorized' : 'unauthorized')
@@ -30,7 +30,7 @@ export function useGroupAccess(): { status: GroupAccessStatus } {
 
     check()
     return () => { cancelled = true }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [enabled]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { status }
 }

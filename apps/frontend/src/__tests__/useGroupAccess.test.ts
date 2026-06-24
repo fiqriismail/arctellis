@@ -18,19 +18,19 @@ beforeEach(() => {
 describe('useGroupAccess', () => {
   it('starts in loading state', () => {
     mockCheckAccess.mockReturnValue(new Promise(() => {})) // never resolves
-    const { result } = renderHook(() => useGroupAccess())
+    const { result } = renderHook(() => useGroupAccess(true))
     expect(result.current.status).toBe('loading')
   })
 
   it('resolves to authorized when checkAccess returns true', async () => {
     mockCheckAccess.mockResolvedValue(true)
-    const { result } = renderHook(() => useGroupAccess())
+    const { result } = renderHook(() => useGroupAccess(true))
     await waitFor(() => expect(result.current.status).toBe('authorized'))
   })
 
   it('resolves to unauthorized when checkAccess returns false', async () => {
     mockCheckAccess.mockResolvedValue(false)
-    const { result } = renderHook(() => useGroupAccess())
+    const { result } = renderHook(() => useGroupAccess(true))
     await waitFor(() => expect(result.current.status).toBe('unauthorized'))
   })
 
@@ -38,14 +38,14 @@ describe('useGroupAccess', () => {
     mockCheckAccess
       .mockRejectedValueOnce(new Error('503'))
       .mockResolvedValue(true)
-    const { result } = renderHook(() => useGroupAccess())
+    const { result } = renderHook(() => useGroupAccess(true))
     await waitFor(() => expect(result.current.status).toBe('authorized'))
     expect(mockCheckAccess).toHaveBeenCalledTimes(2)
   })
 
   it('resolves to unauthorized after two consecutive errors', async () => {
     mockCheckAccess.mockRejectedValue(new Error('503'))
-    const { result } = renderHook(() => useGroupAccess())
+    const { result } = renderHook(() => useGroupAccess(true))
     await waitFor(() => expect(result.current.status).toBe('unauthorized'))
     expect(mockCheckAccess).toHaveBeenCalledTimes(2)
   })

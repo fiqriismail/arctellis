@@ -64,7 +64,7 @@ async def require_auth(
 
 async def require_group_member(
     credentials: HTTPAuthorizationCredentials | None = Security(_bearer),
-    request: Request = None,
+    request: Request = None,  # type: ignore[assignment]  # FastAPI injects Request; None guards unit-test calls without a real request
 ) -> dict:
     """FastAPI dependency — validates token AND checks M365 group membership.
 

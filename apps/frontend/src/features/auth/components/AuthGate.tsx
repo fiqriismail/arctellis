@@ -12,7 +12,7 @@ interface AuthGateProps {
 export function AuthGate({ children }: AuthGateProps) {
   const isAuthenticated = useIsAuthenticated()
   const { instance, accounts } = useMsal()
-  const { status } = useGroupAccess()
+  const { status } = useGroupAccess(isAuthenticated)
 
   const handleSignIn = async () => {
     try {

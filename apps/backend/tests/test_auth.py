@@ -103,14 +103,16 @@ async def test_require_group_member_passes_for_group_member():
     from unittest.mock import AsyncMock, patch, MagicMock
 
     from app.auth import require_group_member
+    from app.group_auth import GroupMembershipCache
     from app.services.graph_auth import GraphAuthService
 
     creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="good.token")
     claims = {"sub": "user-123", "oid": "oid-abc"}
 
-    with patch("app.auth.require_auth", return_value=claims), \
+    with patch("app.auth.require_auth", new=AsyncMock(return_value=claims)), \
          patch("app.auth.check_group_membership", new=AsyncMock(return_value=True)), \
          patch("app.auth._get_auth_service", return_value=MagicMock(spec=GraphAuthService)), \
+         patch("app.auth._cache", GroupMembershipCache()), \
          patch("app.auth.get_settings") as mock_settings:
         mock_settings.return_value.allowed_group_id = "group-xyz"
         result = await require_group_member(credentials=creds)
@@ -132,7 +134,7 @@ async def test_require_group_member_raises_403_for_non_member():
     claims = {"sub": "user-123", "oid": "oid-abc"}
     fresh_cache = GroupMembershipCache()
 
-    with patch("app.auth.require_auth", return_value=claims), \
+    with patch("app.auth.require_auth", new=AsyncMock(return_value=claims)), \
          patch("app.auth.check_group_membership", new=AsyncMock(return_value=False)), \
          patch("app.auth._get_auth_service", return_value=MagicMock(spec=GraphAuthService)), \
          patch("app.auth._cache", fresh_cache), \
@@ -158,7 +160,7 @@ async def test_require_group_member_raises_503_on_graph_failure():
     claims = {"sub": "user-123", "oid": "oid-abc"}
     fresh_cache = GroupMembershipCache()
 
-    with patch("app.auth.require_auth", return_value=claims), \
+    with patch("app.auth.require_auth", new=AsyncMock(return_value=claims)), \
          patch("app.auth.check_group_membership", new=AsyncMock(side_effect=Exception("Graph down"))), \
          patch("app.auth._get_auth_service", return_value=MagicMock(spec=GraphAuthService)), \
          patch("app.auth._cache", fresh_cache), \
