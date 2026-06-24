@@ -52,10 +52,8 @@ async def test_check_group_membership_returns_true_when_member():
 
     auth = MagicMock(spec=GraphAuthService)
     mock_client = MagicMock()
-    mock_response = MagicMock()
-    mock_response.value = ["group-abc"]
-    mock_client.users.by_user_id.return_value.check_member_objects.post = AsyncMock(
-        return_value=mock_response
+    mock_client.users.by_user_id.return_value.transitive_member_of.by_directory_object_id.return_value.get = AsyncMock(
+        return_value=MagicMock()
     )
     auth.get_client.return_value = mock_client
 
@@ -67,13 +65,14 @@ async def test_check_group_membership_returns_true_when_member():
 async def test_check_group_membership_returns_false_when_not_member():
     from app.group_auth import check_group_membership
     from app.services.graph_auth import GraphAuthService
+    from msgraph.generated.models.o_data_errors.o_data_error import ODataError
 
     auth = MagicMock(spec=GraphAuthService)
     mock_client = MagicMock()
-    mock_response = MagicMock()
-    mock_response.value = []
-    mock_client.users.by_user_id.return_value.check_member_objects.post = AsyncMock(
-        return_value=mock_response
+    not_found = ODataError()
+    not_found.response_status_code = 404
+    mock_client.users.by_user_id.return_value.transitive_member_of.by_directory_object_id.return_value.get = AsyncMock(
+        side_effect=not_found
     )
     auth.get_client.return_value = mock_client
 
@@ -85,13 +84,16 @@ async def test_check_group_membership_returns_false_when_not_member():
 async def test_check_group_membership_raises_on_graph_error():
     from app.group_auth import check_group_membership
     from app.services.graph_auth import GraphAuthService
+    from msgraph.generated.models.o_data_errors.o_data_error import ODataError
 
     auth = MagicMock(spec=GraphAuthService)
     mock_client = MagicMock()
-    mock_client.users.by_user_id.return_value.check_member_objects.post = AsyncMock(
-        side_effect=Exception("Graph API unavailable")
+    server_error = ODataError()
+    server_error.response_status_code = 503
+    mock_client.users.by_user_id.return_value.transitive_member_of.by_directory_object_id.return_value.get = AsyncMock(
+        side_effect=server_error
     )
     auth.get_client.return_value = mock_client
 
-    with pytest.raises(Exception, match="Graph API unavailable"):
+    with pytest.raises(ODataError):
         await check_group_membership("oid-1", "group-abc", auth)

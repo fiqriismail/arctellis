@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import time
 
-from msgraph.generated.users.item.check_member_objects.check_member_objects_post_request_body import (
-    CheckMemberObjectsPostRequestBody,
-)
+from msgraph.generated.models.o_data_errors.o_data_error import ODataError
 
 from app.services.graph_auth import GraphAuthService
 
@@ -39,11 +37,17 @@ async def check_group_membership(
     group_id: str,
     auth_service: GraphAuthService,
 ) -> bool:
-    """Call Graph checkMemberObjects and return True if oid is in group_id.
+    """Return True if oid is a transitive member of group_id.
 
-    Raises on any Graph error — callers should handle and return 503.
+    Uses GET /users/{oid}/transitiveMemberOf/{groupId}: 200 = member, 404 = not member.
+    Requires GroupMember.Read.All Application permission (not Directory.Read.All).
+    Raises on non-404 Graph errors — callers should return 503.
     """
     client = auth_service.get_client()
-    body = CheckMemberObjectsPostRequestBody(ids=[group_id])
-    response = await client.users.by_user_id(oid).check_member_objects.post(body)
-    return group_id in (response.value or [])
+    try:
+        await client.users.by_user_id(oid).transitive_member_of.by_directory_object_id(group_id).get()
+        return True
+    except ODataError as e:
+        if e.response_status_code == 404:
+            return False
+        raise
