@@ -73,8 +73,8 @@ export function ChatInput({
           style={{
             width: 34, height: 34, flexShrink: 0, borderRadius: 9,
             border: 'none', cursor: buttonActive ? 'pointer' : 'default',
-            background: buttonActive ? 'var(--brand-gold)' : '#e4e4e7',
-            color: buttonActive ? 'var(--ink)' : '#a1a1aa',
+            background: buttonActive ? 'var(--azure)' : '#e4e4e7',
+            color: buttonActive ? '#ffffff' : '#a1a1aa',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'background .15s', marginBottom: 1,
           }}
@@ -99,7 +99,7 @@ export function ChatInput({
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <kbd style={{
-      fontFamily: 'ui-monospace, "SF Mono", monospace',
+      fontFamily: 'var(--font-mono)',
       fontSize: 11, padding: '1.5px 5px', borderRadius: 5,
       background: 'var(--muted)', border: '1px solid var(--border)',
       color: 'var(--muted-foreground)', boxShadow: '0 1px 0 var(--border)',
