@@ -46,7 +46,11 @@ export function UnauthorizedCard({ account, onSignOut }: UnauthorizedCardProps) 
           <strong style={{ color: 'var(--foreground)', display: 'block' }}>{displayName}</strong>
           {account.name ? account.username : null}
         </p>
-        <Button onClick={onSignOut} style={{ width: '100%' }}>
+        <Button
+          onClick={onSignOut}
+          style={{ width: '100%' }}
+          className="bg-[var(--azure)] text-white hover:bg-[var(--azure)]/90"
+        >
           Sign out
         </Button>
       </div>
