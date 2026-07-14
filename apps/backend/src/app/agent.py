@@ -51,10 +51,13 @@ Data conventions:
   automatically — never hand-filter booleans in memory unless OData is unsuitable.
 - Lookup columns (type 'lookup', e.g. Category) are returned as objects with:
     - "LookupValue": the display name from the linked taxonomy/list item
-  Category points at the category taxonomy list — use LookupValue when
-  filtering in memory or presenting results. OData filters on lookup columns
-  use the hidden id field (e.g. fields/CategoryLookupId eq 109), not the
-  display name.
+  Lookup columns CANNOT be filtered by display value in an odata_filter — the
+  field only stores a hidden numeric id, and you do not know that id. NEVER
+  write an odata_filter like "fields/Category eq '<display value>'" — it will
+  always fail. To find rows by a lookup column's display value, call
+  filter_rows with NO odata_filter (or filter only on another indexed,
+  non-lookup column), then select the rows whose lookup column matches:
+  compare the target value to LookupValue in memory.
 - Date/time columns: for ANY question about a date or day (e.g. "items created
   on 25 May 2026", "modified last week"), use the filter_by_date tool with the
   column's internal name and YYYY-MM-DD dates. It interprets dates in the site's

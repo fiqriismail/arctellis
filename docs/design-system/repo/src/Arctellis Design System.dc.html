@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#14323D"/><path d="M50 30 L67 70 L50 60 L33 70 Z" fill="#34A6EB"/></svg>
+</template>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;}
+  a{text-decoration:none;color:inherit;}
+  a:hover{color:#1F4A57;}
+  h1,h2,h3,h4,p,figure,ul{margin:0;}
+  ::selection{background:rgba(52,166,235,0.22);}
+  @keyframes arcSpin{to{transform:rotate(360deg);}}
+  @keyframes arcRing{0%{transform:scale(.85);opacity:.7;}100%{transform:scale(1.9);opacity:0;}}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important;}}
+</style>
+</helmet>
+
+<div style="display:flex;align-items:flex-start;background:#F6F8F8;font-family:'Hanken Grotesk',system-ui,sans-serif;color:#14323D;min-height:100vh;">
+
+  <!-- ============ SIDE NAV ============ -->
+  <aside style="position:sticky;top:0;align-self:flex-start;width:272px;flex:none;height:100vh;border-right:1px solid #DCE5E5;background:#F6F8F8;display:flex;flex-direction:column;padding:34px 26px 26px;">
+    <div style="display:flex;align-items:center;gap:11px;">
+      <svg width="26" height="26" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="navchev" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop stop-color="#34A6EB"/><stop offset="1" stop-color="#1F4A57"/></linearGradient></defs><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="url(#navchev)"/></svg>
+      <span style="font-size:19px;font-weight:700;letter-spacing:-0.02em;color:#14323D;">Arctellis</span>
+    </div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:#6E8388;margin-top:6px;padding-left:37px;">Design System</div>
+
+    <nav style="margin-top:34px;display:flex;flex-direction:column;gap:2px;">
+      <a data-nav="color" href="#color" style="display:flex;gap:12px;align-items:center;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#5A6B70;transition:background .15s,color .15s;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#9AAAAE;">01</span>Colour</a>
+      <a data-nav="type" href="#type" style="display:flex;gap:12px;align-items:center;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#5A6B70;transition:background .15s,color .15s;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#9AAAAE;">02</span>Typography</a>
+      <a data-nav="logo" href="#logo" style="display:flex;gap:12px;align-items:center;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#5A6B70;transition:background .15s,color .15s;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#9AAAAE;">03</span>Logo</a>
+      <a data-nav="chevron" href="#chevron" style="display:flex;gap:12px;align-items:center;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#5A6B70;transition:background .15s,color .15s;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#9AAAAE;">04</span>Iconography</a>
+      <a data-nav="voice" href="#voice" style="display:flex;gap:12px;align-items:center;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#5A6B70;transition:background .15s,color .15s;"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#9AAAAE;">05</span>Voice &amp; Tone</a>
+    </nav>
+
+    <div style="margin-top:auto;padding-top:22px;border-top:1px solid #DCE5E5;font-family:'JetBrains Mono',monospace;font-size:10.5px;line-height:1.7;color:#6E8388;">
+      <div style="color:#46585D;">v1.0 · 2026</div>
+      <div>Enterprise AI &amp; Engineering</div>
+      <div style="margin-top:8px;color:#9AAAAE;">Click any value to copy</div>
+    </div>
+  </aside>
+
+  <!-- ============ CONTENT ============ -->
+  <main style="flex:1;min-width:0;max-width:1120px;">
+
+    <!-- MASTHEAD -->
+    <header style="position:relative;padding:96px 80px 72px;border-bottom:1px solid #DCE5E5;background:#F6F8F8;overflow:hidden;">
+      <div style="position:absolute;top:-40px;right:64px;opacity:0.09;"><svg width="360" height="360" viewBox="0 0 100 100" fill="none"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#1F4A57"/></svg></div>
+      <div style="position:relative;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:0.18em;text-transform:uppercase;color:#2E7E94;margin-bottom:26px;">Brand &amp; Identity System</div>
+        <div style="display:flex;align-items:center;gap:20px;">
+          <svg width="58" height="58" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="masthead" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop stop-color="#34A6EB"/><stop offset="1" stop-color="#1F4A57"/></linearGradient></defs><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="url(#masthead)"/></svg>
+          <h1 style="font-size:62px;line-height:0.98;font-weight:800;letter-spacing:-0.03em;color:#14323D;">Arctellis</h1>
+        </div>
+        <p style="margin-top:28px;font-size:19px;line-height:1.6;color:#46585D;max-width:640px;">The visual and verbal system behind the brand. Teal grounds every surface; azure carries the single live signal; the north-pointing chevron and monospace figures do the rest. Use these foundations exactly, and the brand reads as one firm across every touchpoint.</p>
+        <div style="margin-top:34px;display:flex;flex-wrap:wrap;gap:10px;font-family:'JetBrains Mono',monospace;font-size:12px;">
+          <span style="background:#EEF3F3;border:1px solid #DCE5E5;border-radius:100px;padding:7px 15px;color:#1F4A57;font-weight:600;">Teal-led palette</span>
+          <span style="background:#EEF3F3;border:1px solid #DCE5E5;border-radius:100px;padding:7px 15px;color:#1F4A57;font-weight:600;">Hanken Grotesk + JetBrains Mono</span>
+          <span style="background:#EEF3F3;border:1px solid #DCE5E5;border-radius:100px;padding:7px 15px;color:#1F4A57;font-weight:600;">UK English, no em-dashes</span>
+        </div>
+        <p style="margin-top:30px;font-size:15px;line-height:1.6;color:#5A6B70;max-width:640px;border-left:2px solid #34A6EB;padding-left:16px;font-style:italic;">&ldquo;We engineer operational advantage.&rdquo; The system exists to make that promise feel true before a single word is read.</p>
+      </div>
+    </header>
+
+    <!-- ============ 01 COLOUR ============ -->
+    <section data-section="color" id="color" style="padding:76px 80px;border-bottom:1px solid #DCE5E5;background:#F6F8F8;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:0.16em;text-transform:uppercase;color:#2E7E94;margin-bottom:14px;">01 — Colour</div>
+      <h2 style="font-size:36px;line-height:1.08;font-weight:800;letter-spacing:-0.025em;color:#14323D;max-width:640px;">Teal grounds. Azure signals. Nothing else competes.</h2>
+      <p style="margin-top:18px;font-size:16px;line-height:1.65;color:#46585D;max-width:660px;">Deep teal is the grounding ink and the default for CTAs, stat bands and the logo base. Azure is reserved as the one live accent: the engine line, active states, checks, a single beacon. Never let azure become decoration. Click a chip to copy its hex.</p>
+
+      <!-- CORE -->
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:#6E8388;margin:40px 0 14px;">Core</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+        <div data-copy="#1F4A57" style="cursor:pointer;border:1px solid #DCE5E5;border-radius:10px;overflow:hidden;background:#FFFFFF;position:relative;">
+          <div style="height:120px;background:#1F4A57;"></div>
+          <div style="padding:16px 18px;">
+            <div style="font-size:15px;font-weight:700;color:#14323D;">Teal Ink</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#46585D;margin-top:4px;">#1F4A57</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#9AAAAE;margin-top:6px;">--teal-ink · primary, CTAs, logo base</div>
+          </div>
+          <span data-copied style="position:absolute;top:12px;right:12px;opacity:0;transition:opacity .2s;font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(255,255,255,0.92);color:#1F4A57;padding:4px 8px;border-radius:5px;">Copied</span>
+        </div>
+        <div data-copy="#14323D" style="cursor:pointer;border:1px solid #DCE5E5;border-radius:10px;overflow:hidden;background:#FFFFFF;position:relative;">
+          <div style="height:120px;background:#14323D;"></div>
+          <div style="padding:16px 18px;">
+            <div style="font-size:15px;font-weight:700;color:#14323D;">Ink</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#46585D;margin-top:4px;">#14323D</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#9AAAAE;margin-top:6px;">--ink · headings, strongest text</div>
+          </div>
+          <span data-copied style="position:absolute;top:12px;right:12px;opacity:0;transition:opacity .2s;font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(255,255,255,0.92);color:#1F4A57;padding:4px 8px;border-radius:5px;">Copied</span>
+        </div>
+        <div data-copy="#34A6EB" style="cursor:pointer;border:1px solid #DCE5E5;border-radius:10px;overflow:hidden;background:#FFFFFF;position:relative;">
+          <div style="height:120px;background:#34A6EB;display:flex;align-items:flex-end;padding:12px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#F6F8F8;background:rgba(20,50,61,0.35);padding:4px 8px;border-radius:4px;">LIVE ACCENT ONLY</span></div>
+          <div style="padding:16px 18px;">
+            <div style="font-size:15px;font-weight:700;color:#14323D;">Azure</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#46585D;margin-top:4px;">#34A6EB</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#9AAAAE;margin-top:6px;">--azure · signal, active, checks</div>
+          </div>
+          <span data-copied style="position:absolute;top:12px;right:12px;opacity:0;transition:opacity .2s;font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(255,255,255,0.92);color:#1F4A57;padding:4px 8px;border-radius:5px;">Copied</span>
+        </div>
+      </div>
+
+      <!-- SUPPORTING ROW -->
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:#6E8388;margin:34px 0 14px;">Surfaces · Lines · Text</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        <div data-copy="#F6F8F8" style="cursor:pointer;border:1px solid #DCE5E5;border-radius:9px;padding:14px;background:#FFFFFF;position:relative;"><div style="height:46px;border-radius:6px;background:#F6F8F8;border:1px solid #DCE5E5;"></div><div style="font-size:13px;font-weight:600;color:#14323D;margin-top:11px;">Ground</div><div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#46585D;">#F6F8F8</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#9AAAAE;margin-top:3px;">--ground</div><span data-copied style="position:absolute;top:10px;right:10px;opacity:0;transition:opacity .2s;font-family:'JetBrains Mono',monospace;font-size:9.5px;background:#1F4A57;color:#fff;padding:3px 7px;border-radius:5px;">Copied</span></div>
+        <div data-copy="#EEF3F3" style="cursor:pointer;border:1px solid #DCE5E5;border-radius:9px;padding:14px;background:#FFFFFF;position:relative;"><div style="height:46px;border-radius:6px;background:#EEF3F3;border:1px solid #DCE5E5;"></div><div style="font-size:13px;font-weight:600;color:#14323D;margin-top:11px;">Surface 2</div><div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#46585D;">#EEF3F3</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#9AAAAE;margin-top:3px;">--surface-2</div><span data-copied style="position:absolute;top:10px;right:10px;opacity:0;transition:opacity .2s;font-family:'JetBrains Mono',monospace;font-size:9.5px;background:#1F4A57;color:#fff;padding:3px 7px;border-radius:5px;">Copied</span></div>
+        <div data-copy="#DCE5E5" style="cursor:pointer;border:1px solid #DCE5E5;border-radius:9px;padding:14px;background:#FFFFFF;position:relative;"><div style="height:46px;border-radius:6px;background:#DCE5E5;"></div><div style="font-size:13px;font-weight:600;color:#14323D;margin-top:11px;">Border</div><div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#46585D;">#DCE5E5</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#9AAAAE;margin-top:3px;">--border</div><span data-copied style="position:absolute;top:10px;right:10px;opacity:0;transition:opacity .2s;font-family:'JetBrains Mono',monospace;font-size:9.5px;background:#1F4A57;color:#fff;padding:3px 7px;border-radius:5px;">Copied</span></div>
+        <div data-copy="#46585D" style="cursor:pointer;border:1px solid #DCE5E5;border-radius:9px;padding:14px;background:#FFFFFF;position:relative;"><div style="height:46px;border-radius:6px;background:#46585D;"></div><div style="font-size:13px;font-weight:600;color:#14323D;margin-top:11px;">Body</div><div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#46585D;">#46585D</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#9AAAAE;margin-top:3px;">--body</div><span data-copied style="position:absolute;top:10px;right:10px;opacity:0;transition:opacity .2s;font-family:'JetBrains Mono',monospace;font-size:9.5px;background:#1F4A57;color:#fff;padding:3px 7px;border-radius:5px;">Copied</span></div>
+        <div data-copy="#5A6B70" style="cursor:pointer;border:1px solid #DCE5E5;border-radius:9px;padding:14px;background:#FFFFFF;position:relative;"><div style="height:46px;border-radius:6px;background:#5A6B70;"></div><div style="font-size:13px;font-weight:600;color:#14323D;margin-top:11px;">Soft</div><div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#46585D;">#5A6B70</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#9AAAAE;margin-top:3px;">--soft</div><span data-copied style="position:absolute;top:10px;right:10px;opacity:0;transition:opacity .2s;font-family:'JetBrains Mono',monospace;font-size:9.5px;background:#1F4A57;color:#fff;padding:3px 7px;border-radius:5px;">Copied</span></div>
+        <div data-copy="#6E8388" style="cursor:pointer;border:1px solid #DCE5E5;border-radius:9px;padding:14px;background:#FFFFFF;position:relative;"><div style="height:46px;border-radius:6px;background:#6E8388;"></div><div style="font-size:13px;font-weight:600;color:#14323D;margin-top:11px;">Mono</div><div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#46585D;">#6E8388</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#9AAAAE;margin-top:3px;">--mono captions</div><span data-copied style="position:absolute;top:10px;right:10px;opacity:0;transition:opacity .2s;font-family:'JetBrains Mono',monospace;font-size:9.5px;background:#1F4A57;color:#fff;padding:3px 7px;border-radius:5px;">Copied</span></div>
+        <div data-copy="#CFE0E4" style="cursor:pointer;border:1px solid #DCE5E5;border-radius:9px;padding:14px;background:#1F4A57;position:relative;"><div style="height:46px;border-radius:6px;background:#CFE0E4;"></div><div style="font-size:13px;font-weight:600;color:#F6F8F8;margin-top:11px;">On-teal</div><div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#CFE0E4;">#CFE0E4</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#9FC4CE;margin-top:3px;">--on-teal body</div><span data-copied style="position:absolute;top:10px;right:10px;opacity:0;transition:opacity .2s;font-family:'JetBrains Mono',monospace;font-size:9.5px;background:#34A6EB;color:#fff;padding:3px 7px;border-radius:5px;">Copied</span></div>
+        <div data-copy="#9FC4CE" style="cursor:pointer;border:1px solid #DCE5E5;border-radius:9px;padding:14px;background:#1F4A57;position:relative;"><div style="height:46px;border-radius:6px;background:#9FC4CE;"></div><div style="font-size:13px;font-weight:600;color:#F6F8F8;margin-top:11px;">On-teal mono</div><div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#CFE0E4;">#9FC4CE</div><div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#9FC4CE;margin-top:3px;">labels on teal</div><span data-copied style="position:absolute;top:10px;right:10px;opacity:0;transition:opacity .2s;font-family:'JetBrains Mono',monospace;font-size:9.5px;background:#34A6EB;color:#fff;padding:3px 7px;border-radius:5px;">Copied</span></div>
+      </div>
+
+      <!-- USAGE RULE -->
+      <div style="margin-top:34px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="border:1px solid #DCE5E5;border-radius:10px;background:#FFFFFF;padding:22px 24px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="width:18px;height:18px;border-radius:50%;background:#34A6EB;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;">✓</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#2E7E94;">Do</span></div>
+          <p style="font-size:14px;line-height:1.6;color:#46585D;">Reserve azure for one live element per view: the analysing pulse, an active check, the forecast apex. Everything structural stays teal, ink and hairline grey.</p>
+        </div>
+        <div style="border:1px solid #E4C8C8;border-radius:10px;background:#FBF4F3;padding:22px 24px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="width:18px;height:18px;border-radius:50%;background:#B4544A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;">✕</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#B4544A;">Don't</span></div>
+          <p style="font-size:14px;line-height:1.6;color:#7A5551;">Don't fill blocks, backgrounds or multiple buttons with azure, and never introduce a second bright hue. When azure is everywhere, it signals nothing.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 02 TYPOGRAPHY ============ -->
+    <section data-section="type" id="type" style="padding:76px 80px;border-bottom:1px solid #DCE5E5;background:#EEF3F3;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:0.16em;text-transform:uppercase;color:#2E7E94;margin-bottom:14px;">02 — Typography</div>
+      <h2 style="font-size:36px;line-height:1.08;font-weight:800;letter-spacing:-0.025em;color:#14323D;max-width:640px;">A grotesque for voice, a monospace for evidence.</h2>
+      <p style="margin-top:18px;font-size:16px;line-height:1.65;color:#46585D;max-width:660px;">Hanken Grotesk carries all display and body copy: tight at 800 for headlines, comfortable at 400 for reading. JetBrains Mono handles every figure, label and eyebrow, so numbers always look computed rather than claimed.</p>
+
+      <!-- SPECIMENS -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:38px;">
+        <div style="border:1px solid #DCE5E5;border-radius:12px;background:#FFFFFF;padding:30px 32px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:#6E8388;">Display &amp; Body</div>
+          <div style="font-size:96px;line-height:0.9;font-weight:800;letter-spacing:-0.04em;color:#14323D;margin-top:10px;">Aa</div>
+          <div style="font-size:22px;font-weight:700;color:#14323D;margin-top:14px;">Hanken Grotesk</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:11px;">
+            <span style="border:1px solid #DCE5E5;border-radius:5px;padding:5px 9px;color:#5A6B70;font-weight:400;">400 Regular</span>
+            <span style="border:1px solid #DCE5E5;border-radius:5px;padding:5px 9px;color:#5A6B70;font-weight:500;">500 Medium</span>
+            <span style="border:1px solid #DCE5E5;border-radius:5px;padding:5px 9px;color:#5A6B70;font-weight:600;">600 Semibold</span>
+            <span style="border:1px solid #DCE5E5;border-radius:5px;padding:5px 9px;color:#5A6B70;font-weight:700;">700 Bold</span>
+            <span style="border:1px solid #DCE5E5;border-radius:5px;padding:5px 9px;color:#14323D;font-weight:800;">800 Extrabold</span>
+          </div>
+        </div>
+        <div style="border:1px solid #DCE5E5;border-radius:12px;background:#14323D;padding:30px 32px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:#9FC4CE;">Figures &amp; Labels</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:70px;line-height:0.95;font-weight:600;letter-spacing:-0.03em;color:#F6F8F8;margin-top:14px;">£495k</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:500;color:#34A6EB;margin-top:12px;">JetBrains Mono</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9FC4CE;margin-top:14px;line-height:1.7;">0123456789 · £ % ↑ ↓<br>eyebrows · stat bands · captions</div>
+        </div>
+      </div>
+
+      <!-- TYPE SCALE -->
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:#6E8388;margin:38px 0 6px;">Type scale</div>
+      <div style="border:1px solid #DCE5E5;border-radius:12px;background:#FFFFFF;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:1fr 190px;align-items:baseline;gap:20px;padding:20px 26px;border-bottom:1px solid #EAF0F0;"><span style="font-size:52px;line-height:1;font-weight:800;letter-spacing:-0.03em;color:#14323D;">We engineer advantage</span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6E8388;">Hero · 58 / 800 / -0.03em</span></div>
+        <div style="display:grid;grid-template-columns:1fr 190px;align-items:baseline;gap:20px;padding:20px 26px;border-bottom:1px solid #EAF0F0;"><span style="font-size:34px;line-height:1.1;font-weight:800;letter-spacing:-0.02em;color:#14323D;">Section heading</span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6E8388;">Section · 34 / 800</span></div>
+        <div style="display:grid;grid-template-columns:1fr 190px;align-items:baseline;gap:20px;padding:20px 26px;border-bottom:1px solid #EAF0F0;"><span style="font-size:24px;line-height:1.14;font-weight:800;letter-spacing:-0.02em;color:#14323D;">Sub-heading</span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6E8388;">Subhead · 30 / 800</span></div>
+        <div style="display:grid;grid-template-columns:1fr 190px;align-items:baseline;gap:20px;padding:20px 26px;border-bottom:1px solid #EAF0F0;"><span style="font-size:19px;line-height:1.2;font-weight:700;color:#14323D;">Card title</span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6E8388;">Card · 19 / 700</span></div>
+        <div style="display:grid;grid-template-columns:1fr 190px;align-items:baseline;gap:20px;padding:20px 26px;border-bottom:1px solid #EAF0F0;"><span style="font-size:17.5px;line-height:1.6;font-weight:400;color:#46585D;">Lead paragraph, comfortable for reading at length.</span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6E8388;">Lead · 17.5 / 400</span></div>
+        <div style="display:grid;grid-template-columns:1fr 190px;align-items:baseline;gap:20px;padding:20px 26px;border-bottom:1px solid #EAF0F0;"><span style="font-size:15.5px;line-height:1.65;font-weight:400;color:#46585D;">Body copy for supporting detail and description.</span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6E8388;">Body · 15.5 / 400</span></div>
+        <div style="display:grid;grid-template-columns:1fr 190px;align-items:baseline;gap:20px;padding:20px 26px;"><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:0.16em;text-transform:uppercase;color:#2E7E94;">The Proposition</span><span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6E8388;">Eyebrow · 11.5 mono / 0.16em</span></div>
+      </div>
+    </section>
+
+    <!-- ============ 03 LOGO ============ -->
+    <section data-section="logo" id="logo" style="padding:76px 80px;border-bottom:1px solid #DCE5E5;background:#F6F8F8;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:0.16em;text-transform:uppercase;color:#2E7E94;margin-bottom:14px;">03 — Logo</div>
+      <h2 style="font-size:36px;line-height:1.08;font-weight:800;letter-spacing:-0.025em;color:#14323D;max-width:640px;">A north-pointing chevron and one confident wordmark.</h2>
+      <p style="margin-top:18px;font-size:16px;line-height:1.65;color:#46585D;max-width:660px;">The mark is an upward chevron with a notched base, gradient from azure at the tip to teal at the foot: a compass north for the decisions that matter. It locks up with the Arctellis wordmark in extrabold Hanken Grotesk.</p>
+
+      <!-- LOCKUPS -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:38px;">
+        <div style="border:1px solid #DCE5E5;border-radius:12px;background:#FFFFFF;padding:44px;display:flex;align-items:center;justify-content:center;min-height:180px;">
+          <img src="assets/arctellis-lockup.png" alt="Arctellis primary lockup" style="max-width:280px;width:100%;height:auto;display:block;">
+        </div>
+        <div style="border:1px solid #1F4A57;border-radius:12px;background:#14323D;padding:44px;display:flex;align-items:center;justify-content:center;min-height:180px;">
+          <img src="assets/arctellis-lockup-dark.png" alt="Arctellis reversed lockup" style="max-width:280px;width:100%;height:auto;display:block;">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#6E8388;">
+        <div>Primary lockup · on ground / light surfaces</div>
+        <div>Reversed lockup · on teal ink &amp; photography</div>
+      </div>
+
+      <!-- MARK + CLEARSPACE -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+        <div style="border:1px solid #DCE5E5;border-radius:12px;background:#FFFFFF;padding:32px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:#6E8388;margin-bottom:20px;">The mark alone</div>
+          <div style="display:flex;align-items:flex-end;gap:26px;">
+            <svg width="72" height="72" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="markA" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop stop-color="#34A6EB"/><stop offset="1" stop-color="#1F4A57"/></linearGradient></defs><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="url(#markA)"/></svg>
+            <svg width="48" height="48" viewBox="0 0 100 100" fill="none"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#1F4A57"/></svg>
+            <svg width="34" height="34" viewBox="0 0 100 100" fill="none"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#14323D"/></svg>
+          </div>
+          <p style="font-size:13.5px;line-height:1.6;color:#5A6B70;margin-top:22px;">Gradient for hero and identity use; solid teal or ink for small sizes, favicons and single-colour contexts.</p>
+        </div>
+        <div style="border:1px solid #DCE5E5;border-radius:12px;background:#FFFFFF;padding:32px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:#6E8388;margin-bottom:20px;">Clear space &amp; minimum size</div>
+          <div style="display:flex;align-items:center;gap:26px;">
+            <div style="position:relative;padding:34px;border:1px dashed #BCCBCB;border-radius:8px;background:#EEF3F3;">
+              <svg width="66" height="66" viewBox="0 0 100 100" fill="none"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#1F4A57"/></svg>
+              <span style="position:absolute;top:8px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#6E8388;">½ mark height</span>
+            </div>
+            <div style="font-size:13.5px;line-height:1.7;color:#5A6B70;">
+              <div>Keep clear space of at least <strong style="color:#14323D;">half the mark's height</strong> on every side.</div>
+              <div style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#46585D;">Min. mark: 20px screen<br>Min. lockup: 110px wide</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DON'TS -->
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:#6E8388;margin:38px 0 14px;">Misuse</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        <div style="border:1px solid #DCE5E5;border-radius:10px;background:#FFFFFF;overflow:hidden;">
+          <div style="height:96px;display:flex;align-items:center;justify-content:center;background:#EEF3F3;"><svg width="80" height="44" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#1F4A57"/></svg></div>
+          <div style="padding:12px 14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#B4544A;">✕ Don't stretch</span></div>
+        </div>
+        <div style="border:1px solid #DCE5E5;border-radius:10px;background:#FFFFFF;overflow:hidden;">
+          <div style="height:96px;display:flex;align-items:center;justify-content:center;background:#EEF3F3;"><svg width="52" height="52" viewBox="0 0 100 100" fill="none"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#C24AE0"/></svg></div>
+          <div style="padding:12px 14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#B4544A;">✕ Don't recolour</span></div>
+        </div>
+        <div style="border:1px solid #DCE5E5;border-radius:10px;background:#FFFFFF;overflow:hidden;">
+          <div style="height:96px;display:flex;align-items:center;justify-content:center;background:#EEF3F3;"><svg width="52" height="52" viewBox="0 0 100 100" fill="none" style="transform:rotate(28deg);"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#1F4A57"/></svg></div>
+          <div style="padding:12px 14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#B4544A;">✕ Don't rotate</span></div>
+        </div>
+        <div style="border:1px solid #DCE5E5;border-radius:10px;background:#FFFFFF;overflow:hidden;">
+          <div style="height:96px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#34A6EB,#C24AE0);"><svg width="52" height="52" viewBox="0 0 100 100" fill="none"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#1F4A57"/></svg></div>
+          <div style="padding:12px 14px;"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#B4544A;">✕ Low-contrast bg</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 04 ICONOGRAPHY ============ -->
+    <section data-section="chevron" id="chevron" style="padding:76px 80px;border-bottom:1px solid #DCE5E5;background:#EEF3F3;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:0.16em;text-transform:uppercase;color:#2E7E94;margin-bottom:14px;">04 — Iconography &amp; the chevron motif</div>
+      <h2 style="font-size:36px;line-height:1.08;font-weight:800;letter-spacing:-0.025em;color:#14323D;max-width:660px;">One shape, echoed everywhere.</h2>
+      <p style="margin-top:18px;font-size:16px;line-height:1.65;color:#46585D;max-width:660px;">The chevron is the brand's connective tissue. It appears as a beacon, as the apex of a forecast line, as a bullet, and as a favicon. Supporting icons stay hairline and functional; numbers alongside them are always monospace.</p>
+
+      <!-- CONSTRUCTION -->
+      <div style="display:grid;grid-template-columns:0.9fr 1.1fr;gap:16px;margin-top:38px;align-items:stretch;">
+        <div style="border:1px solid #DCE5E5;border-radius:12px;background:#FFFFFF;padding:32px;display:flex;flex-direction:column;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:#6E8388;">Construction</div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:18px 0;">
+            <svg width="150" height="150" viewBox="0 0 100 100" fill="none">
+              <rect x="0.5" y="0.5" width="99" height="99" fill="none" stroke="#DCE5E5" stroke-dasharray="3 3"/>
+              <line x1="50" y1="0" x2="50" y2="100" stroke="#DCE5E5" stroke-dasharray="3 3"/>
+              <defs><linearGradient id="constA" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop stop-color="#34A6EB"/><stop offset="1" stop-color="#1F4A57"/></linearGradient></defs>
+              <path d="M50 6 L93 94 L50 71 L7 94 Z" fill="url(#constA)"/>
+            </svg>
+          </div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:#46585D;background:#EEF3F3;border-radius:8px;padding:12px 14px;">path: M50 6 L93 94 L50 71 L7 94 Z<br>gradient: #34A6EB → #1F4A57 (vertical)</div>
+        </div>
+        <div style="border:1px solid #DCE5E5;border-radius:12px;background:#FFFFFF;padding:32px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:#6E8388;margin-bottom:22px;">Motif in use</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px;border:1px solid #EAF0F0;border-radius:10px;">
+              <span style="position:relative;display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center;">
+                <span style="position:absolute;inset:0;border-radius:50%;background:rgba(52,166,235,0.35);animation:arcRing 1.9s ease-out infinite;"></span>
+                <svg width="26" height="26" viewBox="0 0 100 100" fill="none"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#34A6EB"/></svg>
+              </span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#6E8388;">Beacon · live</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:18px;border:1px solid #EAF0F0;border-radius:10px;">
+              <svg viewBox="0 0 120 60" style="width:100%;height:auto;"><defs><linearGradient id="apex" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop stop-color="#34A6EB"/><stop offset="1" stop-color="#1F4A57"/></linearGradient></defs><path d="M6 52 L40 44 L74 30 L108 12" fill="none" stroke="#34A6EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(101,4) scale(0.16)"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="url(#apex)"/></g></svg>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#6E8388;">Forecast apex</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px;border:1px solid #EAF0F0;border-radius:10px;">
+              <div style="display:flex;flex-direction:column;gap:7px;align-self:stretch;padding-left:6px;">
+                <span style="display:flex;align-items:center;gap:9px;font-size:12.5px;color:#33474D;"><svg width="10" height="10" viewBox="0 0 100 100" fill="none"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#34A6EB"/></svg>Bullet point</span>
+                <span style="display:flex;align-items:center;gap:9px;font-size:12.5px;color:#33474D;"><svg width="10" height="10" viewBox="0 0 100 100" fill="none"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#34A6EB"/></svg>List marker</span>
+              </div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#6E8388;margin-top:auto;">As a bullet</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px;border:1px solid #EAF0F0;border-radius:10px;">
+              <div style="width:38px;height:38px;border-radius:9px;background:#14323D;display:flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="favA" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop stop-color="#5FBDF2"/><stop offset="1" stop-color="#34A6EB"/></linearGradient></defs><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="url(#favA)"/></svg></div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#6E8388;">Favicon / app tile</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ICON STYLE NOTE -->
+      <div style="margin-top:16px;border:1px solid #DCE5E5;border-radius:12px;background:#FFFFFF;padding:24px 26px;display:flex;gap:22px;align-items:center;">
+        <div style="display:flex;gap:16px;flex:none;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1F4A57" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1F4A57" stroke-width="1.6"><path d="M4 18V9M10 18V5M16 18v-7M4 18h14"/></svg>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1F4A57" stroke-width="1.6"><path d="M4 12h10M4 12l4-4M4 12l4 4M20 5v14"/></svg>
+        </div>
+        <p style="font-size:14px;line-height:1.6;color:#46585D;">Supporting icons are hairline (1.5–1.6px stroke), teal ink, and strictly functional. No filled illustration, no decorative flourish. The chevron is the only shape that carries meaning on its own.</p>
+      </div>
+    </section>
+
+    <!-- ============ 05 VOICE ============ -->
+    <section data-section="voice" id="voice" style="padding:76px 80px;background:#F6F8F8;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:0.16em;text-transform:uppercase;color:#2E7E94;margin-bottom:14px;">05 — Voice &amp; Tone</div>
+      <h2 style="font-size:36px;line-height:1.08;font-weight:800;letter-spacing:-0.025em;color:#14323D;max-width:660px;">Plain, precise, and accountable for the outcome.</h2>
+      <p style="margin-top:18px;font-size:16px;line-height:1.65;color:#46585D;max-width:660px;">We write like a principal, not a vendor. Every claim is specific and quantified; every sentence earns its place. UK English throughout, and no em-dashes: use a comma, or a full stop.</p>
+
+      <!-- PRINCIPLES -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:38px;">
+        <div style="border:1px solid #DCE5E5;border-radius:12px;background:#FFFFFF;padding:24px;"><div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#34A6EB;">01</div><div style="font-size:17px;font-weight:700;color:#14323D;margin-top:8px;">Specific over grand</div><p style="font-size:14px;line-height:1.6;color:#46585D;margin-top:8px;">Name the decision, put a number on it. &ldquo;£500–600k in the ordering decision&rdquo; beats &ldquo;significant value&rdquo;.</p></div>
+        <div style="border:1px solid #DCE5E5;border-radius:12px;background:#FFFFFF;padding:24px;"><div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#34A6EB;">02</div><div style="font-size:17px;font-weight:700;color:#14323D;margin-top:8px;">Built, not advised</div><p style="font-size:14px;line-height:1.6;color:#46585D;margin-top:8px;">Language of engineering and ownership. We stay accountable for the outcome, not the recommendation.</p></div>
+        <div style="border:1px solid #DCE5E5;border-radius:12px;background:#FFFFFF;padding:24px;"><div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#34A6EB;">03</div><div style="font-size:17px;font-weight:700;color:#14323D;margin-top:8px;">Restraint is authority</div><p style="font-size:14px;line-height:1.6;color:#46585D;margin-top:8px;">Short sentences. No hype words, no exclamation, no jargon a client would not use themselves.</p></div>
+      </div>
+
+      <!-- DO / DON'T -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+        <div style="border:1px solid #DCE5E5;border-radius:12px;background:#FFFFFF;padding:26px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><span style="width:18px;height:18px;border-radius:50%;background:#34A6EB;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;">✓</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#2E7E94;">Write like this</span></div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <p style="font-size:15px;line-height:1.55;color:#14323D;font-weight:600;">&ldquo;If it isn't embedded in the workflow, it's just a dashboard.&rdquo;</p>
+            <p style="font-size:14px;line-height:1.6;color:#46585D;">&ldquo;We find the decisions that carry the most value, put a number on them, and build the systems that change the numbers.&rdquo;</p>
+            <p style="font-size:14px;line-height:1.6;color:#46585D;">&ldquo;Proven in a controlled 90-day pilot.&rdquo;</p>
+          </div>
+        </div>
+        <div style="border:1px solid #E4C8C8;border-radius:12px;background:#FBF4F3;padding:26px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><span style="width:18px;height:18px;border-radius:50%;background:#B4544A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;">✕</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#B4544A;">Not like this</span></div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <p style="font-size:15px;line-height:1.55;color:#7A5551;text-decoration:line-through;text-decoration-color:#D3A9A4;">&ldquo;Leverage cutting-edge AI to unlock transformative synergies!&rdquo;</p>
+            <p style="font-size:14px;line-height:1.6;color:#7A5551;">&ldquo;We deliver significant value across the enterprise&rdquo; — vague, unquantified, could be anyone.</p>
+            <p style="font-size:14px;line-height:1.6;color:#7A5551;">Em-dashes for asides — like this — belong to another brand.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIGNATURE LINES -->
+      <div style="margin-top:16px;border-radius:12px;background:#14323D;padding:40px 44px;overflow:hidden;position:relative;">
+        <div style="position:absolute;top:-30px;right:40px;opacity:0.14;"><svg width="200" height="200" viewBox="0 0 100 100" fill="none"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#34A6EB"/></svg></div>
+        <div style="position:relative;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:#9FC4CE;margin-bottom:16px;">Signature lines</div>
+          <div style="font-size:30px;line-height:1.25;font-weight:800;letter-spacing:-0.02em;color:#F6F8F8;max-width:720px;">We engineer operational advantage.</div>
+          <div style="font-size:17px;line-height:1.5;color:#CFE0E4;margin-top:16px;max-width:640px;">If you can't say which decisions are costing you the most, that's where we start.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:40px;padding-top:22px;border-top:1px solid #DCE5E5;display:flex;align-items:center;gap:11px;">
+        <svg width="20" height="20" viewBox="0 0 100 100" fill="none"><path d="M50 6 L93 94 L50 71 L7 94 Z" fill="#1F4A57"/></svg>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6E8388;">Arctellis Design System · v1.0 · © 2026 TrustPredict Ltd</span>
+      </div>
+    </section>
+
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    // click-to-copy on any [data-copy] chip
+    this._onClick = (e) => {
+      const el = e.target.closest('[data-copy]');
+      if (!el) return;
+      const val = el.getAttribute('data-copy');
+      try { navigator.clipboard && navigator.clipboard.writeText(val); } catch (err) {}
+      const badge = el.querySelector('[data-copied]');
+      if (badge) {
+        badge.style.opacity = '1';
+        clearTimeout(el._t);
+        el._t = setTimeout(() => { badge.style.opacity = '0'; }, 1100);
+      }
+    };
+    document.addEventListener('click', this._onClick);
+
+    // scroll-spy nav highlight
+    const links = Array.from(document.querySelectorAll('[data-nav]'));
+    const setActive = (id) => {
+      links.forEach(l => {
+        const on = l.getAttribute('data-nav') === id;
+        l.style.color = on ? '#14323D' : '#5A6B70';
+        l.style.background = on ? '#EEF3F3' : 'transparent';
+        l.style.fontWeight = on ? '600' : '500';
+      });
+    };
+    const secs = Array.from(document.querySelectorAll('[data-section]'));
+    this._io = new IntersectionObserver((entries) => {
+      entries.forEach(en => { if (en.isIntersecting) setActive(en.target.getAttribute('data-section')); });
+    }, { rootMargin: '-15% 0px -75% 0px', threshold: 0 });
+    secs.forEach(s => this._io.observe(s));
+    if (secs.length) setActive(secs[0].getAttribute('data-section'));
+  }
+  componentWillUnmount() {
+    document.removeEventListener('click', this._onClick);
+    this._io && this._io.disconnect();
+  }
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
