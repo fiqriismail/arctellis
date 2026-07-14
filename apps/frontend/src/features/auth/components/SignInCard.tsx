@@ -39,11 +39,7 @@ export function SignInCard({ onSignIn }: SignInCardProps) {
         <p style={{ fontSize: 14, color: 'var(--muted-foreground)', margin: '0 0 28px', lineHeight: 1.5 }}>
           Sign in with your organisation account to continue.
         </p>
-        <Button
-          onClick={onSignIn}
-          style={{ width: '100%' }}
-          className="bg-[var(--azure)] text-white hover:bg-[var(--azure)]/90"
-        >
+        <Button onClick={onSignIn} style={{ width: '100%' }}>
           Sign in with Microsoft
         </Button>
       </div>
