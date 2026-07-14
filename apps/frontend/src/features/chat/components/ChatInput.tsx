@@ -73,8 +73,8 @@ export function ChatInput({
           style={{
             width: 34, height: 34, flexShrink: 0, borderRadius: 9,
             border: 'none', cursor: buttonActive ? 'pointer' : 'default',
-            background: buttonActive ? 'var(--azure)' : '#e4e4e7',
-            color: buttonActive ? '#ffffff' : '#a1a1aa',
+            background: buttonActive ? 'var(--primary)' : '#e4e4e7',
+            color: buttonActive ? 'var(--primary-foreground)' : '#a1a1aa',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'background .15s', marginBottom: 1,
           }}
