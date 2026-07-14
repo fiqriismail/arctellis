@@ -29,3 +29,4 @@ out/
 .superpowers/
 apps/backend/uv.lock
 docs/design
+.worktrees/
