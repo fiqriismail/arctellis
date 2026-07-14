@@ -48,7 +48,7 @@ const components: Components = {
   code({ className, children }) {
     // className is set when inside a fenced code block (e.g. "language-js").
     // When className is set, the code is already inside a styled <pre> — render plain.
-    // When className is absent, this is inline code — apply brand-tint style.
+    // When className is absent, this is inline code — apply surface-2 / teal-ink style.
     if (className) {
       return (
         <code style={{ fontFamily: 'ui-monospace, monospace', fontSize: 'inherit', color: 'inherit' }}>
@@ -58,10 +58,10 @@ const components: Components = {
     }
     return (
       <code style={{
-        fontFamily: 'ui-monospace, monospace',
+        fontFamily: 'var(--font-mono)',
         fontSize: 12.5,
-        background: 'var(--brand-tint)',
-        color: 'var(--brand-strong)',
+        background: 'var(--surface-2)',
+        color: 'var(--teal-ink)',
         padding: '2px 6px',
         borderRadius: 4,
         border: '1px solid var(--border)',
@@ -121,10 +121,10 @@ const components: Components = {
   blockquote({ children }) {
     return (
       <blockquote style={{
-        borderLeft: '3px solid var(--brand)',
+        borderLeft: '3px solid var(--teal-ink)',
         margin: '10px 0',
         padding: '6px 12px',
-        background: 'var(--brand-tint)',
+        background: 'var(--surface-2)',
         borderRadius: '0 6px 6px 0',
         color: 'var(--muted-foreground)',
         fontStyle: 'italic',
