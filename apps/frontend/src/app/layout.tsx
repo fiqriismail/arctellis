@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Group One RTP — AI Assistant',
+  title: 'Arctellis RTP — AI Assistant',
   description: 'Ask questions about your SharePoint list in plain English.',
 }
 

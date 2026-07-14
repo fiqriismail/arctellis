@@ -1,4 +1,4 @@
-# Group One RTP — SharePoint List AI Assistant
+# Arctellis RTP — SharePoint List AI Assistant
 
 A conversational AI assistant for querying SharePoint list data in plain English.
 

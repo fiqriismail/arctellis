@@ -1,4 +1,4 @@
-# CLAUDE.md — Group One RTP
+# CLAUDE.md — Arctellis RTP
 
 ## Project
 
