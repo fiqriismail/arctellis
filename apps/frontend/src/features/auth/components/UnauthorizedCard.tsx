@@ -46,7 +46,7 @@ export function UnauthorizedCard({ account, onSignOut }: UnauthorizedCardProps) 
           <strong style={{ color: 'var(--foreground)', display: 'block' }}>{displayName}</strong>
           {account.name ? account.username : null}
         </p>
-        <Button variant="outline" onClick={onSignOut} style={{ width: '100%' }}>
+        <Button onClick={onSignOut} style={{ width: '100%' }}>
           Sign out
         </Button>
       </div>
