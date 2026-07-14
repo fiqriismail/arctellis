@@ -31,11 +31,12 @@ Next.js + shadcn/ui chat client. Stories derived from the [[PRD-SharePoint-List-
 | FE-12 | [[FE-12 Chart View for Assistant Tables]]                   | 3 — Chat UI | `done` |
 | FE-13 | [[FE-13 Sortable Tables with Currency and Date Formatting]] | 3 — Chat UI | `done` |
 | FE-14 | [[FE-14 M365 Group Access Gate]]                           | 6 — Access Control | `done` |
+| FE-15 | [[FE-15 Adopt Arctellis Design System]]                     | 6 — Tech Debt | `todo` |
 
 ## Phase grouping
 
 - **Phase 3 — Chat UI:** FE-00, FE-01, FE-02, FE-03, FE-04, FE-05, FE-06, FE-07, FE-08, FE-12, FE-13
 - **Phase 5 — Deploy:** FE-09
-- **Phase 6 — Tech Debt:** FE-10
+- **Phase 6 — Tech Debt:** FE-10, FE-15
 - **Phase 6 — Access Control:** FE-14
 
