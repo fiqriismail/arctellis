@@ -19,16 +19,12 @@ export function ChatHeader({ onNewConversation }: ChatHeaderProps) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <Image
-          src="/group_one.svg"
-          alt="group.one"
-          width={142}
-          height={26}
+          src="/arctellis-lockup.png"
+          alt="Arctellis"
+          width={118}
+          height={28}
           priority
         />
-        <span aria-hidden style={{ width: 1, height: 20, background: 'var(--border)' }} />
-        <span style={{ fontSize: 14.5, fontWeight: 600, letterSpacing: '-.01em' }}>
-          RTP Intelligence Hub
-        </span>
       </div>
       {onNewConversation && (
         <Button
