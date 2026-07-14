@@ -26,11 +26,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${hankenGrotesk.variable} ${jetbrainsMono.variable}`}
-        suppressHydrationWarning
-      >
+    <html
+      lang="en"
+      className={`${hankenGrotesk.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>
