@@ -26,10 +26,10 @@ export function SignInCard({ onSignIn }: SignInCardProps) {
       }}>
         <div style={{ margin: '0 auto 24px', display: 'flex', justifyContent: 'center' }}>
           <Image
-            src="/group_one.svg"
-            alt="group.one"
-            width={142}
-            height={26}
+            src="/arctellis-lockup.png"
+            alt="Arctellis"
+            width={118}
+            height={28}
             priority
           />
         </div>
