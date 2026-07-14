@@ -57,7 +57,7 @@ export default function HomePage() {
                 <p style={{ fontSize: 15.5, color: 'var(--muted-foreground)', margin: 0, lineHeight: 1.5 }}>
                   Ask anything about your{' '}
                   <span style={{ fontWeight: 550, color: 'var(--foreground)' }}>purchase requests</span>
-                  {' '}in plain English — no formulas, no filters.
+                  {' '}in plain English, no formulas, no filters.
                 </p>
               </div>
 
