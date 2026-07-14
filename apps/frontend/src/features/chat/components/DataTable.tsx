@@ -121,7 +121,7 @@ export function DataTable({ table }: { table: ParsedTable }) {
                   <TableCell
                     key={ci}
                     className={`border-r border-border text-[13px] last:border-r-0 ${
-                      c.numeric ? 'text-right tabular-nums' : ''
+                      c.numeric ? 'text-right tabular-nums font-mono' : ''
                     }`}
                   >
                     {c.kind === 'text' ? (
