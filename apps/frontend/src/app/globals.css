@@ -83,21 +83,39 @@ a {
 }
 
 :root {
+  /* Arctellis brand palette — see docs/design-system/repo */
+  --teal-ink: #1F4A57;
+  --ink: #14323D;
+  --azure: #34A6EB;
+  --ground: #F6F8F8;
+  --surface-2: #EEF3F3;
+  --border-hairline: #DCE5E5;
+  --body: #46585D;
+  --soft: #5A6B70;
+  --mono: #6E8388;
+  --on-teal: #CFE0E4;
+  --on-teal-mono: #9FC4CE;
+
+  /* shadcn semantic tokens, aliased to the brand palette above */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: var(--ink);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  /* SharePoint brand */
-  --brand: #0f6cbd;
-  --brand-strong: #0a5ca8;
-  --brand-tint: #eff6fc;
-  /* RTP hub brand */
-  --brand-gold: #f6b01c;
-  --brand-gold-glow: rgba(246, 176, 28, 0.22);
-  --brand-amber: #c9820a;
-  --ink: #1b1b1f;
+  --popover-foreground: var(--ink);
+  --primary: var(--teal-ink);
+  --primary-foreground: var(--on-teal);
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--body);
+  --accent: var(--surface-2);
+  --accent-foreground: var(--ink);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: var(--border-hairline);
+  --input: var(--border-hairline);
+  --ring: var(--azure);
+  --background: var(--ground);
+  --foreground: var(--ink);
+
   /* extended border */
   --border-strong: #d4d4d8;
   /* extra muted surface */
@@ -110,17 +128,7 @@ a {
   --shadow-card-sm: 0 1px 2px 0 rgba(9,9,11,.05);
   --shadow-card-md: 0 4px 12px -2px rgba(9,9,11,.08), 0 2px 4px -2px rgba(9,9,11,.04);
   --shadow-card-lg: 0 12px 32px -8px rgba(9,9,11,.16), 0 4px 8px -4px rgba(9,9,11,.06);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  /* Categorical chart palette (distinct hues, not greyscale) */
+  /* Categorical chart palette (distinct hues, not greyscale) — out of scope, unchanged */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -128,51 +136,49 @@ a {
   --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--teal-ink);
+  --sidebar-primary-foreground: var(--on-teal);
+  --sidebar-accent: var(--surface-2);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--border-hairline);
+  --sidebar-ring: var(--azure);
   color-scheme: light dark;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: var(--ink);
+  --foreground: var(--on-teal);
+  --card: var(--teal-ink);
+  --card-foreground: var(--on-teal);
+  --popover: var(--teal-ink);
+  --popover-foreground: var(--on-teal);
+  --primary: var(--azure);
+  --primary-foreground: var(--ink);
+  --secondary: var(--teal-ink);
+  --secondary-foreground: var(--on-teal);
+  --muted: var(--teal-ink);
+  --muted-foreground: var(--on-teal-mono);
+  --accent: var(--teal-ink);
+  --accent-foreground: var(--on-teal);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  /* Categorical chart palette (distinct hues, not greyscale) */
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.16);
+  --ring: var(--azure);
+  /* Categorical chart palette (distinct hues, not greyscale) — out of scope, unchanged */
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: var(--teal-ink);
+  --sidebar-foreground: var(--on-teal);
+  --sidebar-primary: var(--azure);
+  --sidebar-primary-foreground: var(--ink);
+  --sidebar-accent: var(--teal-ink);
+  --sidebar-accent-foreground: var(--on-teal);
+  --sidebar-border: rgba(255, 255, 255, 0.12);
+  --sidebar-ring: var(--azure);
 }
 
 @keyframes msgIn {
@@ -210,8 +216,8 @@ a {
 }
 
 .input-bar:focus-within {
-  border-color: var(--brand-gold);
-  box-shadow: 0 0 0 4px var(--brand-gold-glow);
+  border-color: var(--azure);
+  box-shadow: 0 0 0 4px rgba(52, 166, 235, 0.18);
   outline: none;
 }
 
