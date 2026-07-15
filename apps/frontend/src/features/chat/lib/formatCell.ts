@@ -58,7 +58,7 @@ export function isMoneyHeader(name: string): boolean {
   if (isCountHeader(name)) return false
 
   const n = name.toLowerCase()
-  if (/\(€\)|\(eur\)/i.test(name)) return true
+  if (/\(€\)|\(eur\)|\(£\)|\(gbp\)/i.test(name)) return true
   if (/\btotal\s+(amount|cost|spend|budget|estimated)/i.test(n)) return true
   if (/\b(sum|subtotal)\s+of\b/i.test(n)) return true
   return MONEY_KEYWORDS.some((k) => n.includes(k))

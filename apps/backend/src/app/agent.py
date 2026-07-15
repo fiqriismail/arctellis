@@ -69,6 +69,11 @@ Data conventions:
   local timezone and converts to the correct UTC range — do NOT hand-build a
   datetime odata_filter, as Graph stores dates in UTC and naive filters miss
   rows near midnight.
+- The monetary column is internally named/labelled "Estimated Amount (€)" in
+  the schema, but always present it to the user in GBP: label it "Estimated
+  Amount (£)" in table headers and prose, and prefix values with £ (e.g.
+  "£10,000"), never €. This is a display convention only — do not convert or
+  scale the underlying numeric values, just change the symbol shown.
 
 Formatting:
 - Whenever you present structured or comparative data (lists of items with

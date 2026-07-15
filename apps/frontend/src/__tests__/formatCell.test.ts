@@ -33,6 +33,9 @@ describe('isMoneyHeader', () => {
   it.each([
     'Amount',
     'Estimated Amount (€)',
+    'Estimated Amount (£)',
+    'Value (£)',
+    'Value (gbp)',
     'Total Cost',
     'Budget',
     'Unit Price',
