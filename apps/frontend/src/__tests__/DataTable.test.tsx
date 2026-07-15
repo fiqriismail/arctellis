@@ -25,10 +25,10 @@ describe('DataTable', () => {
     expect(screen.getByText('Status')).toBeInTheDocument()
   })
 
-  it('formats currency cells as € with two decimals', () => {
+  it('formats currency cells as £ with two decimals', () => {
     render(<DataTable table={table} />)
-    expect(screen.getByText('€6,343.32')).toBeInTheDocument()
-    expect(screen.getByText('€252.48')).toBeInTheDocument()
+    expect(screen.getByText('£6,343.32')).toBeInTheDocument()
+    expect(screen.getByText('£252.48')).toBeInTheDocument()
   })
 
   it('formats count aggregation cells as plain integers', () => {
@@ -42,7 +42,7 @@ describe('DataTable', () => {
     render(<DataTable table={countTable} />)
     expect(screen.getByText('4')).toBeInTheDocument()
     expect(screen.getByText('12')).toBeInTheDocument()
-    expect(screen.queryByText('€4.00')).not.toBeInTheDocument()
+    expect(screen.queryByText('£4.00')).not.toBeInTheDocument()
   })
 
   it('formats date cells as dd-mm-yyyy', () => {
@@ -58,7 +58,7 @@ describe('DataTable', () => {
 
   it('right-aligns currency cells', () => {
     render(<DataTable table={table} />)
-    const cell = screen.getByText('€6,343.32').closest('td')!
+    const cell = screen.getByText('£6,343.32').closest('td')!
     expect(cell.className).toMatch(/text-right/)
   })
 

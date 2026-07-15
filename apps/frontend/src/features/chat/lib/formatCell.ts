@@ -1,7 +1,7 @@
 /**
  * Pure cell parsing/formatting and detection helpers for data tables. No React.
  *
- * Defaults: money columns render as currency (€ unless the cell carries an
+ * Defaults: money columns render as currency (£ unless the cell carries an
  * explicit symbol) with two decimals; dates render as dd-mm-yyyy.
  */
 
@@ -90,8 +90,8 @@ export function formatInteger(value: number): string {
   }).format(value)
 }
 
-export function formatCurrency(value: number, currency = 'EUR'): string {
-  const symbol = CURRENCY_TO_SYMBOL[currency] ?? '€'
+export function formatCurrency(value: number, currency = 'GBP'): string {
+  const symbol = CURRENCY_TO_SYMBOL[currency] ?? '£'
   const n = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -122,7 +122,7 @@ export function formatCellValue(raw: string, kind: ColumnKind): string {
   if (kind === 'currency') {
     const n = parseNumeric(raw)
     if (n === null) return raw
-    return formatCurrency(n, detectCurrency(raw) ?? 'EUR')
+    return formatCurrency(n, detectCurrency(raw) ?? 'GBP')
   }
 
   if (kind === 'integer') {

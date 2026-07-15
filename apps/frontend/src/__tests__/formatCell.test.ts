@@ -76,10 +76,10 @@ describe('formatInteger', () => {
 })
 
 describe('formatCurrency', () => {
-  it('formats with two decimals, thousands separators and € by default', () => {
-    expect(formatCurrency(6343.32)).toBe('€6,343.32')
-    expect(formatCurrency(1514.8)).toBe('€1,514.80')
-    expect(formatCurrency(0)).toBe('€0.00')
+  it('formats with two decimals, thousands separators and £ by default', () => {
+    expect(formatCurrency(6343.32)).toBe('£6,343.32')
+    expect(formatCurrency(1514.8)).toBe('£1,514.80')
+    expect(formatCurrency(0)).toBe('£0.00')
   })
 
   it('uses the given currency symbol', () => {
@@ -115,12 +115,13 @@ describe('formatDate', () => {
 })
 
 describe('formatCellValue', () => {
-  it('formats currency cells, defaulting to €', () => {
-    expect(formatCellValue('6343.32', 'currency')).toBe('€6,343.32')
+  it('formats currency cells, defaulting to £', () => {
+    expect(formatCellValue('6343.32', 'currency')).toBe('£6,343.32')
   })
 
   it('keeps an explicit currency symbol', () => {
     expect(formatCellValue('$1000', 'currency')).toBe('$1,000.00')
+    expect(formatCellValue('€1000', 'currency')).toBe('€1,000.00')
   })
 
   it('formats date cells to dd-mm-yyyy', () => {
