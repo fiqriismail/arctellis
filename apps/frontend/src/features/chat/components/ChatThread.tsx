@@ -38,10 +38,8 @@ export function ChatThread({
           style={{ display: 'flex', gap: 13, marginBottom: 30 }}
         >
           <div style={{
-            width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+            width: 30, height: 30, flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            overflow: 'hidden',
-            boxShadow: 'var(--shadow-card-sm)',
           }}>
             <AppIcon size={30} />
           </div>
@@ -124,10 +122,8 @@ function AssistantMessage({ text }: { text: string }) {
       style={{ display: 'flex', gap: 13, marginBottom: 30 }}
     >
       <div style={{
-        width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+        width: 30, height: 30, flexShrink: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        overflow: 'hidden',
-        boxShadow: 'var(--shadow-card-sm)',
       }}>
         <AppIcon size={30} />
       </div>
