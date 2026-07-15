@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import HomePage from '@/app/page'
+import { SUGGESTED_PROMPTS } from '@/features/chat/lib/suggestedPrompts'
 
 jest.mock('@/features/chat/api/streamMessage', () => ({
   streamMessage: jest.fn().mockImplementation(async function* () {
@@ -60,5 +61,23 @@ describe('HomePage', () => {
     await user.click(newConvButton)
     expect(screen.getByRole('heading', { name: 'RTP Intelligence Hub' })).toBeInTheDocument()
     expect(screen.queryByText('Hello')).not.toBeInTheDocument()
+  })
+
+  it('shows suggested prompts on the empty state', () => {
+    render(<HomePage />)
+    for (const prompt of SUGGESTED_PROMPTS) {
+      expect(screen.getByRole('button', { name: prompt })).toBeInTheDocument()
+    }
+  })
+
+  it('sends the message and enters the conversation view when a suggested prompt is clicked', async () => {
+    const user = userEvent.setup()
+    render(<HomePage />)
+
+    await user.click(screen.getByRole('button', { name: SUGGESTED_PROMPTS[0] }))
+
+    expect(screen.queryByRole('heading', { name: 'RTP Intelligence Hub' })).not.toBeInTheDocument()
+    expect(screen.getByText(SUGGESTED_PROMPTS[0])).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Streamed response')).toBeInTheDocument())
   })
 })

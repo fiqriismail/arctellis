@@ -4,6 +4,7 @@ import { ChatHeader } from '@/features/chat/components/ChatHeader'
 import { AppIcon } from '@/components/AppIcon'
 import { ChatInput } from '@/features/chat/components/ChatInput'
 import { ChatThread } from '@/features/chat/components/ChatThread'
+import { SuggestedPrompts } from '@/features/chat/components/SuggestedPrompts'
 import { useChat } from '@/features/chat/hooks/useChat'
 import { AuthGate } from '@/features/auth/components/AuthGate'
 
@@ -62,6 +63,7 @@ export default function HomePage() {
               </div>
 
               <ChatInput onSubmit={sendMessage} onStop={stopStream} isStreaming={isStreaming} />
+              <SuggestedPrompts onSelect={sendMessage} />
             </div>
           </div>
         </div>
