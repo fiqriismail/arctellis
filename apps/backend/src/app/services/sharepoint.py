@@ -270,13 +270,18 @@ class SharePointService:
 
         Pure function: given raw fields, lookup column configs, and per-list id
         maps, return fields with each lookup column populated under its internal
-        name and the raw LookupId key removed.
+        name and the raw LookupId key removed. SharePoint omits the LookupId key
+        entirely when the lookup was never set, so every configured column is
+        still surfaced as {"LookupValue": None} in that case — the field must
+        never be silently absent, or callers can't tell "not populated" from
+        "not fetched".
         """
         unresolved = {"LookupValue": None}
         out = dict(fields)
         for name, (list_id, _) in lookup_configs.items():
             key = f"{name}LookupId"
             if key not in out:
+                out[name] = unresolved
                 continue
             raw = out.pop(key)
             id_map = lookup_maps.get(list_id, {})

@@ -51,6 +51,11 @@ Data conventions:
   automatically — never hand-filter booleans in memory unless OData is unsuitable.
 - Lookup columns (type 'lookup', e.g. Category) are returned as objects with:
     - "LookupValue": the display name from the linked taxonomy/list item
+  A row with no value set for a lookup column still has the key, with
+  "LookupValue": null — this means the column is genuinely not populated on
+  that row. Report it as blank/not populated. NEVER substitute a different
+  column (e.g. report Main Category's value when asked about Category, or vice
+  versa) — they are distinct columns and must never be used interchangeably.
   Lookup columns CANNOT be filtered by display value in an odata_filter — the
   field only stores a hidden numeric id, and you do not know that id. NEVER
   write an odata_filter like "fields/Category eq '<display value>'" — it will

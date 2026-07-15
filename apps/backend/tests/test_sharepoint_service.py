@@ -813,6 +813,22 @@ def test_merge_lookup_fields_unknown_id_yields_null():
     assert out["Category"] == {"LookupValue": None}
 
 
+def test_merge_lookup_fields_missing_key_still_yields_null():
+    """A row where the lookup was never set has no '{Name}LookupId' key at all
+    (SharePoint omits unset lookups from the Graph payload entirely). The
+    configured column must still surface as {"LookupValue": None} rather than
+    being silently absent, so callers can tell "not populated" from "not
+    fetched"."""
+    from app.services.sharepoint import SharePointService
+
+    out = SharePointService._merge_lookup_fields(
+        {"Title": "Req"},
+        {"Category": ("list-1", "Title")},
+        {},
+    )
+    assert out["Category"] == {"LookupValue": None}
+
+
 @pytest.mark.asyncio
 async def test_resolve_lookup_ids_queries_target_list_and_caches():
     from app.services.sharepoint import SharePointService
