@@ -19,14 +19,12 @@ const CHART_TYPES: { type: ChartType; label: string }[] = [
 ]
 
 /**
- * Wraps a chartable Markdown table with a Table/Chart toggle. Aggregation
- * tables (one label + one numeric column) default to a pie chart; other
- * chartable tables default to the table view.
+ * Wraps a chartable Markdown table with a Table/Chart toggle. All tables
+ * default to the table view; switching to chart on an aggregation table
+ * (one label + one numeric column) preselects a pie chart.
  */
 export function TableChartToggle({ table, children }: TableChartToggleProps) {
-  const [view, setView] = useState<'table' | 'chart'>(
-    table.isAggregation ? 'chart' : 'table',
-  )
+  const [view, setView] = useState<'table' | 'chart'>('table')
   const [chartType, setChartType] = useState<ChartType>(
     table.isAggregation ? 'pie' : 'bar',
   )

@@ -31,10 +31,13 @@ const multiNumeric = parseMarkdownTable(
 const chart = () => document.querySelector('[data-slot="chart"]')
 
 describe('TableChartToggle', () => {
-  it('defaults to the chart (pie) view for an aggregation table', () => {
+  it('defaults to the table view for an aggregation table, with pie preselected for chart', () => {
     render(<TableChartToggle table={aggregation}>{origTable}</TableChartToggle>)
+    expect(screen.getByTestId('orig-table')).toBeInTheDocument()
+    expect(chart()).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /chart/i }))
     expect(chart()).toBeInTheDocument()
-    expect(screen.queryByTestId('orig-table')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /pie/i })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -57,6 +60,7 @@ describe('TableChartToggle', () => {
 
   it('lets the user switch chart type to donut', () => {
     render(<TableChartToggle table={aggregation}>{origTable}</TableChartToggle>)
+    fireEvent.click(screen.getByRole('button', { name: /chart/i }))
     fireEvent.click(screen.getByRole('button', { name: /donut/i }))
     expect(screen.getByRole('button', { name: /donut/i })).toHaveAttribute(
       'aria-pressed',

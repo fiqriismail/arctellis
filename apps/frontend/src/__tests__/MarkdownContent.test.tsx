@@ -148,10 +148,11 @@ describe('MarkdownContent chart toggle', () => {
   const PLAIN_MD =
     '| Title | Status |\n|---|---|\n| Laptop | Active |\n| Chair | Draft |'
 
-  it('shows a chart by default for an aggregation table', () => {
+  it('shows the table by default for an aggregation table, with a chart toggle available', () => {
     const { container } = render(<MarkdownContent text={AGG_MD} />)
-    expect(container.querySelector('[data-slot="chart"]')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /table/i })).toBeInTheDocument()
+    expect(container.querySelector('table')).toBeInTheDocument()
+    expect(container.querySelector('[data-slot="chart"]')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /chart/i })).toBeInTheDocument()
   })
 
   it('shows no chart toggle for a table with more than two columns', () => {
